@@ -657,7 +657,7 @@ body{font-family:var(--font)}
 [data-theme="dark"] footer.editorial-footer .text-neutral-500{color:#869a8f!important}
 [data-theme="dark"] footer.editorial-footer a:hover{color:#83dfbd!important}
 [data-theme="dark"] footer.editorial-footer .border-neutral-300\/60,[data-theme="dark"] footer.editorial-footer [class*="border-neutral-300"]{border-color:rgba(147,226,197,.18)!important}
-[data-theme="dark"] footer.editorial-footer .bg-black{background-color:#83dfbd!important}
+[data-theme="dark"] footer.editorial-footer .bg-black,[data-theme="dark"] footer.editorial-footer .bg-neutral-950{background-color:#83dfbd!important}
 
 
 /* Editorial landing legibility pass */
@@ -676,7 +676,7 @@ body{font-family:var(--font)}
 .hero-coordinate-tag,.hero-bottomline,.hero-proofline,.globe-drag-hint,.feature-section-index,.footer-clock,.footer-legal,.cta-index{font-size:.75rem}
 @media(max-width:760px){.hero-description{font-size:1rem}.editorial-intro>p{font-size:1.125rem}.feature-card-main h3{font-size:1.5rem}.feature-card-main p{font-size:.9375rem}.editorial-feature-card,.feature-moss,.feature-dark,.feature-sage{padding:24px}.editorial-kicker,.feature-number,.feature-kicker,.feature-tags>span,.ticker-intro,.ticker-city,.ticker-category,.hero-coordinate-tag,.hero-bottomline,.hero-proofline,.globe-drag-hint,.feature-section-index,.footer-clock,.footer-legal,.cta-index{font-size:.75rem}}
 
-@media(max-width:420px){.editorial-nav nav a:first-child{display:none}.editorial-nav nav{margin-left:auto}.editorial-nav{width:calc(100% - 26px)}.editorial-hero{width:calc(100% - 30px)}.hero-actions{gap:14px}.hero-primary{gap:9px;padding:13px 12px;font-size:10px}.hero-secondary{font-size:10px}.hero-bottomline{font-size:6px}.feature-card-bottom{align-items:flex-end}.feature-tags{max-width:68%}.feature-tags span{font-size:6px}.feature-reveal{font-size:7px}}
+@media(max-width:420px){.editorial-nav nav{margin-left:auto}.editorial-nav{width:calc(100% - 26px)}.editorial-hero{width:calc(100% - 30px)}.hero-actions{gap:14px}.hero-primary{gap:9px;padding:13px 12px;font-size:10px}.hero-secondary{font-size:10px}.hero-bottomline{font-size:6px}.feature-card-bottom{align-items:flex-end}.feature-tags{max-width:68%}.feature-tags span{font-size:6px}.feature-reveal{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.ticker-track{animation:none}.editorial-feature-card,.hero-primary,.nav-explore{transition:none}}
 
 .footer-watermark-banner{width:100%;overflow:hidden;padding:3rem 0 1.5rem;background:#f7f6f0}
