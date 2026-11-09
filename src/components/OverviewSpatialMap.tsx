@@ -9,7 +9,8 @@ import {
   Star,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
-import type { Map as LeafletMap, Layer } from "leaflet";
+import type { Map as LeafletMap, Layer, TileLayer } from "leaflet";
+import { useTheme } from "@/lib/use-theme";
 
 export type MapLayerKey = "aqi" | "pm2_5" | "pm10" | "ozone" | "no2" | "so2" | "co";
 
@@ -410,12 +411,12 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
 ];
 
 function getAqiCategory(aqi: number) {
-  if (aqi <= 50) return { category: "Good", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)" };
-  if (aqi <= 100) return { category: "Moderate", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.2)" };
-  if (aqi <= 150) return { category: "Unhealthy for Sensitive", color: "#f97316", bg: "rgba(249, 115, 22, 0.2)" };
-  if (aqi <= 200) return { category: "Unhealthy", color: "#ef4444", bg: "rgba(239, 68, 68, 0.2)" };
-  if (aqi <= 300) return { category: "Very Unhealthy", color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)" };
-  return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.2)" };
+  if (aqi <= 50) return { category: "Good", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" };
+  if (aqi <= 100) return { category: "Moderate", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" };
+  if (aqi <= 150) return { category: "Unhealthy for Sensitive", color: "#f97316", bg: "rgba(249, 115, 22, 0.15)" };
+  if (aqi <= 200) return { category: "Unhealthy", color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)" };
+  if (aqi <= 300) return { category: "Very Unhealthy", color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.15)" };
+  return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.15)" };
 }
 
 interface OverviewSpatialMapProps {
@@ -428,8 +429,11 @@ interface LeafletContainer extends HTMLDivElement {
 }
 
 export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpatialMapProps) {
+  const { theme } = useTheme();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const baseTileRef = useRef<TileLayer | null>(null);
+  const refTileRef = useRef<TileLayer | null>(null);
   const markersRef = useRef<Layer[]>([]);
 
   const [hotspots, setHotspots] = useState<SpatialHotspot[]>(INITIAL_HOTSPOTS);
@@ -482,6 +486,22 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       }
     }
   }, [selectedCity, activeHotspot.id]);
+
+  // Seamlessly switch tile layers when theme changes (Light vs Dark)
+  useEffect(() => {
+    if (baseTileRef.current && refTileRef.current) {
+      const isLightMode = theme === "light";
+      const baseTileUrl = isLightMode
+        ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+      const refTileUrl = isLightMode
+        ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+        : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+
+      baseTileRef.current.setUrl(baseTileUrl);
+      refTileRef.current.setUrl(refTileUrl);
+    }
+  }, [theme]);
 
   // Render glowing markers on map
   const renderMarkers = useCallback((L: typeof import("leaflet"), map: LeafletMap, list: SpatialHotspot[]) => {
@@ -545,10 +565,14 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
       const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
 
-      // Leaflet Popup with provenance
+      // Leaflet Tooltip with provenance
       marker.bindTooltip(
         `<strong>${spot.name}</strong> (${spot.country})<br/>AQI: <span style="color:${cat.color};font-weight:bold">${spot.aqi}</span> · ${spot.status}`,
-        { direction: "top", offset: [0, -10], className: "bg-neutral-900 text-white rounded-lg p-2 border border-neutral-700" }
+        {
+          direction: "top",
+          offset: [0, -10],
+          className: "theme-adaptive-tooltip font-mono text-xs",
+        }
       );
 
       marker.on("click", () => {
@@ -561,7 +585,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     });
   }, [onSelectCity]);
 
-  // Update markers when hotspots or mapInstance changes
+  // Update markers when hotspots change
   useEffect(() => {
     if (mapInstanceRef.current) {
       import("leaflet").then((L) => {
@@ -614,17 +638,28 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         attributionControl: false,
       });
 
-      // 100% Free, High-Performance Dark Cartography (Esri World Dark Gray Canvas: No API Key, No Watermark)
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+      const isLightMode = theme === "light";
+      const baseTileUrl = isLightMode
+        ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+      const refTileUrl = isLightMode
+        ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+        : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+
+      // 100% Free, High-Performance Cartography (Esri Canvas: No API Key, No Watermark)
+      const baseTile = L.tileLayer(baseTileUrl, {
         maxZoom: 16,
         attribution: "Esri, HERE, Garmin, OpenStreetMap",
       }).addTo(map);
 
       // Clean Sharp Country & City Reference Labels
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+      const refTile = L.tileLayer(refTileUrl, {
         maxZoom: 16,
         pane: "shadowPane",
       }).addTo(map);
+
+      baseTileRef.current = baseTile;
+      refTileRef.current = refTile;
 
       // Custom zoom control in bottom right
       L.control.zoom({ position: "bottomright" }).addTo(map);
@@ -652,6 +687,21 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Dynamically swap map tiles when user toggles light/dark theme
+  useEffect(() => {
+    if (!baseTileRef.current || !refTileRef.current) return;
+    const isLightMode = theme === "light";
+    const baseTileUrl = isLightMode
+      ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+      : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+    const refTileUrl = isLightMode
+      ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+      : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+
+    baseTileRef.current.setUrl(baseTileUrl);
+    refTileRef.current.setUrl(refTileUrl);
+  }, [theme]);
 
   const handleContinentClick = (region: string) => {
     setActiveContinent(region);
@@ -703,19 +753,19 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <form
           onSubmit={handleSearchSubmit}
-          className="flex items-center bg-neutral-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-neutral-800 shadow-md w-full max-w-md transition-all focus-within:ring-2 focus-within:ring-emerald-500"
+          className="flex items-center bg-[var(--dash-surface)] px-4 py-2.5 rounded-xl border border-[var(--dash-rule)] shadow-sm w-full max-w-md transition-all focus-within:border-[var(--dash-accent)]"
         >
-          <Search size={16} className="text-neutral-400 mr-2.5 flex-none" />
+          <Search size={16} className="text-[var(--dash-muted)] mr-2.5 flex-none" />
           <input
             type="text"
             placeholder="Search worldwide city (e.g. New York, London, Tokyo, Delhi, Cairo)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-xs sm:text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+            className="w-full bg-transparent text-xs sm:text-sm text-[var(--dash-ink)] outline-none placeholder:text-[var(--dash-faint)]"
           />
           <button
             type="submit"
-            className="ml-2 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+            className="ml-2 px-3 py-1 rounded-lg bg-[var(--dash-accent)] hover:opacity-90 text-white text-xs font-semibold transition-opacity"
           >
             GO
           </button>
@@ -723,8 +773,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
         {/* Global Continent Navigator Pills */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] font-mono text-neutral-400 mr-1 hidden sm:inline flex items-center gap-1">
-            <Globe size={13} className="text-emerald-400" /> REGION:
+          <span className="text-[11px] font-mono text-[var(--dash-muted)] mr-1 hidden sm:inline-flex items-center gap-1 font-bold">
+            <Globe size={13} className="text-[var(--dash-accent)]" /> REGION:
           </span>
           {["Global", "Asia", "Europe", "Americas", "Africa", "Oceania"].map((region) => (
             <button
@@ -733,8 +783,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               onClick={() => handleContinentClick(region)}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
                 activeContinent === region
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm"
-                  : "bg-neutral-900/80 hover:bg-neutral-800 text-neutral-400 border border-neutral-800"
+                  ? "bg-[var(--dash-accent)] text-white shadow-sm"
+                  : "bg-[var(--dash-surface)] hover:bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]"
               }`}
             >
               {region}
@@ -743,10 +793,10 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         </div>
 
         <div className="flex items-center gap-2 self-start lg:self-center">
-          <span className="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900/90 border border-neutral-800 text-xs font-mono text-neutral-300">
+          <span className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--dash-surface)] border border-[var(--dash-rule)] text-xs font-mono text-[var(--dash-muted)] shadow-sm">
             <span
               className={`w-2 h-2 rounded-full ${
-                liveUpdating ? "bg-amber-400 animate-spin" : "bg-emerald-400 animate-pulse"
+                liveUpdating ? "bg-amber-400 animate-spin" : "bg-emerald-500 animate-pulse"
               }`}
             />
             {liveUpdating ? "Ingesting Feeds..." : "OpenAQ · WAQI · CAMS Live"}
@@ -758,7 +808,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                 navigator.share({ title: "Vayu Index", url: window.location.href });
               }
             }}
-            className="p-2 rounded-xl bg-neutral-900/90 border border-neutral-800 text-neutral-300 hover:text-emerald-400 transition-colors"
+            className="p-2 rounded-xl bg-[var(--dash-surface)] border border-[var(--dash-rule)] text-[var(--dash-muted)] hover:text-[var(--dash-accent)] transition-colors shadow-sm"
             title="Share"
           >
             <Share2 size={16} />
@@ -767,23 +817,23 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 1. Dedicated Leaflet Container (Clean Bounds & Esri Dark Cartography) */}
+      {/* 1. Dedicated Leaflet Container (Clean Bounds & Theme-Adaptive Cartography) */}
       {/* ------------------------------------------------------------------ */}
-      <div className="relative w-full h-[650px] rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950">
+      <div className="relative w-full h-[650px] rounded-2xl overflow-hidden border border-[var(--dash-rule)] shadow-xl bg-[var(--dash-surface-soft)]">
         {/* Full Spatial Map Canvas */}
         <div ref={mapContainerRef} className="absolute inset-0 z-0 w-full h-full" />
 
         {/* ------------------------------------------------------------------ */}
-        {/* Left Floating Drawer: Absolute Pinning with Dark Theme */}
+        {/* Left Floating Drawer: Absolute Pinning with Theme Adaptive Card */}
         {/* ------------------------------------------------------------------ */}
-        <div className="absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-neutral-900/90 border border-neutral-800 text-white rounded-xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto">
+        <div className="absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
+          <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-2.5">
             <div>
-              <h2 className="text-xl font-extrabold text-white tracking-tight">
+              <h2 className="text-xl font-extrabold text-[var(--dash-ink)] tracking-tight">
                 {activeHotspot.name}
               </h2>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400">
+              <span className="text-[10px] font-mono tracking-wider uppercase text-[var(--dash-muted)] font-semibold">
                 {activeHotspot.state ? `${activeHotspot.state}, ` : ""}{activeHotspot.country}
               </span>
             </div>
@@ -791,21 +841,21 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               type="button"
               onClick={() => setIsFavorite(!isFavorite)}
               aria-label="Bookmark location"
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-amber-400 transition-colors"
+              className="p-1.5 rounded-lg text-[var(--dash-muted)] hover:text-amber-500 transition-colors"
             >
-              <Star size={18} className={isFavorite ? "fill-amber-400 text-amber-400" : ""} />
+              <Star size={18} className={isFavorite ? "fill-amber-400 text-amber-500" : ""} />
             </button>
           </div>
 
           {/* Big AQI Banner */}
           <div
-            className="p-4 rounded-xl border border-neutral-800 relative overflow-hidden flex flex-col justify-between"
+            className="p-4 rounded-xl border border-[var(--dash-rule)] relative overflow-hidden flex flex-col justify-between"
             style={{
-              background: `linear-gradient(135deg, ${aqiInfo.bg}, rgba(23, 23, 23, 0.7))`,
+              background: `linear-gradient(135deg, ${aqiInfo.bg}, transparent)`,
             }}
           >
             <div className="relative z-10">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-neutral-400">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)]">
                 US AQI · {activeHotspot.country}
               </span>
               <div className="flex items-baseline gap-2 mt-0.5">
@@ -819,40 +869,40 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             </div>
 
             <div className="relative z-10 flex flex-col gap-0.5 mt-2">
-              <span className="text-[10px] font-mono text-neutral-400">
-                Provenance: <strong className="text-emerald-400">{activeHotspot.provenance}</strong>
+              <span className="text-[10px] font-mono text-[var(--dash-muted)]">
+                Provenance: <strong className="text-[var(--dash-accent)]">{activeHotspot.provenance}</strong>
               </span>
-              <span className="text-[9px] font-mono text-neutral-500">
+              <span className="text-[9px] font-mono text-[var(--dash-faint)]">
                 Updated: {activeHotspot.updatedAt}
               </span>
             </div>
           </div>
 
           {/* Health Advisory Box */}
-          <div className="p-3 rounded-lg bg-neutral-950/70 border border-neutral-800 text-neutral-300">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-1">
+          <div className="p-3 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[var(--dash-ink)]">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--dash-accent)] block mb-1">
               ATMOSPHERIC HEALTH ADVISORY
             </span>
-            <p className="text-xs leading-relaxed text-neutral-300">
+            <p className="text-xs leading-relaxed text-[var(--dash-muted)]">
               {activeHotspot.advisory}
             </p>
           </div>
 
           {/* Individual Pollutants Progress Bars */}
           <div className="space-y-1.5 pt-1">
-            <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 border-b border-neutral-800 pb-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-[var(--dash-muted)] border-b border-[var(--dash-rule)] pb-1">
               <span>Pollutant</span>
               <span>Concentration</span>
             </div>
 
             {/* PM2.5 */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-rose-500" /> PM2.5
               </span>
-              <span className="font-mono text-neutral-300">{activeHotspot.pollutants.pm2_5} µg/m³</span>
+              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.pm2_5} µg/m³</span>
             </div>
-            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-[var(--dash-surface-soft)] h-1.5 rounded-full overflow-hidden border border-[var(--dash-rule)]">
               <div
                 className="bg-rose-500 h-full rounded-full"
                 style={{ width: `${Math.min(100, (activeHotspot.pollutants.pm2_5 / 150) * 100)}%` }}
@@ -861,12 +911,12 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
             {/* PM10 */}
             <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500" /> PM10
               </span>
-              <span className="font-mono text-neutral-300">{activeHotspot.pollutants.pm10} µg/m³</span>
+              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.pm10} µg/m³</span>
             </div>
-            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-[var(--dash-surface-soft)] h-1.5 rounded-full overflow-hidden border border-[var(--dash-rule)]">
               <div
                 className="bg-amber-500 h-full rounded-full"
                 style={{ width: `${Math.min(100, (activeHotspot.pollutants.pm10 / 250) * 100)}%` }}
@@ -875,34 +925,34 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
             {/* Ozone */}
             <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" /> Ozone (O₃)
               </span>
-              <span className="font-mono text-neutral-300">{activeHotspot.pollutants.ozone} µg/m³</span>
+              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.ozone} µg/m³</span>
             </div>
 
             {/* NO2 */}
             <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-sky-500" /> Nitrogen Dioxide (NO₂)
               </span>
-              <span className="font-mono text-neutral-300">{activeHotspot.pollutants.no2} µg/m³</span>
+              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.no2} µg/m³</span>
             </div>
 
             {/* SO2 */}
             <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-teal-500" /> Sulphur Dioxide (SO₂)
               </span>
-              <span className="font-mono text-neutral-300">{activeHotspot.pollutants.so2} µg/m³</span>
+              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.so2} µg/m³</span>
             </div>
 
             {/* CO */}
             <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-purple-500" /> Carbon Monoxide (CO)
               </span>
-              <span className="font-mono text-neutral-300">{activeHotspot.pollutants.co} µg/m³</span>
+              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.co} µg/m³</span>
             </div>
           </div>
         </div>
@@ -910,8 +960,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         {/* ------------------------------------------------------------------ */}
         {/* Right Floating Map Layers Panel */}
         {/* ------------------------------------------------------------------ */}
-        <div className="absolute top-4 right-4 z-20 backdrop-blur-md bg-neutral-900/90 border border-neutral-800 rounded-xl p-4 text-white shadow-2xl w-48 space-y-3 pointer-events-auto">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block border-b border-neutral-800 pb-1.5">
+        <div className="absolute top-4 right-4 z-20 backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] rounded-2xl p-4 text-[var(--dash-ink)] shadow-2xl w-48 space-y-3 pointer-events-auto">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)] block border-b border-[var(--dash-rule)] pb-1.5">
             MAP LAYERS
           </span>
 
@@ -928,7 +978,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               <label
                 key={layer.id}
                 className={`flex items-center gap-2.5 text-xs cursor-pointer p-1.5 rounded-lg transition-colors ${
-                  activeLayer === layer.id ? "bg-emerald-500/15 text-emerald-300 font-semibold" : "text-neutral-300 hover:bg-neutral-800"
+                  activeLayer === layer.id ? "bg-[var(--dash-surface-soft)] text-[var(--dash-accent)] font-semibold" : "text-[var(--dash-muted)] hover:bg-[var(--dash-surface-soft)]"
                 }`}
               >
                 <input
@@ -937,33 +987,33 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                   value={layer.id}
                   checked={activeLayer === layer.id}
                   onChange={() => setActiveLayer(layer.id as MapLayerKey)}
-                  className="accent-emerald-500"
+                  className="accent-[var(--dash-accent)]"
                 />
                 <span>{layer.label}</span>
               </label>
             ))}
           </div>
 
-          <div className="pt-2 border-t border-neutral-800 space-y-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block">
+          <div className="pt-2 border-t border-[var(--dash-rule)] space-y-2">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)] block">
               OVERLAYS
             </span>
-            <div className="flex items-center justify-between text-xs text-neutral-300">
+            <div className="flex items-center justify-between text-xs text-[var(--dash-muted)]">
               <span>Weather</span>
               <input
                 type="checkbox"
                 checked={weatherOverlay}
                 onChange={(e) => setWeatherOverlay(e.target.checked)}
-                className="accent-emerald-500 cursor-pointer"
+                className="accent-[var(--dash-accent)] cursor-pointer"
               />
             </div>
-            <div className="flex items-center justify-between text-xs text-neutral-300">
+            <div className="flex items-center justify-between text-xs text-[var(--dash-muted)]">
               <span>Wind</span>
               <input
                 type="checkbox"
                 checked={windOverlay}
                 onChange={(e) => setWindOverlay(e.target.checked)}
-                className="accent-emerald-500 cursor-pointer"
+                className="accent-[var(--dash-accent)] cursor-pointer"
               />
             </div>
           </div>
@@ -973,14 +1023,14 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       {/* ------------------------------------------------------------------ */}
       {/* AQI Scale Bar: Cleanly Placed Directly Underneath Map Canvas */}
       {/* ------------------------------------------------------------------ */}
-      <div className="w-full p-4 sm:p-5 rounded-2xl border border-neutral-800 bg-neutral-900/90 backdrop-blur-md shadow-md text-white">
+      <div className="w-full p-4 sm:p-5 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] backdrop-blur-md shadow-sm text-[var(--dash-ink)]">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-neutral-300">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[var(--dash-ink)]">
             <span>AQI SCALE (US)</span>
-            <Info size={13} className="text-neutral-400" />
+            <Info size={13} className="text-[var(--dash-muted)]" />
           </div>
-          <span className="text-[11px] font-mono text-neutral-400">
-            Selected City: <strong className="text-white">{activeHotspot.name}</strong> ({activeHotspot.country}) · <span style={{ color: aqiInfo.color }}>{activeHotspot.status}</span>
+          <span className="text-[11px] font-mono text-[var(--dash-muted)]">
+            Selected City: <strong className="text-[var(--dash-ink)]">{activeHotspot.name}</strong> ({activeHotspot.country}) · <span style={{ color: aqiInfo.color }}>{activeHotspot.status}</span>
           </span>
         </div>
 
@@ -1002,18 +1052,18 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               key={tier.range}
               className={`p-3 rounded-xl border text-center transition-all ${
                 tier.active
-                  ? "border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-emerald-500/15 scale-102 z-10"
-                  : "border-neutral-800 bg-neutral-950/60 opacity-80"
+                  ? "border-[var(--dash-accent)] shadow-md bg-[var(--dash-surface-soft)] scale-102 z-10"
+                  : "border-[var(--dash-rule)] bg-[var(--dash-surface)] opacity-85"
               }`}
             >
               <span
                 className="w-full h-1.5 rounded-full inline-block mb-1.5"
                 style={{ backgroundColor: tier.color }}
               />
-              <span className="text-xs font-mono font-bold text-white block">
+              <span className="text-xs font-mono font-bold text-[var(--dash-ink)] block">
                 {tier.range}
               </span>
-              <span className="text-[11px] text-neutral-400 font-medium leading-tight line-clamp-1 mt-0.5">
+              <span className="text-[11px] text-[var(--dash-muted)] font-medium leading-tight line-clamp-1 mt-0.5">
                 {tier.label}
               </span>
             </div>

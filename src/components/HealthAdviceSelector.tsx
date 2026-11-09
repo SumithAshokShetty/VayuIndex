@@ -174,18 +174,18 @@ export function HealthAdviceSelector({ aqi = 145 }: { aqi?: number }) {
   const severity = activeCondition.riskSeverity(aqi);
 
   return (
-    <section className="health-advice-section w-full rounded-2xl border border-neutral-800 bg-neutral-900/90 backdrop-blur-md p-6 sm:p-8 shadow-xl text-white">
-      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-neutral-800 pb-4 mb-6">
+    <section className="health-advice-section w-full rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] p-6 sm:p-8 shadow-sm text-[var(--dash-ink)] transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-[var(--dash-rule)] pb-4 mb-6">
         <div>
-          <span className="text-xs font-mono font-bold tracking-widest text-emerald-400 uppercase flex items-center gap-2">
-            <Activity size={14} className="text-emerald-400" />
+          <span className="text-xs font-mono font-bold tracking-widest text-[var(--dash-accent)] uppercase flex items-center gap-2">
+            <Activity size={14} className="text-[var(--dash-accent)]" />
             DISEASE &amp; HEALTH CONDITION CLINICAL ADVICE
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-1">
-            Prevent Health Problems: <em className="text-emerald-400 not-italic">Understand Your Risk</em>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+            Prevent Health Problems: <em className="text-[var(--dash-accent)] not-italic">Understand Your Risk</em>
           </h2>
         </div>
-        <span className="text-xs font-mono px-3 py-1 rounded-full bg-neutral-800 text-neutral-300 border border-neutral-700">
+        <span className="text-xs font-mono px-3 py-1 rounded-full bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]">
           Targeted Clinical Protocols
         </span>
       </div>
@@ -199,10 +199,10 @@ export function HealthAdviceSelector({ aqi = 145 }: { aqi?: number }) {
               key={cond.key}
               type="button"
               onClick={() => setSelectedKey(cond.key)}
-              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all border ${
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all border ${
                 isSelected
-                  ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
-                  : "bg-neutral-950/70 text-neutral-400 hover:text-white border-neutral-800"
+                  ? "bg-[var(--dash-accent)] text-white border-[var(--dash-accent)] shadow-sm"
+                  : "bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] hover:text-[var(--dash-ink)] border-[var(--dash-rule)]"
               }`}
             >
               {cond.label}
@@ -212,22 +212,22 @@ export function HealthAdviceSelector({ aqi = 145 }: { aqi?: number }) {
       </div>
 
       {/* Severity Banner */}
-      <div className="mt-6 p-4 sm:p-5 rounded-xl border border-neutral-800 bg-neutral-950/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+      <div className="mt-6 p-4 sm:p-5 rounded-xl border border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
           <span
             className="w-3.5 h-3.5 rounded-full flex-none animate-pulse"
             style={{ backgroundColor: severity.color }}
           />
           <div>
-            <span className="text-xs font-mono uppercase tracking-wider font-bold text-neutral-400">
+            <span className="text-xs font-mono uppercase tracking-wider font-bold text-[var(--dash-muted)]">
               CONDITION RISK STATUS · AQI {Math.round(aqi)}
             </span>
-            <h3 className="text-base sm:text-lg font-bold text-white">
+            <h3 className="text-base sm:text-lg font-bold text-[var(--dash-ink)]">
               {severity.label}
             </h3>
           </div>
         </div>
-        <span className="text-xs font-mono px-3 py-1.5 rounded-md font-bold self-start sm:self-auto bg-neutral-900 border border-neutral-800 text-neutral-200">
+        <span className="text-xs font-mono px-3 py-1.5 rounded-md font-bold self-start sm:self-auto bg-[var(--dash-surface)] border border-[var(--dash-rule)] text-[var(--dash-ink)]">
           Severity: {severity.level.toUpperCase()}
         </span>
       </div>
@@ -235,18 +235,18 @@ export function HealthAdviceSelector({ aqi = 145 }: { aqi?: number }) {
       {/* Do's and Don'ts Two-Column Panel */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         {/* DO'S Column */}
-        <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between shadow-md">
+        <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <CheckCircle2 size={20} className="text-emerald-400" />
-              <h4 className="text-base font-bold text-emerald-300 font-mono tracking-wide">
+              <CheckCircle2 size={20} className="text-emerald-600 dark:text-emerald-400" />
+              <h4 className="text-base font-bold text-emerald-800 dark:text-emerald-300 font-mono tracking-wide">
                 RECOMMENDED DO&apos;S
               </h4>
             </div>
             <ul className="space-y-3">
               {activeCondition.dos.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-neutral-200 leading-relaxed">
-                  <span className="text-emerald-400 font-bold mt-0.5">•</span>
+                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--dash-ink)] leading-relaxed">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">•</span>
                   <span>{item}</span>
                 </li>
               ))}
@@ -255,18 +255,18 @@ export function HealthAdviceSelector({ aqi = 145 }: { aqi?: number }) {
         </div>
 
         {/* DON'TS Column */}
-        <div className="p-6 rounded-2xl border border-rose-500/30 bg-rose-950/20 flex flex-col justify-between shadow-md">
+        <div className="p-6 rounded-2xl border border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/20 flex flex-col justify-between shadow-xs">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <XCircle size={20} className="text-rose-400" />
-              <h4 className="text-base font-bold text-rose-300 font-mono tracking-wide">
+              <XCircle size={20} className="text-rose-600 dark:text-rose-400" />
+              <h4 className="text-base font-bold text-rose-800 dark:text-rose-300 font-mono tracking-wide">
                 STRICT DON&apos;TS &amp; AVOIDANCES
               </h4>
             </div>
             <ul className="space-y-3">
               {activeCondition.donts.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-neutral-200 leading-relaxed">
-                  <span className="text-rose-400 font-bold mt-0.5">•</span>
+                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--dash-ink)] leading-relaxed">
+                  <span className="text-rose-600 dark:text-rose-400 font-bold mt-0.5">•</span>
                   <span>{item}</span>
                 </li>
               ))}
@@ -276,8 +276,8 @@ export function HealthAdviceSelector({ aqi = 145 }: { aqi?: number }) {
       </div>
 
       {/* Clinical Mechanism Footnote */}
-      <div className="mt-6 p-4 rounded-xl border border-neutral-800 bg-neutral-950/70 text-xs text-neutral-400 leading-relaxed">
-        <strong>Pathophysiology Note:</strong> {activeCondition.clinicalNote}
+      <div className="mt-6 p-4 rounded-xl border border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] text-xs text-[var(--dash-muted)] leading-relaxed">
+        <strong className="text-[var(--dash-ink)]">Pathophysiology Note:</strong> {activeCondition.clinicalNote}
       </div>
     </section>
   );
