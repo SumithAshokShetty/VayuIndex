@@ -355,16 +355,24 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
   // Filter stations with valid coordinates and active pollutants
   const candidates = allStations
     .filter((s) => s.latitude !== 0 && s.longitude !== 0 && Object.keys(s.pollutants).length > 0)
-    .map((s) => ({
-      station: s,
-      distanceKm: haversineKm(latitude, longitude, s.latitude, s.longitude),
-    }))
+    .map((s) => {
+      const hasPM = s.pollutants["PM25"] !== undefined || s.pollutants["PM10"] !== undefined;
+      return {
+        station: s,
+        distanceKm: haversineKm(latitude, longitude, s.latitude, s.longitude),
+        hasPM,
+      };
+    })
     .filter((item) => item.distanceKm <= 75) // within 75km radius of city/coordinates
-    .sort((a, b) => a.distanceKm - b.distanceKm);
+    .sort((a, b) => {
+      // Prioritize stations that actually monitor PM2.5 or PM10!
+      if (a.hasPM !== b.hasPM) return a.hasPM ? -1 : 1;
+      return a.distanceKm - b.distanceKm;
+    });
 
   if (!candidates.length) return null;
 
-  const { station, distanceKm } = candidates[0];
+  const { station, distanceKm, hasPM } = candidates[0];
   const pol = station.pollutants;
 
   const current: Record<(typeof POLLUTANTS)[number], number | null> = {
@@ -375,6 +383,23 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
     carbon_monoxide: pol["CO"] ?? null,
     ozone: pol["OZONE"] ?? pol["O3"] ?? null,
   };
+
+  // Atmospheric Model Fill: If any criteria pollutant is missing from the physical station, fill from Copernicus CAMS reanalysis
+  let filledFromModel = false;
+  try {
+    const modelUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi`;
+    const modelRes = await fetch(modelUrl, { signal: AbortSignal.timeout(3000) });
+    if (modelRes.ok) {
+      const modelData = await modelRes.json();
+      const mCur = modelData.current || {};
+      if (current.pm2_5 === null && typeof mCur.pm2_5 === "number") { current.pm2_5 = mCur.pm2_5; filledFromModel = true; }
+      if (current.pm10 === null && typeof mCur.pm10 === "number") { current.pm10 = mCur.pm10; filledFromModel = true; }
+      if (current.nitrogen_dioxide === null && typeof mCur.nitrogen_dioxide === "number") { current.nitrogen_dioxide = mCur.nitrogen_dioxide; filledFromModel = true; }
+      if (current.sulphur_dioxide === null && typeof mCur.sulphur_dioxide === "number") { current.sulphur_dioxide = mCur.sulphur_dioxide; filledFromModel = true; }
+      if (current.carbon_monoxide === null && typeof mCur.carbon_monoxide === "number") { current.carbon_monoxide = mCur.carbon_monoxide; filledFromModel = true; }
+      if (current.ozone === null && typeof mCur.ozone === "number") { current.ozone = mCur.ozone; filledFromModel = true; }
+    }
+  } catch {}
 
   const units: Record<string, string> = {
     pm2_5: "µg/m³",
@@ -408,6 +433,11 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
 
   const aqiResult = calculateCompositeAqi(concentrations, "cpcb");
 
+  // If even after model fill, no valid AQI exists, reject candidate so next fallback tier handles it
+  if (aqiResult.aqi === null || (!hasPM && aqiResult.aqi === 0 && !filledFromModel)) {
+    return null;
+  }
+
   const currentData: AirCurrent = {
     ...current,
     time: station.lastUpdate,
@@ -420,6 +450,8 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
     us_aqi_carbon_monoxide: aqiResult.subIndices.co?.value ?? null,
   };
 
+  const modelNote = filledFromModel ? " (augmented with CAMS reanalysis for unmonitored gases)" : "";
+
   return {
     provider: "cpcb",
     provenance: "station-observation",
@@ -429,7 +461,7 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
     stationUrl: "https://cpcb.nic.in/",
     stationLatitude: station.latitude,
     stationLongitude: station.longitude,
-    fallbackNote: `CPCB Official Monitoring Station · ${distanceKm.toFixed(1)} km away. Observed: ${station.lastUpdate}.`,
+    fallbackNote: `CPCB Official Monitoring Station · ${distanceKm.toFixed(1)} km away. Observed: ${station.lastUpdate}${modelNote}.`,
     attribution: [
       { name: "Central Pollution Control Board (CPCB)", url: "https://cpcb.nic.in/" },
       { name: "National Data & Analytics Platform (data.gov.in)", url: "https://data.gov.in/" },

@@ -237,7 +237,13 @@ export function calculateCompositeAqi(
     (dominant, pollutant) => dominant === null || subIndices[pollutant]!.value > subIndices[dominant]!.value ? pollutant : dominant,
     null,
   );
-  const aqi = dominantPollutant ? subIndices[dominantPollutant]!.value : null;
+  // A valid AQI requires particulate matter or a non-zero sub-index
+  const hasParticulate = subIndices.pm2_5 !== undefined || subIndices.pm10 !== undefined;
+  const aqi = dominantPollutant && (hasParticulate || subIndices[dominantPollutant]!.value > 0)
+    ? subIndices[dominantPollutant]!.value
+    : hasParticulate
+      ? (subIndices.pm2_5?.value ?? subIndices.pm10?.value ?? 0)
+      : null;
   const band = aqi === null ? null : categoryFor(aqi, standard);
   return { standard, aqi, category: band?.category ?? null, color: band?.color ?? null, dominantPollutant, subIndices };
 }

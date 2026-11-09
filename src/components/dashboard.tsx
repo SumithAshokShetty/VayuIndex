@@ -84,6 +84,7 @@ export function Dashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [mapLayer, setMapLayer] = useState<MapLayer>("aqi");
+  const [heatmapEnabled, setHeatmapEnabled] = useState(true);
   const [windEnabled, setWindEnabled] = useState(false);
   const [temperatureEnabled, setTemperatureEnabled] = useState(false);
   const [weather, setWeather] = useState<{ temperature_2m?: number; wind_speed_10m?: number; wind_direction_10m?: number; time?: string } | null>(null);
@@ -278,9 +279,9 @@ export function Dashboard() {
               <div className="spatial-canvas" id="globe">
                 <div className="spatial-grid"/><div className="spatial-orbit spatial-orbit-one"/><div className="spatial-orbit spatial-orbit-two"/>
                 <div className="spatial-location-tag"><i/>{location.name}<small>{locationCoordinates(location)}</small></div>
-                <MapLayersPanel layer={mapLayer} onLayerChange={setMapLayer} wind={windEnabled} onWindChange={setWindEnabled} temperature={temperatureEnabled} onTemperatureChange={setTemperatureEnabled}/>
+                <MapLayersPanel layer={mapLayer} onLayerChange={setMapLayer} heatmap={heatmapEnabled} onHeatmapChange={setHeatmapEnabled} wind={windEnabled} onWindChange={setWindEnabled} temperature={temperatureEnabled} onTemperatureChange={setTemperatureEnabled}/>
                 <motion.div className="spatial-globe-wrap" key="globe-engine" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7, ease: "easeOut" }}>
-                  <GlobeEngine location={location} air={air} layer={mapLayer} weather={weather} wind={windEnabled} temperature={temperatureEnabled} zoom={zoom} onLocationSelect={selectLocation}/>
+                  <GlobeEngine location={location} air={air} layer={mapLayer} weather={weather} heatmap={heatmapEnabled} wind={windEnabled} temperature={temperatureEnabled} zoom={zoom} onLocationSelect={selectLocation}/>
                 </motion.div>
                 <div className="spatial-aqi-chip"><span>{mapLayer === "aqi" ? air?.sourceLabel ?? "WAITING FOR SOURCE" : `${mapLayer.toUpperCase().replace("_", "₂.")} · ${activeLayerUnit}`}</span><strong>{typeof activeLayerValue === "number" ? (mapLayer === "aqi" ? Math.round(activeLayerValue) : activeLayerValue.toFixed(1)) : "—"}</strong></div>
                 <div className="spatial-controls"><button type="button" aria-label="Zoom in" onClick={() => setZoom((value) => Math.min(1.18, value + .05))}><Plus size={14}/></button><button type="button" aria-label="Zoom out" onClick={() => setZoom((value) => Math.max(.88, value - .05))}><Minus size={14}/></button></div>
