@@ -54,7 +54,7 @@ export default function AboutPage() {
 
       <section className="about-next"><div><span className="eyebrow"><span className="eyebrow-line"/> BUILDING IN PARTS</span><h2>Next: make the risk<br/><em>personal.</em></h2></div><a className="story-primary" href="/risk">See the next part <ArrowUpRight size={15}/></a></section>
       <footer className="story-footer"><span>VAYU INDEX <i>·</i> REAL-TIME GLOBAL AIR INTELLIGENCE &amp; PERSONAL RISK ENGINE</span><a href="/dashboard">OPEN DASHBOARD <ArrowUpRight size={12}/></a></footer>
-      <a className="about-back" href="/"><ArrowLeft size={13}/> Back to overview</a>
+      <a className="about-back" href="/"><ArrowLeft size={13}/> Back to home</a>
     </main>
   );
 }

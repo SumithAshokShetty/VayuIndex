@@ -86,16 +86,6 @@ export function Navbar() {
               <a
                 className="relative py-2 text-[14px] sm:text-[15px] font-medium no-underline transition-colors"
                 style={{
-                  color: isDark ? "#a4b6ad" : "#5a655c",
-                  fontWeight: 500,
-                }}
-                href="/overview"
-              >
-                Overview
-              </a>
-              <a
-                className="relative py-2 text-[14px] sm:text-[15px] font-medium no-underline transition-colors"
-                style={{
                   color: currentPath === "/about"
                     ? (isDark ? "#83dfbd" : "#0f382c")
                     : (isDark ? "#a4b6ad" : "#5a655c"),
