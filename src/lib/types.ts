@@ -12,7 +12,7 @@ export type AirCurrent = Record<string, number | string | null> & {
 };
 
 export type AirQualityResponse = {
-  provider: "openaq" | "waqi" | "open-meteo";
+  provider: "cpcb" | "openaq" | "waqi" | "open-meteo";
   provenance: "station-observation" | "modeled-estimate";
   sourceLabel: string;
   sourceUrl: string;

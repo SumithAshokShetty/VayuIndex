@@ -818,7 +818,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
         <div className="flex items-center gap-2 self-start md:self-end">
           <span className="provenance-pill inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-mono font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm">
             <RadioTower size={14} className="text-[var(--dash-accent)]" />
-            OPENAQ V3 & WAQI GROUND PROVENANCE
+            CPCB · OPENAQ V3 · WAQI GROUND PROVENANCE
           </span>
         </div>
       </header>

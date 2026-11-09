@@ -49,9 +49,10 @@ type TelemetryCardProps = {
 export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, error }: TelemetryCardProps) {
   const counterRef = useRef<HTMLSpanElement | null>(null);
   const band = aqi === null ? null : getBand(aqi);
-  const source = air?.provider === "openaq" ? "OPENAQ · GROUND STATION"
-    : air?.provider === "waqi" ? "WAQI · STATION INDEX"
-      : air?.provider === "open-meteo" ? "OPEN-METEO · CAMS MODEL" : "AIR DATA SOURCE";
+  const source = air?.provider === "cpcb" ? "CPCB OFFICIAL TELEMETRY"
+    : air?.provider === "openaq" ? "OPENAQ · GROUND STATION"
+      : air?.provider === "waqi" ? "WAQI · STATION INDEX"
+        : air?.provider === "open-meteo" ? "OPEN-METEO · CAMS MODEL" : "AIR DATA SOURCE";
   const measurementTime = air?.current.time;
 
   useEffect(() => {
@@ -141,7 +142,7 @@ export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, 
         </div>
       </div>
 
-      <div className="telemetry-footnote"><Wind size={12}/><span>{air?.provider === "openaq" ? "Individual station measurements; no composite AQI is inferred." : "Pollutant sub-indices are shown when supplied by the source."}</span></div>
+      <div className="telemetry-footnote"><Wind size={12}/><span>{air?.provider === "cpcb" ? "Central Pollution Control Board official real-time physical telemetry." : air?.provider === "openaq" ? "Individual station measurements; no composite AQI is inferred." : "Pollutant sub-indices are shown when supplied by the source."}</span></div>
     </article>
   );
 }

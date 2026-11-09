@@ -53,7 +53,7 @@ export default function OverviewPage() {
             <div className="flex flex-wrap items-center gap-2 self-start md:self-end">
               <span className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-mono font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm">
                 <RadioTower size={14} className="text-[var(--dash-accent)]" />
-                OPENAQ V3 · WAQI · CAMS
+                CPCB · OPENAQ V3 · WAQI · CAMS
               </span>
               <a
                 href="/dashboard"
@@ -144,44 +144,6 @@ export default function OverviewPage() {
               }}
             />
           </section>
-
-          {/* ------------------------------------------------------------------ */}
-          {/* Bottom Cross-Navigation Links */}
-          {/* ------------------------------------------------------------------ */}
-          <footer className="pt-8 border-t border-[var(--dash-rule)] grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <a
-              href="/dashboard"
-              className="p-5 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] hover:bg-[var(--dash-surface-soft)] text-inherit no-underline transition-all flex flex-col justify-between shadow-sm"
-            >
-              <span className="text-xs font-mono text-[var(--dash-muted)] font-bold">01 GLOBAL VIEW</span>
-              <div className="mt-4 flex items-center justify-between">
-                <h3 className="text-base font-bold text-[var(--dash-ink)]">3D Planetary Atmosphere</h3>
-                <ArrowRight size={16} className="text-[var(--dash-accent)]" />
-              </div>
-            </a>
-
-            <a
-              href="/compare"
-              className="p-5 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] hover:bg-[var(--dash-surface-soft)] text-inherit no-underline transition-all flex flex-col justify-between shadow-sm"
-            >
-              <span className="text-xs font-mono text-[var(--dash-muted)] font-bold">02 LOCATION COMPARE</span>
-              <div className="mt-4 flex items-center justify-between">
-                <h3 className="text-base font-bold text-[var(--dash-ink)]">Multi-City Benchmark</h3>
-                <ArrowRight size={16} className="text-[var(--dash-accent)]" />
-              </div>
-            </a>
-
-            <a
-              href="/risk"
-              className="p-5 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] hover:bg-[var(--dash-surface-soft)] text-inherit no-underline transition-all flex flex-col justify-between shadow-sm"
-            >
-              <span className="text-xs font-mono text-[var(--dash-muted)] font-bold">03 PERSONAL RISK</span>
-              <div className="mt-4 flex items-center justify-between">
-                <h3 className="text-base font-bold text-[var(--dash-ink)]">Area Air Score &amp; Havens</h3>
-                <ArrowRight size={16} className="text-[var(--dash-accent)]" />
-              </div>
-            </a>
-          </footer>
         </main>
       </div>
     </div>

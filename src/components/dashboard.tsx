@@ -162,7 +162,7 @@ export function Dashboard() {
   const aqi = air?.current.aqi ?? null;
   const dominantPollutant = useMemo(() => getDominantPollutant(air), [air]);
   const guidance = getHealthGuidance(aqi);
-  const providerBadge = loading ? "CONNECTING" : error ? "DATA OFFLINE" : air?.provider === "openaq" ? "STATION DATA" : air?.provider === "waqi" ? "WAQI AQI" : air?.provider === "open-meteo" ? "MODEL ESTIMATE" : "AIR QUALITY DATA";
+  const providerBadge = loading ? "CONNECTING" : error ? "DATA OFFLINE" : air?.provider === "cpcb" ? "CPCB OFFICIAL TELEMETRY" : air?.provider === "openaq" ? "STATION DATA" : air?.provider === "waqi" ? "WAQI AQI" : air?.provider === "open-meteo" ? "MODEL ESTIMATE" : "AIR QUALITY DATA";
   const timestamp = air?.current.time?.replace("T", " ").slice(0, 19) ?? "TIME NOT PROVIDED";
   const activeLayerValue = mapLayer === "aqi" ? aqi : air?.current[LAYER_FIELDS[mapLayer]];
   const activeLayerUnit = mapLayer === "aqi" ? "INDEX" : air?.current_units?.[LAYER_FIELDS[mapLayer]] ?? "SOURCE UNIT";

@@ -39,6 +39,38 @@ type OpenMeteoPayload = {
   current_units?: Record<string, string>;
 };
 
+type CpcbRecord = {
+  country?: string;
+  state?: string;
+  city?: string;
+  station?: string;
+  last_update?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  pollutant_id?: string;
+  min_value?: string | number;
+  max_value?: string | number;
+  avg_value?: string | number;
+  pollutant_avg?: string | number;
+};
+
+export type CpcbStationGroup = {
+  station: string;
+  city: string;
+  state: string;
+  latitude: number;
+  longitude: number;
+  lastUpdate: string;
+  pollutants: Record<string, number>;
+};
+
+let cpcbCache: { timestamp: number; stations: CpcbStationGroup[] } | null = null;
+const CPCB_CACHE_TTL_MS = 8 * 60 * 1000;
+
+export function isIndiaCoordinates(latitude: number, longitude: number): boolean {
+  return latitude >= 6.5 && latitude <= 37.5 && longitude >= 68.0 && longitude <= 97.5;
+}
+
 type CacheEntry = { expiresAt: number; value: AirQualityResponse };
 // Edge workers can be reused across requests, but this cache is instance-local
 // and best-effort. It is not a shared/distributed cache across deployments.
@@ -48,6 +80,7 @@ const inFlight = new Map<string, Promise<AirQualityResponse>>();
 /** Safe readiness flags; never returns credential values. */
 export function getProviderConfiguration() {
   return {
+    dataGovInConfigured: Boolean(process.env.DATA_GOV_IN_API_KEY),
     openAqConfigured: Boolean(process.env.OPENAQ_API_KEY),
     waqiConfigured: Boolean(process.env.WAQI_API_KEY || process.env.WAQI_API_TOKEN),
     groqConfigured: Boolean(process.env.GROQ_API_KEY),
@@ -267,12 +300,177 @@ async function fetchOpenMeteo({ latitude, longitude }: Coordinates): Promise<Air
   };
 }
 
+export async function fetchCPCBStations(apiKey: string): Promise<CpcbStationGroup[]> {
+  const now = Date.now();
+  if (cpcbCache && now - cpcbCache.timestamp < CPCB_CACHE_TTL_MS) {
+    return cpcbCache.stations;
+  }
+
+  const endpoint = `https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69?api-key=${encodeURIComponent(apiKey)}&format=json&limit=500`;
+  const res = await fetch(endpoint, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) throw new Error(`data.gov.in CPCB request returned ${res.status}`);
+  const payload = (await res.json()) as { records?: CpcbRecord[] };
+
+  const groupMap = new Map<string, CpcbStationGroup>();
+  for (const r of payload.records || []) {
+    const stationName = (r.station || "").trim();
+    if (!stationName) continue;
+    const lat = Number(r.latitude);
+    const lng = Number(r.longitude);
+    const key = stationName.toLowerCase();
+
+    if (!groupMap.has(key)) {
+      groupMap.set(key, {
+        station: stationName,
+        city: (r.city || "").trim(),
+        state: (r.state || "").trim(),
+        latitude: Number.isFinite(lat) ? lat : 0,
+        longitude: Number.isFinite(lng) ? lng : 0,
+        lastUpdate: r.last_update || new Date().toISOString(),
+        pollutants: {},
+      });
+    }
+
+    const group = groupMap.get(key)!;
+    const avgVal = Number(r.avg_value ?? r.pollutant_avg);
+    const rawPol = (r.pollutant_id || "").toUpperCase().replace(/[._\s-]/g, "");
+    if (!isNaN(avgVal) && rawPol) {
+      group.pollutants[rawPol] = avgVal;
+    }
+  }
+
+  const stations = Array.from(groupMap.values());
+  cpcbCache = { timestamp: now, stations };
+  return stations;
+}
+
+export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: string): Promise<AirQualityResponse | null> {
+  const allStations = await fetchCPCBStations(apiKey);
+  if (!allStations.length) return null;
+
+  // Filter stations with valid coordinates and active pollutants
+  const candidates = allStations
+    .filter((s) => s.latitude !== 0 && s.longitude !== 0 && Object.keys(s.pollutants).length > 0)
+    .map((s) => ({
+      station: s,
+      distanceKm: haversineKm(latitude, longitude, s.latitude, s.longitude),
+    }))
+    .filter((item) => item.distanceKm <= 75) // within 75km radius of city/coordinates
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+
+  if (!candidates.length) return null;
+
+  const { station, distanceKm } = candidates[0];
+  const pol = station.pollutants;
+
+  const current: Record<(typeof POLLUTANTS)[number], number | null> = {
+    pm2_5: pol["PM25"] ?? null,
+    pm10: pol["PM10"] ?? null,
+    nitrogen_dioxide: pol["NO2"] ?? null,
+    sulphur_dioxide: pol["SO2"] ?? null,
+    carbon_monoxide: pol["CO"] ?? null,
+    ozone: pol["OZONE"] ?? pol["O3"] ?? null,
+  };
+
+  const units: Record<string, string> = {
+    pm2_5: "µg/m³",
+    pm10: "µg/m³",
+    nitrogen_dioxide: "µg/m³",
+    sulphur_dioxide: "µg/m³",
+    carbon_monoxide: current.carbon_monoxide && current.carbon_monoxide > 25 ? "µg/m³" : "mg/m³",
+    ozone: "µg/m³",
+  };
+
+  const concentrations: Partial<Record<Pollutant, PollutantConcentration>> = {};
+  if (typeof current.pm2_5 === "number" && Number.isFinite(current.pm2_5)) {
+    concentrations.pm2_5 = { value: current.pm2_5, unit: "µg/m³" };
+  }
+  if (typeof current.pm10 === "number" && Number.isFinite(current.pm10)) {
+    concentrations.pm10 = { value: current.pm10, unit: "µg/m³" };
+  }
+  if (typeof current.nitrogen_dioxide === "number" && Number.isFinite(current.nitrogen_dioxide)) {
+    concentrations.no2 = { value: current.nitrogen_dioxide, unit: "µg/m³" };
+  }
+  if (typeof current.sulphur_dioxide === "number" && Number.isFinite(current.sulphur_dioxide)) {
+    concentrations.so2 = { value: current.sulphur_dioxide, unit: "µg/m³" };
+  }
+  if (typeof current.carbon_monoxide === "number" && Number.isFinite(current.carbon_monoxide)) {
+    const coVal = current.carbon_monoxide > 25 ? current.carbon_monoxide / 1000 : current.carbon_monoxide;
+    concentrations.co = { value: coVal, unit: "mg/m³" };
+  }
+  if (typeof current.ozone === "number" && Number.isFinite(current.ozone)) {
+    concentrations.o3 = { value: current.ozone, unit: "µg/m³" };
+  }
+
+  const aqiResult = calculateCompositeAqi(concentrations, "cpcb");
+
+  const currentData: AirCurrent = {
+    ...current,
+    time: station.lastUpdate,
+    aqi: aqiResult.aqi,
+    us_aqi_pm2_5: aqiResult.subIndices.pm2_5?.value ?? null,
+    us_aqi_pm10: aqiResult.subIndices.pm10?.value ?? null,
+    us_aqi_ozone: aqiResult.subIndices.o3?.value ?? null,
+    us_aqi_nitrogen_dioxide: aqiResult.subIndices.no2?.value ?? null,
+    us_aqi_sulphur_dioxide: aqiResult.subIndices.so2?.value ?? null,
+    us_aqi_carbon_monoxide: aqiResult.subIndices.co?.value ?? null,
+  };
+
+  return {
+    provider: "cpcb",
+    provenance: "station-observation",
+    sourceLabel: "CPCB OFFICIAL TELEMETRY",
+    sourceUrl: "https://data.gov.in/resource/real-time-air-quality-index",
+    stationName: `${station.station}, ${station.city}`,
+    stationUrl: "https://cpcb.nic.in/",
+    stationLatitude: station.latitude,
+    stationLongitude: station.longitude,
+    fallbackNote: `CPCB Official Monitoring Station · ${distanceKm.toFixed(1)} km away. Observed: ${station.lastUpdate}.`,
+    attribution: [
+      { name: "Central Pollution Control Board (CPCB)", url: "https://cpcb.nic.in/" },
+      { name: "National Data & Analytics Platform (data.gov.in)", url: "https://data.gov.in/" },
+    ],
+    latitude,
+    longitude,
+    timezone: "Asia/Kolkata",
+    current: currentData,
+    current_units: units,
+    measurementTimes: {
+      pm2_5: station.lastUpdate,
+      pm10: station.lastUpdate,
+      nitrogen_dioxide: station.lastUpdate,
+      sulphur_dioxide: station.lastUpdate,
+      carbon_monoxide: station.lastUpdate,
+      ozone: station.lastUpdate,
+    },
+  };
+}
+
 async function loadAirQuality(coordinates: Coordinates): Promise<AirQualityResponse> {
+  const inIndia = isIndiaCoordinates(coordinates.latitude, coordinates.longitude);
+  const cpcbKey = process.env.DATA_GOV_IN_API_KEY;
   const openAQKey = process.env.OPENAQ_API_KEY;
   const waqiKey = process.env.WAQI_API_KEY || process.env.WAQI_API_TOKEN;
+
+  let cpcbFailed = false;
   let openAQFailed = false;
   let waqiFailed = false;
 
+  // Hierarchy Step 1: For Indian coordinates/cities, Primary is data.gov.in CPCB API
+  if (inIndia && cpcbKey) {
+    try {
+      const station = await fetchCPCB(coordinates, cpcbKey);
+      if (station && station.current.aqi !== null) return station;
+    } catch {
+      cpcbFailed = true;
+    }
+  }
+
+  // Hierarchy Step 2 (Fallback 1): OpenAQ v3 API
   if (openAQKey) {
     try {
       const station = await fetchOpenAQ(coordinates, openAQKey);
@@ -303,23 +501,37 @@ async function loadAirQuality(coordinates: Coordinates): Promise<AirQualityRespo
     }
   }
 
+  // Hierarchy Step 3 (Fallback 2): WAQI API
   if (waqiKey) {
     try {
       const station = await fetchWAQI(coordinates, waqiKey);
       if (station) return {
         ...station,
-        fallbackNote: openAQKey ? "No fresh nearby OpenAQ reading was available; showing the WAQI station index." : station.fallbackNote,
+        fallbackNote: inIndia && cpcbKey
+          ? "No fresh nearby CPCB reading was available; showing the WAQI station index."
+          : openAQKey
+            ? "No fresh nearby OpenAQ reading was available; showing the WAQI station index."
+            : station.fallbackNote,
       };
     } catch {
       waqiFailed = true;
     }
   }
 
+  // Hierarchy Step 4 (Fallback 3): Open-Meteo CAMS grid model
   const model = await fetchOpenMeteo(coordinates);
-  const configuredKeys = [openAQKey && "OpenAQ", waqiKey && "WAQI"].filter(Boolean);
+  const configuredKeys = [
+    inIndia && cpcbKey && "CPCB (data.gov.in)",
+    openAQKey && "OpenAQ",
+    waqiKey && "WAQI",
+  ].filter(Boolean);
+
   let fallbackNote = "No API keys configured for station feeds; showing the Open-Meteo model estimate.";
-  if (configuredKeys.length && (openAQFailed || waqiFailed)) fallbackNote = "A station feed was unavailable; showing the Open-Meteo model estimate.";
-  else if (configuredKeys.length) fallbackNote = "No fresh nearby station reading was available; showing the Open-Meteo model estimate.";
+  if (configuredKeys.length && (cpcbFailed || openAQFailed || waqiFailed)) {
+    fallbackNote = "Station feed was unavailable; showing the Open-Meteo model estimate.";
+  } else if (configuredKeys.length) {
+    fallbackNote = "No fresh nearby station reading was available; showing the Open-Meteo model estimate.";
+  }
   return { ...model, fallbackNote };
 }
 

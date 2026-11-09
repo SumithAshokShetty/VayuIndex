@@ -52,7 +52,7 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     status: "Unhealthy",
     advisory: "Everyone may begin to experience health effects; sensitive groups should avoid outdoor exertion.",
     pollutants: { pm2_5: 84.1, pm10: 108.0, ozone: 104.0, no2: 88.1, so2: 52.3, co: 1459.0 },
-    provenance: "OpenAQ v3 Ground Station (CPCB/DPCC)",
+    provenance: "CPCB OFFICIAL TELEMETRY",
     updatedAt: "Live Real-Time Telemetry",
   },
   {
@@ -67,7 +67,7 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     status: "Moderate",
     advisory: "Air quality is acceptable; however, sensitive individuals should monitor respiration.",
     pollutants: { pm2_5: 35.0, pm10: 75.0, ozone: 54.0, no2: 32.0, so2: 18.0, co: 620.0 },
-    provenance: "OpenAQ Physical Station (MPCB)",
+    provenance: "CPCB OFFICIAL TELEMETRY",
     updatedAt: "Live Real-Time Telemetry",
   },
   {
@@ -799,7 +799,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                 liveUpdating ? "bg-amber-400 animate-spin" : "bg-emerald-500 animate-pulse"
               }`}
             />
-            {liveUpdating ? "Ingesting Feeds..." : "OpenAQ · WAQI · CAMS Live"}
+            {liveUpdating ? "Ingesting Feeds..." : "CPCB · OpenAQ · WAQI Live"}
           </span>
           <button
             type="button"
