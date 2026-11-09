@@ -12,6 +12,7 @@ import { MapLayersPanel, type MapLayer } from "@/components/MapLayersPanel";
 import { HistoricalTracker } from "@/components/HistoricalTracker";
 import { LocationComparison } from "@/components/LocationComparison";
 import { AqiForecast } from "@/components/AqiForecast";
+import { GlobalCityRanking } from "@/components/GlobalCityRanking";
 import { useTheme } from "@/lib/use-theme";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
 
@@ -183,7 +184,7 @@ export function Dashboard() {
             <span className="brand-copy"><strong>VAYU<span>INDEX</span></strong><small>GLOBAL AIR INTELLIGENCE</small></span>
           </a>
           <nav className="main-nav" aria-label="Main navigation">
-            <a className="nav-link" href="/">Overview</a>
+            <a className="nav-link" href="/">Home</a>
             <a className="nav-link active" href="/dashboard">Global view</a>
             <a className="nav-link" href="/compare">Compare</a>
             <a className="nav-link" href="/about">About</a>
@@ -262,6 +263,7 @@ export function Dashboard() {
             </section>
           </section>
           <AqiScaleBar value={aqi}/>
+          <GlobalCityRanking onSelectLocation={selectLocation}/>
           </>}
           {activeView === "history" && <HistoricalTracker location={location}/>}
           {activeView === "compare" && <LocationComparison initialLocation={location}/>}
