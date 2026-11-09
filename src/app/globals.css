@@ -586,43 +586,69 @@ body{font-family:var(--font)}
 [data-theme="dark"] .ticker-item{border-color:var(--landing-line)}
 [data-theme="dark"] .editorial-intro h2,[data-theme="dark"] .feature-section-heading h2{color:#f2f7f4}
 [data-theme="dark"] .editorial-intro>p{color:#a7b9af}
-/* Warm cream/olive cards using light theme background palette with forest-green accent */
-[data-theme="dark"] .feature-paper{background:#f7f6f0!important;color:#14211a!important;border-color:rgba(15,56,44,.16)!important;box-shadow:0 16px 42px rgba(0,0,0,.28)!important}
-[data-theme="dark"] .feature-paper .feature-card-main h3{color:#14211a!important}
-[data-theme="dark"] .feature-paper .feature-card-main p{color:#4f5e53!important}
-[data-theme="dark"] .feature-paper .feature-number,[data-theme="dark"] .feature-paper .feature-kicker{color:#5d6f62!important}
-[data-theme="dark"] .feature-paper .feature-icon{border-color:rgba(15,56,44,.22)!important;color:#0f382c!important;background:rgba(15,56,44,.04)!important}
-[data-theme="dark"] .feature-paper .feature-tags span{background:rgba(15,56,44,.06)!important;border-color:rgba(15,56,44,.16)!important;color:#273d30!important}
-[data-theme="dark"] .feature-paper .feature-reveal{color:#0f382c!important}
-[data-theme="dark"] .feature-paper:hover{border-color:rgba(15,56,44,.35)!important;box-shadow:0 22px 50px rgba(0,0,0,.38)!important}
+/* High-contrast, unified light-colored editorial cards on dark theme */
+[data-theme="dark"] .editorial-feature-card{
+  border-radius:12px;
+  box-shadow:0 18px 48px rgba(0,0,0,.32);
+  transition:transform .3s cubic-bezier(.2,.75,.25,1),border-color .3s,box-shadow .3s;
+}
 
-[data-theme="dark"] .feature-moss{background:#e9eee4!important;color:#14211a!important;border-color:rgba(15,56,44,.16)!important;box-shadow:0 16px 42px rgba(0,0,0,.28)!important}
-[data-theme="dark"] .feature-moss .feature-card-main h3{color:#14211a!important}
-[data-theme="dark"] .feature-moss .feature-card-main p{color:#4e5d51!important}
-[data-theme="dark"] .feature-moss .feature-number,[data-theme="dark"] .feature-moss .feature-kicker{color:#5c6d60!important}
-[data-theme="dark"] .feature-moss .feature-icon{border-color:rgba(15,56,44,.22)!important;color:#0f382c!important;background:rgba(15,56,44,.04)!important}
-[data-theme="dark"] .feature-moss .feature-tags span{background:rgba(15,56,44,.06)!important;border-color:rgba(15,56,44,.16)!important;color:#273d30!important}
-[data-theme="dark"] .feature-moss .feature-reveal{color:#0f382c!important}
-[data-theme="dark"] .feature-moss:hover{border-color:rgba(15,56,44,.35)!important;box-shadow:0 22px 50px rgba(0,0,0,.38)!important}
+/* Card 01: Warm Alabaster */
+[data-theme="dark"] .feature-paper{
+  background:#FAF9F5!important;
+  color:#0B1410!important;
+  border:1px solid rgba(15,56,44,.14)!important;
+}
+[data-theme="dark"] .feature-paper .feature-card-main h3{color:#0B1410!important}
+[data-theme="dark"] .feature-paper .feature-card-main p{color:#223328!important}
+[data-theme="dark"] .feature-paper .feature-number,[data-theme="dark"] .feature-paper .feature-kicker{color:#1D402F!important;font-weight:600!important}
+[data-theme="dark"] .feature-paper .feature-icon{border-color:rgba(15,56,44,.18)!important;color:#0F6B48!important;background:#fff!important;box-shadow:0 2px 8px rgba(0,0,0,.05)!important}
+[data-theme="dark"] .feature-paper .feature-tags span{background:#fff!important;border:1px solid rgba(15,56,44,.18)!important;color:#112E20!important;font-weight:600!important;box-shadow:0 1px 3px rgba(0,0,0,.04)!important}
+[data-theme="dark"] .feature-paper .feature-reveal{color:#0F6B48!important;opacity:1!important;font-weight:700!important}
+[data-theme="dark"] .feature-paper:hover{border-color:rgba(15,56,44,.35)!important;box-shadow:0 24px 56px rgba(0,0,0,.45)!important;transform:translateY(-4px)}
 
-[data-theme="dark"] .feature-sage{background:#edf0e8!important;color:#14211a!important;border-color:rgba(15,56,44,.16)!important;box-shadow:0 16px 42px rgba(0,0,0,.28)!important}
-[data-theme="dark"] .feature-sage .feature-card-main h3{color:#14211a!important}
-[data-theme="dark"] .feature-sage .feature-card-main p{color:#4e5d51!important}
-[data-theme="dark"] .feature-sage .feature-number,[data-theme="dark"] .feature-sage .feature-kicker{color:#5c6d60!important}
-[data-theme="dark"] .feature-sage .feature-icon{border-color:rgba(15,56,44,.22)!important;color:#0f382c!important;background:rgba(15,56,44,.04)!important}
-[data-theme="dark"] .feature-sage .feature-tags span{background:rgba(15,56,44,.06)!important;border-color:rgba(15,56,44,.16)!important;color:#273d30!important}
-[data-theme="dark"] .feature-sage .feature-reveal{color:#0f382c!important}
-[data-theme="dark"] .feature-sage:hover{border-color:rgba(15,56,44,.35)!important;box-shadow:0 22px 50px rgba(0,0,0,.38)!important}
+/* Card 02: Porcelain Celadon */
+[data-theme="dark"] .feature-moss{
+  background:#F5F8F2!important;
+  color:#0B1410!important;
+  border:1px solid rgba(15,56,44,.14)!important;
+}
+[data-theme="dark"] .feature-moss .feature-card-main h3{color:#0B1410!important}
+[data-theme="dark"] .feature-moss .feature-card-main p{color:#223328!important}
+[data-theme="dark"] .feature-moss .feature-number,[data-theme="dark"] .feature-moss .feature-kicker{color:#1D402F!important;font-weight:600!important}
+[data-theme="dark"] .feature-moss .feature-icon{border-color:rgba(15,56,44,.18)!important;color:#0F6B48!important;background:#fff!important;box-shadow:0 2px 8px rgba(0,0,0,.05)!important}
+[data-theme="dark"] .feature-moss .feature-tags span{background:#fff!important;border:1px solid rgba(15,56,44,.18)!important;color:#112E20!important;font-weight:600!important;box-shadow:0 1px 3px rgba(0,0,0,.04)!important}
+[data-theme="dark"] .feature-moss .feature-reveal{color:#0F6B48!important;opacity:1!important;font-weight:700!important}
+[data-theme="dark"] .feature-moss:hover{border-color:rgba(15,56,44,.35)!important;box-shadow:0 24px 56px rgba(0,0,0,.45)!important;transform:translateY(-4px)}
 
-/* Forest-green accent card */
-[data-theme="dark"] .feature-dark{background:#143b2e!important;color:#fafaf4!important;border-color:rgba(131,223,189,.35)!important;box-shadow:0 18px 45px rgba(0,0,0,.35),0 0 35px rgba(20,59,46,.35)!important}
-[data-theme="dark"] .feature-dark .feature-card-main h3{color:#fff!important}
-[data-theme="dark"] .feature-dark .feature-card-main p{color:#d4ebd9!important}
-[data-theme="dark"] .feature-dark .feature-number,[data-theme="dark"] .feature-dark .feature-kicker{color:#9fe2c4!important}
-[data-theme="dark"] .feature-dark .feature-icon{border-color:rgba(131,223,189,.45)!important;color:#83dfbd!important;background:rgba(131,223,189,.12)!important}
-[data-theme="dark"] .feature-dark .feature-tags span{background:rgba(131,223,189,.12)!important;border-color:rgba(131,223,189,.32)!important;color:#d8f5e5!important}
-[data-theme="dark"] .feature-dark .feature-reveal{color:#83dfbd!important}
-[data-theme="dark"] .feature-dark:hover{border-color:#83dfbd!important;box-shadow:0 24px 55px rgba(0,0,0,.45),0 0 45px rgba(20,59,46,.5)!important}
+/* Card 04: Pale Mineral Sage */
+[data-theme="dark"] .feature-sage{
+  background:#F4F7F5!important;
+  color:#0B1410!important;
+  border:1px solid rgba(15,56,44,.14)!important;
+}
+[data-theme="dark"] .feature-sage .feature-card-main h3{color:#0B1410!important}
+[data-theme="dark"] .feature-sage .feature-card-main p{color:#223328!important}
+[data-theme="dark"] .feature-sage .feature-number,[data-theme="dark"] .feature-sage .feature-kicker{color:#1D402F!important;font-weight:600!important}
+[data-theme="dark"] .feature-sage .feature-icon{border-color:rgba(15,56,44,.18)!important;color:#0F6B48!important;background:#fff!important;box-shadow:0 2px 8px rgba(0,0,0,.05)!important}
+[data-theme="dark"] .feature-sage .feature-tags span{background:#fff!important;border:1px solid rgba(15,56,44,.18)!important;color:#112E20!important;font-weight:600!important;box-shadow:0 1px 3px rgba(0,0,0,.04)!important}
+[data-theme="dark"] .feature-sage .feature-reveal{color:#0F6B48!important;opacity:1!important;font-weight:700!important}
+[data-theme="dark"] .feature-sage:hover{border-color:rgba(15,56,44,.35)!important;box-shadow:0 24px 56px rgba(0,0,0,.45)!important;transform:translateY(-4px)}
+
+/* Card 03: Radiant Emerald Celadon (Light Accent Card) */
+[data-theme="dark"] .feature-dark{
+  background:#EBF5EE!important;
+  color:#072618!important;
+  border:1px solid rgba(34,138,92,.32)!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.32),0 0 28px rgba(45,155,105,.12)!important;
+}
+[data-theme="dark"] .feature-dark .feature-card-main h3{color:#072618!important}
+[data-theme="dark"] .feature-dark .feature-card-main p{color:#1B3828!important}
+[data-theme="dark"] .feature-dark .feature-number,[data-theme="dark"] .feature-dark .feature-kicker{color:#0C5738!important;font-weight:700!important}
+[data-theme="dark"] .feature-dark .feature-icon{border-color:rgba(20,90,58,.25)!important;color:#0B462E!important;background:#fff!important;box-shadow:0 2px 10px rgba(12,68,43,.12)!important}
+[data-theme="dark"] .feature-dark .feature-tags span{background:#fff!important;border:1px solid rgba(20,90,58,.26)!important;color:#0A422B!important;font-weight:700!important;box-shadow:0 1px 4px rgba(12,68,43,.08)!important}
+[data-theme="dark"] .feature-dark .feature-reveal{color:#0B462E!important;opacity:1!important;font-weight:800!important}
+[data-theme="dark"] .feature-dark:hover{border-color:rgba(34,138,92,.6)!important;box-shadow:0 26px 60px rgba(0,0,0,.45),0 0 40px rgba(45,155,105,.22)!important;transform:translateY(-4px)}
 
 [data-theme="dark"] .editorial-cta{background:radial-gradient(ellipse at 88% 50%,rgba(33,91,80,.28),transparent 42%),#0d1916;border:1px solid rgba(147,226,197,.18)}
 [data-theme="dark"] footer.editorial-footer,[data-theme="dark"] .editorial-footer{background:#091311!important;color:#eef6f2!important}
