@@ -341,21 +341,36 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     let canceled = false;
 
     async function initMap() {
-      if (!mapContainerRef.current || mapInstanceRef.current) return;
+      const container = mapContainerRef.current;
+      if (!container) return;
 
-      const container = mapContainerRef.current as HTMLElement & { _leaflet_id?: number | null };
-      if (container._leaflet_id) {
-        container._leaflet_id = null;
+      // Clean up previous instance if already assigned
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch {
+          // ignore
+        }
+        mapInstanceRef.current = null;
+      }
+
+      // Completely clear any leftover Leaflet ID and DOM children
+      if ((container as any)._leaflet_id) {
+        delete (container as any)._leaflet_id;
+        container.innerHTML = "";
       }
 
       const L = await import("leaflet");
-      if (canceled || !mapContainerRef.current || mapInstanceRef.current) return;
+      if (canceled || !mapContainerRef.current) return;
 
-      if (container._leaflet_id) {
-        container._leaflet_id = null;
+      // Double-check clean state immediately before initialization
+      const targetContainer = mapContainerRef.current;
+      if ((targetContainer as any)._leaflet_id) {
+        delete (targetContainer as any)._leaflet_id;
+        targetContainer.innerHTML = "";
       }
 
-      const map = L.map(mapContainerRef.current, {
+      const map = L.map(targetContainer, {
         center: [activeHotspot.lat, activeHotspot.lng],
         zoom: 5,
         zoomControl: false,
@@ -382,12 +397,15 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     return () => {
       canceled = true;
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch {
+          // ignore
+        }
         mapInstanceRef.current = null;
       }
       if (mapContainerRef.current) {
-        const container = mapContainerRef.current as HTMLElement & { _leaflet_id?: number | null };
-        container._leaflet_id = null;
+        delete (mapContainerRef.current as any)._leaflet_id;
       }
     };
   }, []);
