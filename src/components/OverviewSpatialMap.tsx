@@ -336,11 +336,24 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     });
   };
 
-  // Initialize Leaflet Map
+  // Initialize Leaflet Map safely in React 18/19 StrictMode
   useEffect(() => {
+    let canceled = false;
+
     async function initMap() {
       if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+      const container = mapContainerRef.current as HTMLElement & { _leaflet_id?: number | null };
+      if (container._leaflet_id) {
+        container._leaflet_id = null;
+      }
+
       const L = await import("leaflet");
+      if (canceled || !mapContainerRef.current || mapInstanceRef.current) return;
+
+      if (container._leaflet_id) {
+        container._leaflet_id = null;
+      }
 
       const map = L.map(mapContainerRef.current, {
         center: [activeHotspot.lat, activeHotspot.lng],
@@ -349,10 +362,10 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         attributionControl: false,
       });
 
-      // CartoDB Voyager clean tile layer
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        maxZoom: 18,
-        subdomains: "abcd",
+      // Free standard OpenStreetMap tile layer (zero watermarks, no API key required)
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        subdomains: ["a", "b", "c"],
       }).addTo(map);
 
       // Custom zoom control in bottom right
@@ -367,9 +380,14 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     initMap();
 
     return () => {
+      canceled = true;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+      }
+      if (mapContainerRef.current) {
+        const container = mapContainerRef.current as HTMLElement & { _leaflet_id?: number | null };
+        container._leaflet_id = null;
       }
     };
   }, []);
@@ -654,8 +672,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       {/* ------------------------------------------------------------------ */}
       {/* Bottom Floating Card: AQI SCALE (US) with active range highlight */}
       {/* ------------------------------------------------------------------ */}
-      <div className="relative z-[400] m-4 self-center pointer-events-auto w-full max-w-4xl">
-        <div className="p-4 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] shadow-xl">
+      <div className="absolute bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 z-[400] pointer-events-auto w-auto md:w-full md:max-w-3xl">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] shadow-xl">
           <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[var(--dash-muted)] mb-3">
             <span>AQI SCALE (US)</span>
             <Info size={13} className="text-[var(--dash-muted)]" />
