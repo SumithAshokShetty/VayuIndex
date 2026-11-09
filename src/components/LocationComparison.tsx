@@ -1,103 +1,1110 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Check, Plus, Search, X } from "lucide-react";
-import { convertConcentration, type ConcentrationUnit, type Pollutant } from "@/lib/aqi-calculator";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Activity,
+  ArrowDownRight,
+  ArrowUpRight,
+  BarChart2,
+  Calendar,
+  Check,
+  ChevronDown,
+  Clock,
+  CloudSun,
+  Layers,
+  MapPin,
+  Plus,
+  RadioTower,
+  RotateCcw,
+  Search,
+  Sparkles,
+  TrendingUp,
+  X,
+} from "lucide-react";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
 
-const COLORS = ["#2f7650", "#bb7651", "#687fa6", "#9b6e98", "#79964b"];
-const POLLUTANTS: { key: string; pollutant: Pollutant; label: string; limit: number; unit: ConcentrationUnit }[] = [
-  { key:"pm2_5",pollutant:"pm2_5",label:"PM₂.₅",limit:9,unit:"µg/m³" }, { key:"pm10",pollutant:"pm10",label:"PM₁₀",limit:54,unit:"µg/m³" },
-  { key:"ozone",pollutant:"o3",label:"O₃",limit:.054,unit:"ppm" }, { key:"nitrogen_dioxide",pollutant:"no2",label:"NO₂",limit:53,unit:"ppb" },
-  { key:"sulphur_dioxide",pollutant:"so2",label:"SO₂",limit:35,unit:"ppb" }, { key:"carbon_monoxide",pollutant:"co",label:"CO",limit:4.4,unit:"ppm" },
-];
-const DEFAULTS: Location[] = [
-  { name:"New Delhi",admin:"Delhi",country:"India",latitude:28.6139,longitude:77.209 },
-  { name:"London",admin:"England",country:"United Kingdom",latitude:51.5072,longitude:-.1276 },
-];
-type Site = { location: Location; air: AirQualityResponse | null; error?: string };
+// ==========================================
+// Types & Constants
+// ==========================================
 
-function normalizedUnit(value?: string): ConcentrationUnit | null {
-  const unit = value?.toLowerCase().replace(/μ/g,"µ").replace(/ug/g,"µg").replace(/\s/g,"").replace(/m3/g,"m³");
-  if (["µg/m³","mg/m³","ppm","ppb"].includes(unit ?? "")) return unit as ConcentrationUnit;
-  return null;
+export type Timeframe = "24h" | "7d" | "30d";
+
+export type ParameterKey =
+  | "us_aqi"
+  | "pm2_5"
+  | "pm10"
+  | "nitrogen_dioxide"
+  | "sulphur_dioxide"
+  | "carbon_monoxide"
+  | "ozone";
+
+export interface ParameterDef {
+  key: ParameterKey;
+  label: string;
+  shortLabel: string;
+  unit: string;
+  threshold: number;
+  thresholdLabel: string;
+  description: string;
 }
-function getValue(air: AirQualityResponse | null, item: typeof POLLUTANTS[number]): number | null {
-  const value = air?.current[item.key];
-  const from = normalizedUnit(air?.current_units?.[item.key]);
-  if (typeof value !== "number" || !Number.isFinite(value) || !from) return null;
-  try { return convertConcentration(value, from, item.unit, item.pollutant); } catch { return null; }
+
+export const PARAMETERS: ParameterDef[] = [
+  {
+    key: "us_aqi",
+    label: "Composite AQI (US)",
+    shortLabel: "AQI",
+    unit: "AQI",
+    threshold: 50,
+    thresholdLabel: "EPA Good (50)",
+    description: "Standard US EPA composite air quality index",
+  },
+  {
+    key: "pm2_5",
+    label: "PM2.5 (Fine Particles)",
+    shortLabel: "PM₂.₅",
+    unit: "µg/m³",
+    threshold: 12.0,
+    thresholdLabel: "EPA 24h Good (12 µg/m³)",
+    description: "Fine respirable particles under 2.5 micrometers",
+  },
+  {
+    key: "pm10",
+    label: "PM10 (Inhalable Dust)",
+    shortLabel: "PM₁₀",
+    unit: "µg/m³",
+    threshold: 54.0,
+    thresholdLabel: "EPA 24h Good (54 µg/m³)",
+    description: "Coarse particulate matter under 10 micrometers",
+  },
+  {
+    key: "nitrogen_dioxide",
+    label: "NO2 (Nitrogen Dioxide)",
+    shortLabel: "NO₂",
+    unit: "µg/m³",
+    threshold: 53.0,
+    thresholdLabel: "Combustion Reference (53 µg/m³)",
+    description: "Urban traffic and fossil fuel combustion emissions",
+  },
+  {
+    key: "sulphur_dioxide",
+    label: "SO2 (Sulphur Dioxide)",
+    shortLabel: "SO₂",
+    unit: "µg/m³",
+    threshold: 35.0,
+    thresholdLabel: "Industrial Reference (35 µg/m³)",
+    description: "Heavy industrial and coal-fired generation emissions",
+  },
+  {
+    key: "carbon_monoxide",
+    label: "CO (Carbon Monoxide)",
+    shortLabel: "CO",
+    unit: "µg/m³",
+    threshold: 4400.0,
+    thresholdLabel: "EPA 8h Reference (4,400 µg/m³)",
+    description: "Incomplete combustion product and vehicle tracer",
+  },
+  {
+    key: "ozone",
+    label: "O3 (Ground-level Ozone)",
+    shortLabel: "O₃",
+    unit: "µg/m³",
+    threshold: 100.0,
+    thresholdLabel: "WHO 8h Guideline (100 µg/m³)",
+    description: "Photochemical oxidant created by sunlight and precursors",
+  },
+];
+
+export const PRESETS = [
+  {
+    label: "Mumbai vs Delhi",
+    locations: [
+      { name: "Mumbai", admin: "Maharashtra", country: "India", latitude: 19.076, longitude: 72.8777 },
+      { name: "Delhi", admin: "Delhi", country: "India", latitude: 28.6139, longitude: 77.209 },
+    ],
+  },
+  {
+    label: "Tokyo vs Paris",
+    locations: [
+      { name: "Tokyo", admin: "Tokyo", country: "Japan", latitude: 35.6762, longitude: 139.6503 },
+      { name: "Paris", admin: "Île-de-France", country: "France", latitude: 48.8566, longitude: 2.3522 },
+    ],
+  },
+  {
+    label: "New York vs London",
+    locations: [
+      { name: "New York", admin: "New York", country: "United States", latitude: 40.7128, longitude: -74.006 },
+      { name: "London", admin: "England", country: "United Kingdom", latitude: 51.5072, longitude: -0.1276 },
+    ],
+  },
+];
+
+const LOCATION_THEMES = [
+  { stroke: "#2f7650", fill: "#83dfbd", bg: "rgba(47, 118, 80, 0.12)", badgeBg: "rgba(47, 118, 80, 0.2)", badgeText: "#2f7650" },
+  { stroke: "#bb7651", fill: "#f3a16b", bg: "rgba(187, 118, 81, 0.12)", badgeBg: "rgba(187, 118, 81, 0.2)", badgeText: "#bb7651" },
+  { stroke: "#3b7aa3", fill: "#70b1d9", bg: "rgba(59, 122, 163, 0.12)", badgeBg: "rgba(59, 122, 163, 0.2)", badgeText: "#3b7aa3" },
+  { stroke: "#8d5e8f", fill: "#ba8cb7", bg: "rgba(141, 94, 143, 0.12)", badgeBg: "rgba(141, 94, 143, 0.2)", badgeText: "#8d5e8f" },
+];
+
+const POLLUTANT_SNAPSHOT_LIST: { key: ParameterKey; label: string; limit: number }[] = [
+  { key: "pm2_5", label: "PM₂.₅", limit: 12.0 },
+  { key: "pm10", label: "PM₁₀", limit: 54.0 },
+  { key: "nitrogen_dioxide", label: "NO₂", limit: 53.0 },
+  { key: "sulphur_dioxide", label: "SO₂", limit: 35.0 },
+  { key: "carbon_monoxide", label: "CO", limit: 4400.0 },
+  { key: "ozone", label: "O₃", limit: 100.0 },
+];
+
+function formatTime(isoString: string, tf: Timeframe): string {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+    if (tf === "24h") {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+    if (tf === "7d") {
+      return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} ${d.toLocaleTimeString([], { hour: "2-digit", hour12: false })}h`;
+    }
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  } catch {
+    return isoString;
+  }
 }
+
+function locationKey(loc: Location): string {
+  return `${loc.latitude.toFixed(3)}:${loc.longitude.toFixed(3)}`;
+}
+
+// ==========================================
+// Main Component
+// ==========================================
 
 export function LocationComparison({ initialLocation }: { initialLocation?: Location }) {
-  const [locations, setLocations] = useState<Location[]>(() => initialLocation ? [initialLocation, ...DEFAULTS.filter((place) => Math.abs(place.latitude-initialLocation.latitude)>.01).slice(0,1)] : DEFAULTS);
+  // 1. Comparison Location State (2 to 4 locations)
+  const [locations, setLocations] = useState<Location[]>(() => {
+    if (initialLocation) {
+      const other = PRESETS[0].locations.find(
+        (p) => Math.abs(p.latitude - initialLocation.latitude) > 0.05
+      ) || PRESETS[0].locations[1];
+      return [initialLocation, other];
+    }
+    return PRESETS[0].locations;
+  });
+
+  // 2. Control Bar Filters
+  const [timeframe, setTimeframe] = useState<Timeframe>("24h");
+  const [parameterKey, setParameterKey] = useState<ParameterKey>("us_aqi");
+  const [viewMode, setViewMode] = useState<"line" | "bar">("line");
+
+  // 3. Search & Suggestions State
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodedPlace[]>([]);
   const [searching, setSearching] = useState(false);
-  const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
+  // 4. Ingested Data State
+  const [liveData, setLiveData] = useState<Record<string, { air: AirQualityResponse | null; loading: boolean; error?: string }>>({});
+  const [historyData, setHistoryData] = useState<Record<string, { payload: any | null; loading: boolean; error?: string }>>({});
+
+  const activeParam = useMemo(
+    () => PARAMETERS.find((p) => p.key === parameterKey) || PARAMETERS[0],
+    [parameterKey]
+  );
+
+  // ------------------------------------------
+  // Geocode Search Autocomplete
+  // ------------------------------------------
   useEffect(() => {
     const trimmed = query.trim();
-    if (trimmed.length < 2) { setSuggestions([]); setSearching(false); return; }
-    const controller = new AbortController(); const timer = window.setTimeout(() => {
+    if (trimmed.length < 2) {
+      setSuggestions([]);
+      setSearching(false);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
       setSearching(true);
       fetch(`/api/geocode?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal })
-        .then(async (response) => { const json = await response.json() as { results?: GeocodedPlace[]; error?: string }; if (!response.ok) throw new Error(json.error ?? "Place search is unavailable."); return json; })
-        .then((json) => { if (!controller.signal.aborted) setSuggestions(json.results ?? []); })
-        .catch(() => { if (!controller.signal.aborted) setSuggestions([]); })
-        .finally(() => { if (!controller.signal.aborted) setSearching(false); });
-    }, 300);
-    return () => { window.clearTimeout(timer); controller.abort(); };
+        .then(async (res) => {
+          const json = (await res.json()) as { results?: GeocodedPlace[] };
+          if (!res.ok) throw new Error("Search failed");
+          return json;
+        })
+        .then((json) => {
+          if (!controller.signal.aborted) setSuggestions(json.results || []);
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setSuggestions([]);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
+        });
+    }, 280);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query]);
 
+  // ------------------------------------------
+  // Data Ingestion Pipeline (Live & History)
+  // ------------------------------------------
   useEffect(() => {
-    if (locations.length < 2) { setSites([]); return; }
-    const controller = new AbortController(); setLoading(true); setError(null); setSites([]);
-    Promise.all(locations.map(async (location): Promise<Site> => {
-      const params = new URLSearchParams({ lat:String(location.latitude),lng:String(location.longitude) });
-      try {
-        const response = await fetch(`/api/air-quality?${params}`, { signal:controller.signal });
-        const json = await response.json() as AirQualityResponse & { error?: string };
-        if (!response.ok) throw new Error(json.error ?? "Air data is unavailable.");
-        return { location, air:json };
-      } catch (fetchError) { return { location, air:null, error:fetchError instanceof Error ? fetchError.message : "Air data is unavailable." }; }
-    })).then((results) => { if (!controller.signal.aborted) setSites(results); })
-      .catch(() => { if (!controller.signal.aborted) setError("Could not load the comparison readings."); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    const controller = new AbortController();
+    const days = timeframe === "24h" ? 1 : timeframe === "7d" ? 7 : 30;
+
+    locations.forEach((loc) => {
+      const key = locationKey(loc);
+
+      // Ingest Live Physical Station (OpenAQ v3 / WAQI / Open-Meteo)
+      setLiveData((prev) => ({
+        ...prev,
+        [key]: { air: prev[key]?.air ?? null, loading: true },
+      }));
+
+      fetch(`/api/air-quality?lat=${loc.latitude}&lng=${loc.longitude}`, {
+        signal: controller.signal,
+      })
+        .then(async (res) => {
+          const json = (await res.json()) as AirQualityResponse;
+          if (!res.ok) throw new Error(json.fallbackNote || "Station telemetry unavailable");
+          if (!controller.signal.aborted) {
+            setLiveData((prev) => ({ ...prev, [key]: { air: json, loading: false } }));
+          }
+        })
+        .catch((err) => {
+          if (!controller.signal.aborted) {
+            setLiveData((prev) => ({
+              ...prev,
+              [key]: { air: null, loading: false, error: err.message },
+            }));
+          }
+        });
+
+      // Ingest Continuous Time-Series (Open-Meteo CAMS Reanalysis Grid)
+      setHistoryData((prev) => ({
+        ...prev,
+        [key]: { payload: prev[key]?.payload ?? null, loading: true },
+      }));
+
+      fetch(`/api/air-quality/history?lat=${loc.latitude}&lng=${loc.longitude}&days=${days}`, {
+        signal: controller.signal,
+      })
+        .then(async (res) => {
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || "Time-series unavailable");
+          if (!controller.signal.aborted) {
+            setHistoryData((prev) => ({ ...prev, [key]: { payload: json, loading: false } }));
+          }
+        })
+        .catch((err) => {
+          if (!controller.signal.aborted) {
+            setHistoryData((prev) => ({
+              ...prev,
+              [key]: { payload: null, loading: false, error: err.message },
+            }));
+          }
+        });
+    });
+
     return () => controller.abort();
-  }, [locations]);
+  }, [locations, timeframe]);
 
-  function addPlace(place: GeocodedPlace) {
-    if (locations.length >= 5) return;
-    if (locations.some((item) => Math.abs(item.latitude-place.latitude)<.01 && Math.abs(item.longitude-place.longitude)<.01)) { setQuery(""); setSuggestions([]); return; }
-    setLocations((value) => [...value, { name:place.name,admin:place.admin1,country:place.country,latitude:place.latitude,longitude:place.longitude }]);
-    setQuery(""); setSuggestions([]);
-  }
+  // ------------------------------------------
+  // Action Helpers
+  // ------------------------------------------
+  const addLocation = (place: GeocodedPlace) => {
+    if (locations.length >= 4) return;
+    const exists = locations.some(
+      (l) => Math.abs(l.latitude - place.latitude) < 0.02 && Math.abs(l.longitude - place.longitude) < 0.02
+    );
+    if (exists) {
+      setQuery("");
+      setSuggestions([]);
+      return;
+    }
+    setLocations((prev) => [
+      ...prev,
+      {
+        name: place.name,
+        admin: place.admin1,
+        country: place.country,
+        latitude: place.latitude,
+        longitude: place.longitude,
+      },
+    ]);
+    setQuery("");
+    setSuggestions([]);
+  };
 
-  const comparison = useMemo(() => {
-    const available = POLLUTANTS.map((pollutant) => ({ pollutant, values:sites.map((site) => getValue(site.air,pollutant)) }));
-    const common = available.filter((item) => item.values.length >= 2 && item.values.every((value) => typeof value === "number" && Number.isFinite(value))).map((item) => ({ pollutant:item.pollutant,values:item.values as number[] }));
-    const chartData = common.map(({ pollutant,values }) => ({ pollutant:pollutant.label, ...Object.fromEntries(values.map((value,index) => [`site${index}`,value/pollutant.limit*100])) }));
-    const radarData = common.map(({ pollutant,values }) => { const max = Math.max(...values,1e-9); return { pollutant:pollutant.label,...Object.fromEntries(values.map((value,index) => [`site${index}`,value/max*100])) }; });
-    const scores = sites.map((_,index) => common.length ? common.reduce((sum,item)=>sum + item.values[index]!/item.pollutant.limit,0)/common.length*100 : null);
-    const best = scores.some((value)=>value!==null) ? scores.reduce<number|null>((best,value,index)=> value!==null && (best===null || value<scores[best]!) ? index : best,null) : null;
-    return { chartData,radarData,scores,best,commonCount:common.length };
-  }, [sites]);
+  const removeLocation = (index: number) => {
+    if (locations.length <= 2) return;
+    setLocations((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const applyPreset = (preset: (typeof PRESETS)[number]) => {
+    setLocations(preset.locations);
+  };
+
+  // ------------------------------------------
+  // Comparative Analytics & Variance Synthesis
+  // ------------------------------------------
+
+  // Chart 1 Data: Time-Series Comparison
+  const timeSeriesData = useMemo(() => {
+    const baselineKey = locationKey(locations[0]);
+    const baselineHistory = historyData[baselineKey]?.payload?.hourly;
+    if (!baselineHistory?.time?.length) return [];
+
+    const times: string[] = baselineHistory.time;
+    return times.map((t, timeIndex) => {
+      const entry: Record<string, any> = {
+        rawTime: t,
+        displayTime: formatTime(t, timeframe),
+      };
+
+      locations.forEach((loc) => {
+        const key = locationKey(loc);
+        const hourly = historyData[key]?.payload?.hourly;
+        const val = hourly?.[parameterKey]?.[timeIndex];
+        entry[loc.name] = typeof val === "number" && !isNaN(val) ? Number(val.toFixed(1)) : null;
+      });
+
+      return entry;
+    });
+  }, [locations, historyData, parameterKey, timeframe]);
+
+  // Live Metric Snapshot & Best Air Quality Badge
+  const { siteMetrics, bestIndex, varianceAnalysis } = useMemo(() => {
+    const metrics = locations.map((loc, idx) => {
+      const key = locationKey(loc);
+      const live = liveData[key]?.air;
+      const hist = historyData[key]?.payload?.hourly;
+
+      // Extract current parameter value
+      let currentVal: number | null = null;
+      if (live?.current) {
+        if (parameterKey === "us_aqi") {
+          currentVal = live.current.us_aqi !== undefined ? Number(live.current.us_aqi) : live.current.aqi ?? null;
+        } else if (typeof live.current[parameterKey] === "number") {
+          currentVal = Number(live.current[parameterKey]);
+        }
+      }
+
+      // Fallback to latest historical hourly if live station sensor missing this specific parameter
+      if (currentVal === null && hist?.[parameterKey]?.length) {
+        const lastVal = hist[parameterKey][hist[parameterKey].length - 1];
+        if (typeof lastVal === "number" && !isNaN(lastVal)) {
+          currentVal = Number(lastVal);
+        }
+      }
+
+      // Compute timeframe average
+      let avgVal: number | null = null;
+      let peakVal: number | null = null;
+      let peakTime: string | null = null;
+      if (hist?.[parameterKey]?.length) {
+        const validValues: number[] = hist[parameterKey].filter((v: any) => typeof v === "number" && !isNaN(v));
+        if (validValues.length) {
+          avgVal = validValues.reduce((a, b) => a + b, 0) / validValues.length;
+          peakVal = Math.max(...validValues);
+          const maxIdx = hist[parameterKey].indexOf(peakVal);
+          if (maxIdx >= 0 && hist.time?.[maxIdx]) {
+            peakTime = formatTime(hist.time[maxIdx], timeframe);
+          }
+        }
+      }
+
+      // Live composite AQI for overall best comparison
+      const compositeAqi = live?.current?.aqi ?? (typeof live?.current?.us_aqi === "number" ? live.current.us_aqi : null);
+
+      return {
+        location: loc,
+        live,
+        currentVal,
+        avgVal,
+        peakVal,
+        peakTime,
+        compositeAqi,
+        provenance: live?.provenance ?? "modeled-estimate",
+        sourceLabel: live?.sourceLabel ?? "Open-Meteo CAMS Reanalysis",
+        stationName: live?.stationName,
+        theme: LOCATION_THEMES[idx % LOCATION_THEMES.length],
+      };
+    });
+
+    // Best Air Quality: Lowest AQI (or lowest parameter concentration)
+    let best = 0;
+    let minScore = Infinity;
+    metrics.forEach((m, idx) => {
+      const score = m.compositeAqi ?? m.currentVal;
+      if (score !== null && score < minScore) {
+        minScore = score;
+        best = idx;
+      }
+    });
+
+    // Variance vs Baseline (locations[0])
+    const baseline = metrics[0];
+    const variances = metrics.slice(1).map((m) => {
+      let currentDeltaPct: number | null = null;
+      let currentDeltaAbs: number | null = null;
+      let avgDeltaPct: number | null = null;
+
+      if (baseline.currentVal !== null && m.currentVal !== null && baseline.currentVal > 0) {
+        currentDeltaAbs = m.currentVal - baseline.currentVal;
+        currentDeltaPct = ((m.currentVal - baseline.currentVal) / baseline.currentVal) * 100;
+      }
+      if (baseline.avgVal !== null && m.avgVal !== null && baseline.avgVal > 0) {
+        avgDeltaPct = ((m.avgVal - baseline.avgVal) / baseline.avgVal) * 100;
+      }
+
+      return {
+        targetName: m.location.name,
+        baselineName: baseline.location.name,
+        currentDeltaPct,
+        currentDeltaAbs,
+        avgDeltaPct,
+        m,
+      };
+    });
+
+    return {
+      siteMetrics: metrics,
+      bestIndex: minScore !== Infinity ? best : null,
+      varianceAnalysis: variances,
+    };
+  }, [locations, liveData, historyData, parameterKey, timeframe]);
+
+  // Chart 2 Data: Side-by-Side Parameter Snapshot (% of EPA Good-Band Limit)
+  const snapshotData = useMemo(() => {
+    return POLLUTANT_SNAPSHOT_LIST.map((pollutant) => {
+      const row: Record<string, any> = {
+        pollutant: pollutant.label,
+        key: pollutant.key,
+        limit: pollutant.limit,
+      };
+
+      locations.forEach((loc) => {
+        const key = locationKey(loc);
+        const live = liveData[key]?.air;
+        let val: number | null = null;
+        if (live?.current && typeof live.current[pollutant.key] === "number") {
+          val = Number(live.current[pollutant.key]);
+        }
+        // Percentage relative to reference standard
+        row[loc.name] = val !== null ? Number(((val / pollutant.limit) * 100).toFixed(1)) : null;
+        row[`${loc.name}_raw`] = val !== null ? Number(val.toFixed(1)) : null;
+      });
+
+      return row;
+    });
+  }, [locations, liveData]);
+
+  // Chart 3 Data: Atmospheric Multi-Pollutant Fingerprint (Radar)
+  const radarData = useMemo(() => {
+    return POLLUTANT_SNAPSHOT_LIST.map((pollutant) => {
+      const row: Record<string, any> = {
+        pollutant: pollutant.label,
+      };
+
+      // Collect raw values
+      const values = locations.map((loc) => {
+        const key = locationKey(loc);
+        const live = liveData[key]?.air;
+        const val = live?.current?.[pollutant.key];
+        return typeof val === "number" && !isNaN(val) ? Number(val) : 0;
+      });
+
+      const maxVal = Math.max(...values, pollutant.limit, 0.001);
+
+      locations.forEach((loc, idx) => {
+        const pct = Math.min(100, Math.round((values[idx] / maxVal) * 100));
+        row[loc.name] = pct;
+      });
+
+      return row;
+    });
+  }, [locations, liveData]);
 
   return (
-    <section className="phase-view comparison-view">
-      <header className="phase-view-heading"><div><span className="section-kicker"><span className="eyebrow-line"/> SIDE-BY-SIDE · LIVE SOURCE DATA</span><h1>Places, in <em>perspective.</em></h1><p>Compare shared pollutant measurements after unit conversion. Up to five locations.</p></div><span className="provenance-pill station-pill">LIVE TELEMETRY · SOURCE-LABELED</span></header>
-      <div className="comparison-place-picker"><label htmlFor="compare-place"><Search size={15}/><input id="compare-place" value={query} placeholder="Add a city or region" onChange={(event)=>setQuery(event.target.value)} autoComplete="off"/><span>{locations.length}/5</span></label>{query.trim().length>=2 && <div className="compare-suggestions">{searching && <span>Searching…</span>}{!searching && suggestions.length===0 && <span>No places found</span>}{suggestions.map((place)=><button type="button" key={place.id} onClick={()=>addPlace(place)}><span>{place.name}</span><small>{[place.admin1,place.country].filter(Boolean).join(" · ")}</small><Plus size={14}/></button>)}</div>}</div>
-      <div className="comparison-site-cards">{locations.map((location,index)=>{const site=sites.find((item)=>item.location.latitude===location.latitude&&item.location.longitude===location.longitude);const cleaner=comparison.best===index;return <article className={`comparison-site ${cleaner?"is-cleaner":""}`} key={`${location.latitude}-${location.longitude}`}><span className="comparison-site-index" style={{backgroundColor:COLORS[index]}}>{String(index+1).padStart(2,"0")}</span><div><h2>{location.name}</h2><p>{[location.admin,location.country].filter(Boolean).join(" · ")}</p><small>{site?.air?.sourceLabel??(loading?"FETCHING SOURCE…":site?.error??"WAITING FOR DATA")}</small></div>{cleaner&&<span className="cleaner-badge"><Check size={12}/> CLEANER RELATIVE</span>}{locations.length>2&&<button type="button" className="remove-place" aria-label={`Remove ${location.name}`} onClick={()=>setLocations((value)=>value.filter((_,itemIndex)=>itemIndex!==index))}><X size={14}/></button>}</article>})}</div>
-      {error&&<div className="phase-state phase-error">{error}</div>}
-      {comparison.best!==null&&<p className="comparison-clean-note"><Check size={14}/> {locations[comparison.best]?.name} has the lower comparable-pollutant relative burden across {comparison.commonCount} shared pollutant{comparison.commonCount===1?"":"s"}. This is a comparison aid, not an official AQI or health ranking.</p>}
-      {comparison.commonCount===0&&!loading&&<div className="phase-state">No shared, unit-compatible pollutant readings were returned. Try locations with model estimates or live concentration measurements; WAQI index-only responses cannot be compared by pollutant.</div>}
-      <div className="comparison-chart-grid"><article className="phase-chart-card"><div className="phase-chart-heading"><div><span className="section-kicker">REFERENCE-RELATIVE CONCENTRATION</span><h2>Side-by-side pollutant levels</h2></div><span className="chart-unit">% OF EPA GOOD-BAND LIMIT</span></div>{loading?<div className="phase-state">Loading selected locations…</div>:comparison.chartData.length>0&&<div className="phase-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={comparison.chartData} margin={{top:12,right:10,left:-12,bottom:0}}><CartesianGrid strokeDasharray="3 5" stroke="var(--chart-grid)"/><XAxis dataKey="pollutant" tick={{fill:"var(--chart-muted)",fontSize:10}}/><YAxis tick={{fill:"var(--chart-muted)",fontSize:10}}/><Tooltip formatter={(value,name)=>[`${Number(value).toFixed(1)}%`,name]}/><Legend/>{locations.map((location,index)=><Bar key={location.name} dataKey={`site${index}`} name={location.name} fill={COLORS[index]} radius={[4,4,0,0]}/>)}</BarChart></ResponsiveContainer></div>}</article>
-        <article className="phase-chart-card"><div className="phase-chart-heading"><div><span className="section-kicker">SHARED POLLUTANTS · NORMALIZED</span><h2>Relative profile</h2></div></div>{loading?<div className="phase-state">Preparing comparison…</div>:comparison.radarData.length>0&&<div className="phase-chart radar-chart"><ResponsiveContainer width="100%" height="100%"><RadarChart data={comparison.radarData} outerRadius="72%"><PolarGrid stroke="var(--chart-grid)"/><PolarAngleAxis dataKey="pollutant" tick={{fill:"var(--chart-muted)",fontSize:10}}/><PolarRadiusAxis angle={30} domain={[0,100]} tick={{fill:"var(--chart-muted)",fontSize:8}}/><Tooltip formatter={(value)=>[`${Number(value).toFixed(0)}% of highest value`,"Relative level"]}/>{locations.map((location,index)=><Radar key={location.name} name={location.name} dataKey={`site${index}`} stroke={COLORS[index]} fill={COLORS[index]} fillOpacity={.10} strokeWidth={2}/>)}</RadarChart></ResponsiveContainer></div>}</article></div>
-      <p className="phase-disclaimer">Only pollutant fields present for every compared location are charted. Concentrations are converted to common EPA AQI input units where source units permit. The cleaner-relative indicator averages each shared pollutant as a fraction of its EPA “Good” breakpoint; it is not an official AQI, and sources may represent different measurement types and update times.</p>
+    <section className="phase-view comparison-view w-full pb-16">
+      {/* ---------------------------------------------------- */}
+      {/* Header Tier */}
+      {/* ---------------------------------------------------- */}
+      <header className="phase-view-heading flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[var(--dash-rule)]">
+        <div>
+          <span className="section-kicker flex items-center gap-2 text-xs font-mono tracking-widest text-[var(--dash-muted)]">
+            <span className="eyebrow-line w-6 h-[1px] bg-[var(--dash-accent)]" />
+            TELEMETRY ENGINE · MULTI-LOCATION BENCHMARK
+          </span>
+          <h1 className="text-3xl md:text-5xl font-normal tracking-tight text-[var(--dash-ink)] mt-2">
+            Air, in <em>comparison.</em>
+          </h1>
+          <p className="text-sm text-[var(--dash-muted)] max-w-2xl mt-1">
+            Compare validated ground-truth station observations with continuous atmospheric CAMS reanalysis across global coordinates.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start md:self-end">
+          <span className="provenance-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)]">
+            <RadioTower size={12} className="text-[var(--dash-accent)]" />
+            OPENAQ V3 & WAQI GROUND PROVENANCE
+          </span>
+        </div>
+      </header>
+
+      {/* ---------------------------------------------------- */}
+      {/* Control Bar: Selector, Presets, Filters */}
+      {/* ---------------------------------------------------- */}
+      <div className="mt-8 space-y-4">
+        {/* Presets and Location Input Bar */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+          {/* Location Autocomplete Input */}
+          <div className="lg:col-span-6 relative">
+            <label
+              htmlFor="compare-search-input"
+              className="flex items-center gap-2.5 h-11 px-3.5 rounded-lg border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm focus-within:border-[var(--dash-accent)] transition-colors"
+            >
+              <Search size={16} className="text-[var(--dash-muted)] flex-none" />
+              <input
+                id="compare-search-input"
+                className="w-full bg-transparent text-xs sm:text-sm outline-none placeholder:text-[var(--dash-faint)] text-[var(--dash-ink)]"
+                placeholder={locations.length >= 4 ? "Maximum 4 locations reached" : "Search to add city or coordinate..."}
+                disabled={locations.length >= 4}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoComplete="off"
+              />
+              <span className="font-mono text-[10px] text-[var(--dash-muted)] px-2 py-0.5 rounded bg-[var(--dash-surface-soft)]">
+                {locations.length}/4
+              </span>
+            </label>
+
+            {/* Autocomplete Dropdown Suggestions */}
+            {query.trim().length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 z-40 max-h-60 overflow-y-auto rounded-lg border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-xl divide-y divide-[var(--dash-rule)]">
+                {searching && (
+                  <div className="p-3 text-xs text-[var(--dash-muted)] font-mono flex items-center gap-2">
+                    <Clock size={12} className="animate-spin" /> Querying geocoding registry...
+                  </div>
+                )}
+                {!searching && suggestions.length === 0 && (
+                  <div className="p-3 text-xs text-[var(--dash-muted)]">No geographic places matched.</div>
+                )}
+                {suggestions.map((place) => (
+                  <button
+                    type="button"
+                    key={place.id}
+                    onClick={() => addLocation(place)}
+                    className="w-full text-left px-3.5 py-2.5 hover:bg-[var(--dash-surface-soft)] flex items-center justify-between text-xs text-[var(--dash-ink)] transition-colors"
+                  >
+                    <div>
+                      <strong className="font-medium text-[var(--dash-ink)] block">{place.name}</strong>
+                      <span className="text-[10px] text-[var(--dash-muted)]">
+                        {[place.admin1, place.country].filter(Boolean).join(" · ")}
+                      </span>
+                    </div>
+                    <Plus size={14} className="text-[var(--dash-accent)]" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Comparison Preset Buttons */}
+          <div className="lg:col-span-6 flex items-center flex-wrap gap-2">
+            <span className="text-[11px] font-mono text-[var(--dash-muted)] uppercase tracking-wider mr-1">
+              Presets:
+            </span>
+            {PRESETS.map((preset) => (
+              <button
+                type="button"
+                key={preset.label}
+                onClick={() => applyPreset(preset)}
+                className="px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] hover:border-[var(--dash-accent)] hover:text-[var(--dash-accent)] transition-all shadow-sm"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Dynamic Filters Bar: Timeframe, Parameter, View Toggle */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--dash-rule)] bg-[var(--dash-surface)]">
+          {/* Timeframe Dropdown Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-[var(--dash-muted)] flex items-center gap-1.5">
+              <Calendar size={13} className="text-[var(--dash-accent)]" />
+              HORIZON:
+            </span>
+            <div className="inline-flex rounded-md border border-[var(--dash-rule)] p-0.5 bg-[var(--dash-surface-soft)]">
+              {(["24h", "7d", "30d"] as const).map((tf) => (
+                <button
+                  key={tf}
+                  type="button"
+                  onClick={() => setTimeframe(tf)}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    timeframe === tf
+                      ? "bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm font-semibold"
+                      : "text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
+                  }`}
+                >
+                  {tf === "24h" ? "24 Hours" : tf === "7d" ? "7 Days" : "30 Days"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Parameter Dropdown Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-[var(--dash-muted)] flex items-center gap-1.5">
+              <Activity size={13} className="text-[var(--dash-accent)]" />
+              PARAMETER:
+            </span>
+            <div className="relative">
+              <select
+                value={parameterKey}
+                onChange={(e) => setParameterKey(e.target.value as ParameterKey)}
+                aria-label="Active parameter to compare"
+                className="h-8 pl-3 pr-8 rounded-md text-xs font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] outline-none cursor-pointer appearance-none focus:border-[var(--dash-accent)]"
+              >
+                {PARAMETERS.map((p) => (
+                  <option key={p.key} value={p.key}>
+                    {p.label} ({p.unit})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={13} className="absolute right-2.5 top-2.5 text-[var(--dash-muted)] pointer-events-none" />
+            </div>
+          </div>
+
+          {/* View Mode Toggle Icons (Line vs Bar) */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            <span className="text-xs font-mono text-[var(--dash-muted)] mr-1 hidden sm:inline">VIEW:</span>
+            <button
+              type="button"
+              onClick={() => setViewMode("line")}
+              aria-label="Line trend view"
+              className={`p-1.5 rounded border transition-colors ${
+                viewMode === "line"
+                  ? "border-[var(--dash-accent)] bg-[var(--dash-surface-soft)] text-[var(--dash-accent)]"
+                  : "border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
+              }`}
+              title="Line Chart Trend"
+            >
+              <TrendingUp size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("bar")}
+              aria-label="Bar snapshot view"
+              className={`p-1.5 rounded border transition-colors ${
+                viewMode === "bar"
+                  ? "border-[var(--dash-accent)] bg-[var(--dash-surface-soft)] text-[var(--dash-accent)]"
+                  : "border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
+              }`}
+              title="Bar Chart Snapshot"
+            >
+              <BarChart2 size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------- */}
+      {/* Multi-Location Metric Snapshot Cards */}
+      {/* ---------------------------------------------------- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        <AnimatePresence>
+          {siteMetrics.map((site, index) => {
+            const isBest = bestIndex === index;
+            const theme = site.theme;
+
+            return (
+              <motion.article
+                key={site.location.name}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.35, delay: index * 0.05 }}
+                className={`relative p-4 rounded-xl border transition-all ${
+                  isBest
+                    ? "border-[var(--dash-accent)] ring-1 ring-[var(--dash-accent)]/30 bg-[var(--dash-surface)] shadow-md"
+                    : "border-[var(--dash-rule)] bg-[var(--dash-surface)] hover:border-[var(--dash-muted)]"
+                }`}
+              >
+                {/* Header: Dot Index + Best Badge */}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold text-white shadow-sm"
+                      style={{ backgroundColor: theme.stroke }}
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="font-mono text-[10px] text-[var(--dash-muted)] uppercase tracking-wider">
+                      {index === 0 ? "BASELINE" : "COMPARISON"}
+                    </span>
+                  </div>
+
+                  {isBest && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      <Sparkles size={10} /> BEST AIR QUALITY
+                    </span>
+                  )}
+
+                  {locations.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => removeLocation(index)}
+                      className="text-[var(--dash-muted)] hover:text-[var(--dash-ink)] p-1 rounded-full hover:bg-[var(--dash-surface-soft)] transition-colors"
+                      aria-label={`Remove ${site.location.name}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* City and Coordinates */}
+                <h2 className="text-xl font-bold tracking-tight text-[var(--dash-ink)] truncate">
+                  {site.location.name}
+                </h2>
+                <p className="text-[11px] text-[var(--dash-muted)] truncate mb-3">
+                  {[site.location.admin, site.location.country].filter(Boolean).join(" · ")}
+                </p>
+
+                {/* Current Active Parameter Highlight */}
+                <div className="flex items-baseline justify-between p-2.5 rounded-lg bg-[var(--dash-surface-soft)] mb-3">
+                  <div>
+                    <span className="text-[10px] font-mono text-[var(--dash-muted)] block uppercase">
+                      {activeParam.shortLabel} NOW
+                    </span>
+                    <strong className="text-2xl font-extrabold text-[var(--dash-ink)]">
+                      {site.currentVal !== null ? site.currentVal.toFixed(1) : "—"}
+                    </strong>
+                    <span className="text-[10px] font-mono text-[var(--dash-muted)] ml-1">
+                      {activeParam.unit}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] font-mono text-[var(--dash-muted)] block uppercase">
+                      {timeframe.toUpperCase()} AVG
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--dash-ink)]">
+                      {site.avgVal !== null ? site.avgVal.toFixed(1) : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Provenance Badge & Live Metadata */}
+                <div className="space-y-1.5 pt-2 border-t border-[var(--dash-rule)] text-[10px] font-mono">
+                  <div className="flex items-center gap-1.5 text-[var(--dash-muted)]">
+                    <RadioTower size={11} className={site.provenance === "station-observation" ? "text-emerald-500" : "text-amber-500"} />
+                    <span className="truncate">{site.sourceLabel}</span>
+                  </div>
+                  {site.live?.current?.time && (
+                    <div className="text-[var(--dash-faint)] flex items-center gap-1">
+                      <Clock size={10} />
+                      Observed: {new Date(site.live.current.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  )}
+                </div>
+              </motion.article>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
+      {/* ---------------------------------------------------- */}
+      {/* Chart 1: Time-Series Trend Comparison */}
+      {/* ---------------------------------------------------- */}
+      <article className="mt-8 p-5 sm:p-6 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--dash-muted)]">
+                CHART 01 · CONTINUOUS CHRONOLOGY
+              </span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)]">
+                CAMS Atmospheric Reanalysis
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+              {activeParam.label} Dynamic Trend
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs font-mono text-[var(--dash-muted)]">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-amber-500 inline-block" />
+              Threshold: {activeParam.threshold} {activeParam.unit}
+            </span>
+          </div>
+        </div>
+
+        {/* Recharts Container */}
+        <div className="w-full h-80 sm:h-96">
+          <ResponsiveContainer width="100%" height="100%">
+            {viewMode === "line" ? (
+              <LineChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 5" stroke="var(--dash-rule)" opacity={0.6} />
+                <XAxis dataKey="displayTime" tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
+                <YAxis
+                  tick={{ fill: "var(--dash-muted)", fontSize: 10 }}
+                  label={{
+                    value: activeParam.unit,
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "var(--dash-muted)",
+                    fontSize: 10,
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--dash-surface)",
+                    borderColor: "var(--dash-rule)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    color: "var(--dash-ink)",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                  }}
+                  formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
+                  labelStyle={{ color: "var(--dash-muted)", marginBottom: "4px", fontSize: "11px" }}
+                />
+                <Legend />
+                <ReferenceLine
+                  y={activeParam.threshold}
+                  stroke="#f59e0b"
+                  strokeDasharray="4 4"
+                  label={{
+                    value: activeParam.thresholdLabel,
+                    fill: "#f59e0b",
+                    fontSize: 10,
+                    position: "insideTopRight",
+                  }}
+                />
+                {locations.map((loc, idx) => (
+                  <Line
+                    key={loc.name}
+                    type="monotone"
+                    dataKey={loc.name}
+                    name={loc.name}
+                    stroke={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 5 }}
+                  />
+                ))}
+              </LineChart>
+            ) : (
+              <AreaChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 5" stroke="var(--dash-rule)" opacity={0.6} />
+                <XAxis dataKey="displayTime" tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
+                <YAxis tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--dash-surface)",
+                    borderColor: "var(--dash-rule)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    color: "var(--dash-ink)",
+                  }}
+                  formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
+                />
+                <Legend />
+                <ReferenceLine y={activeParam.threshold} stroke="#f59e0b" strokeDasharray="4 4" />
+                {locations.map((loc, idx) => (
+                  <Area
+                    key={loc.name}
+                    type="monotone"
+                    dataKey={loc.name}
+                    name={loc.name}
+                    stroke={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
+                    fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].fill}
+                    fillOpacity={0.15}
+                    strokeWidth={2}
+                  />
+                ))}
+              </AreaChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+
+        {/* Automated Percentage Variance & Trend Narrative Callout */}
+        <div className="mt-6 p-4 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)]">
+          <span className="text-[10px] font-mono text-[var(--dash-accent)] uppercase tracking-wider flex items-center gap-1.5 font-bold mb-2">
+            <Sparkles size={12} /> AUTOMATED VARIANCE & PROVENANCE INSIGHTS:
+          </span>
+          <div className="space-y-2 text-xs text-[var(--dash-ink)] leading-relaxed">
+            {varianceAnalysis.map((item) => {
+              const isHigher = (item.currentDeltaPct ?? 0) > 0;
+              return (
+                <div key={item.targetName} className="flex items-start gap-2">
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                    isHigher
+                      ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                      : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                  }`}>
+                    {isHigher ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                    {item.currentDeltaPct !== null ? `${item.currentDeltaPct > 0 ? "+" : ""}${item.currentDeltaPct.toFixed(1)}%` : "0%"}
+                  </span>
+                  <p>
+                    <strong>{item.targetName}</strong> exhibits a{" "}
+                    <strong>{item.currentDeltaPct !== null ? `${Math.abs(item.currentDeltaPct).toFixed(1)}% ${isHigher ? "higher" : "lower"}` : "comparable"}</strong>{" "}
+                    level of {activeParam.label} relative to <strong>{item.baselineName}</strong> ({item.m.currentVal?.toFixed(1) ?? "—"} vs{" "}
+                    {siteMetrics[0]?.currentVal?.toFixed(1) ?? "—"} {activeParam.unit}). Across the {timeframe} window, {item.targetName} averaged{" "}
+                    <strong>{item.m.avgVal?.toFixed(1) ?? "—"} {activeParam.unit}</strong>{" "}
+                    {item.m.peakVal !== null && `with a peak accumulation of ${item.m.peakVal.toFixed(1)} ${activeParam.unit} observed at ${item.m.peakTime}`}.
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </article>
+
+      {/* ---------------------------------------------------- */}
+      {/* Charts 2 & 3 Grid: Snapshot Bar & Radar Profile */}
+      {/* ---------------------------------------------------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+        {/* Chart 2: Side-by-Side Parameter Snapshot (Grouped Bar) */}
+        <article className="lg:col-span-7 p-5 sm:p-6 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--dash-muted)]">
+                CHART 02 · MULTI-POLLUTANT SNAPSHOT
+              </span>
+              <h2 className="text-xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+                Pollutant Burden vs Benchmark
+              </h2>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-1 rounded bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]">
+              % of EPA/WHO Limit
+            </span>
+          </div>
+
+          <div className="w-full h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={snapshotData} margin={{ top: 12, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 5" stroke="var(--dash-rule)" opacity={0.6} />
+                <XAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 11 }} />
+                <YAxis
+                  tick={{ fill: "var(--dash-muted)", fontSize: 10 }}
+                  label={{ value: "% of Limit", angle: -90, position: "insideLeft", fill: "var(--dash-muted)", fontSize: 10 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--dash-surface)",
+                    borderColor: "var(--dash-rule)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    color: "var(--dash-ink)",
+                  }}
+                  formatter={(val: any, name: any, item: any) => [
+                    `${val}% (${item.payload[`${name}_raw`]} raw)`,
+                    name,
+                  ]}
+                />
+                <Legend />
+                <ReferenceLine
+                  y={100}
+                  stroke="#ef4444"
+                  strokeDasharray="4 4"
+                  label={{ value: "100% Health Standard", fill: "#ef4444", fontSize: 10, position: "insideTopRight" }}
+                />
+                {locations.map((loc, idx) => (
+                  <Bar
+                    key={loc.name}
+                    dataKey={loc.name}
+                    name={loc.name}
+                    fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[11px] text-[var(--dash-muted)] mt-4">
+            Bars exceeding 100% indicate concentrations surpassing EPA or WHO clean-air benchmark thresholds.
+          </p>
+        </article>
+
+        {/* Chart 3: Atmospheric Multi-Pollutant Fingerprint (Radar) */}
+        <article className="lg:col-span-5 p-5 sm:p-6 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--dash-muted)]">
+                  CHART 03 · CHEMICAL SIGNATURE
+                </span>
+                <h2 className="text-xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+                  Atmospheric Profile
+                </h2>
+              </div>
+            </div>
+
+            <div className="w-full h-80 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData} outerRadius="72%">
+                  <PolarGrid stroke="var(--dash-rule)" opacity={0.7} />
+                  <PolarAngleAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 11 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "var(--dash-muted)", fontSize: 9 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--dash-surface)",
+                      borderColor: "var(--dash-rule)",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      color: "var(--dash-ink)",
+                    }}
+                    formatter={(val: any) => [`${val}% relative intensity`, "Burden"]}
+                  />
+                  <Legend />
+                  {locations.map((loc, idx) => (
+                    <Radar
+                      key={loc.name}
+                      name={loc.name}
+                      dataKey={loc.name}
+                      stroke={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
+                      fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].fill}
+                      fillOpacity={0.15}
+                      strokeWidth={2}
+                    />
+                  ))}
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[11px] text-[var(--dash-muted)] mt-2">
+            The radar signature demonstrates whether atmospheric stress is particulate-heavy (PM2.5/PM10) or traffic/industrial (NO2/SO2/CO).
+          </div>
+        </article>
+      </div>
     </section>
   );
 }
+
+export default LocationComparison;
