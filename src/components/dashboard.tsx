@@ -99,6 +99,41 @@ export function Dashboard() {
 
   const selectLocation = useCallback((nextLocation: Location) => setLocation(nextLocation), []);
 
+  const detectUserLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      try {
+        const response = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+        if (response.ok) {
+          const place = (await response.json()) as { name?: string; admin?: string; country?: string };
+          if (place.name) {
+            setLocation({
+              name: place.name,
+              admin: place.admin || "Detected location",
+              country: place.country || "",
+              latitude: lat,
+              longitude: lng,
+            });
+            return;
+          }
+        }
+      } catch {}
+
+      setLocation({
+        name: "Detected location",
+        admin: "Browser coordinates",
+        latitude: lat,
+        longitude: lng,
+      });
+    }, () => undefined, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 });
+  }, []);
+
+  useEffect(() => {
+    detectUserLocation();
+  }, [detectUserLocation]);
+
   useEffect(() => {
     const controller = new AbortController();
     async function load() {
@@ -191,7 +226,23 @@ export function Dashboard() {
           <section className="dashboard-split" aria-label="Live air quality dashboard">
             <aside className="dashboard-sidebar">
               <section className="location-search-card">
-                <div className="location-search-heading"><div><span className="section-kicker">SELECTED PLACE</span><h2>{location.name}</h2><p>{[location.admin, location.country].filter(Boolean).join(" · ")}</p></div><span className="location-pin"><LocateFixed size={16}/></span></div>
+                <div className="location-search-heading">
+                  <div>
+                    <span className="section-kicker">SELECTED PLACE</span>
+                    <h2>{location.name}</h2>
+                    <p>{[location.admin, location.country].filter(Boolean).join(" · ")}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="location-pin"
+                    onClick={detectUserLocation}
+                    title="Detect my real location"
+                    aria-label="Detect my real location"
+                    style={{ cursor: "pointer", background: "none", border: "none" }}
+                  >
+                    <LocateFixed size={16}/>
+                  </button>
+                </div>
                 <Popover.Root open={searchOpen && query.trim().length >= 2} onOpenChange={setSearchOpen}>
                   <Popover.Anchor asChild>
                     <label className="search-box" htmlFor="city-search"><Search size={15} aria-hidden="true"/><input id="city-search" type="search" placeholder="Search a city or region" autoComplete="off" value={query} onFocus={() => setSearchOpen(true)} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setSearchOpen(false); }}/><kbd>↵</kbd></label>

@@ -63,8 +63,32 @@ export function GlobeEngine({ location, air, layer, weather, wind, temperature, 
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((position) => {
-      onLocationSelect({ name: "Your location", admin: "Detected by browser", latitude: position.coords.latitude, longitude: position.coords.longitude });
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      try {
+        const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+        if (res.ok) {
+          const place = (await res.json()) as { name?: string; admin?: string; country?: string };
+          if (place.name) {
+            onLocationSelect({
+              name: place.name,
+              admin: place.admin || "Detected location",
+              country: place.country || "",
+              latitude: lat,
+              longitude: lng,
+            });
+            return;
+          }
+        }
+      } catch {}
+
+      onLocationSelect({
+        name: "Detected location",
+        admin: "Browser coordinates",
+        latitude: lat,
+        longitude: lng,
+      });
     }, () => undefined, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 });
   // Run once on initial mount; location changes are driven by search and globe clicks.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,8 +112,40 @@ export function GlobeEngine({ location, air, layer, weather, wind, temperature, 
   }, []);
   useEffect(() => { if (!ready) return; return addAtmosphere(); }, [addAtmosphere, ready]);
 
-  const selectCoordinates = useCallback((coords: { lat: number; lng: number }) => {
-    onLocationSelect({ name: "Selected location", admin: "Globe coordinates", latitude: coords.lat, longitude: coords.lng });
+  const selectCoordinates = useCallback(async (coords: { lat: number; lng: number }) => {
+    const lat = coords.lat;
+    const lng = coords.lng;
+
+    onLocationSelect({
+      name: "Resolving location…",
+      admin: "Globe point",
+      latitude: lat,
+      longitude: lng,
+    });
+
+    try {
+      const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+      if (res.ok) {
+        const place = (await res.json()) as { name?: string; admin?: string; country?: string };
+        if (place.name) {
+          onLocationSelect({
+            name: place.name,
+            admin: place.admin || "Selected point",
+            country: place.country || "",
+            latitude: lat,
+            longitude: lng,
+          });
+          return;
+        }
+      }
+    } catch {}
+
+    onLocationSelect({
+      name: "Selected location",
+      admin: "Globe coordinates",
+      latitude: lat,
+      longitude: lng,
+    });
   }, [onLocationSelect]);
 
   const windAngle = weather?.wind_direction_10m ?? 0;
