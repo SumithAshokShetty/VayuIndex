@@ -28,21 +28,17 @@ import {
   ArrowUpRight,
   BarChart2,
   Calendar,
-  Check,
   ChevronDown,
   Clock,
-  CloudSun,
-  Layers,
-  MapPin,
   Plus,
   RadioTower,
-  RotateCcw,
   Search,
   Sparkles,
   TrendingUp,
   X,
 } from "lucide-react";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
+import { useTheme } from "@/lib/use-theme";
 
 // ==========================================
 // Types & Constants
@@ -175,17 +171,47 @@ const POLLUTANT_SNAPSHOT_LIST: { key: ParameterKey; label: string; limit: number
   { key: "ozone", label: "O₃", limit: 100.0 },
 ];
 
-function formatTime(isoString: string, tf: Timeframe): string {
+// Clean formatting helpers for X-axis ticks
+function formatTimestampForAxis(isoString: string, tf: Timeframe): string {
   try {
     const d = new Date(isoString);
     if (isNaN(d.getTime())) return isoString;
+
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    const ampm = hours >= 12 ? "pm" : "am";
+    const h12 = hours % 12 === 0 ? 12 : hours % 12;
+    const h12Pad = String(h12).padStart(2, "0");
+    const minPad = String(minutes).padStart(2, "0");
+    const day = d.getDate();
+    const month = d.toLocaleDateString([], { month: "short" });
+
     if (tf === "24h") {
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+      // Clean 12-hour format: 12:00am, 03:00am, 06:00am, 09:00am
+      return `${h12Pad}:${minPad}${ampm}`;
     }
     if (tf === "7d") {
-      return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} ${d.toLocaleTimeString([], { hour: "2-digit", hour12: false })}h`;
+      // 12am 2 Nov, 12pm 2 Nov, 12am 3 Nov
+      return `${h12}${ampm} ${day} ${month}`;
     }
-    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+    // 30d
+    return `${day} ${month}`;
+  } catch {
+    return isoString;
+  }
+}
+
+// Compact formatting helper for Min/Max summary badge timestamps
+function formatTimestampBadge(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+    const hours = d.getHours();
+    const ampm = hours >= 12 ? "pm" : "am";
+    const h12 = hours % 12 === 0 ? 12 : hours % 12;
+    const day = d.getDate();
+    const month = d.toLocaleDateString([], { month: "short" });
+    return `${h12}${ampm} ${day} ${month}`;
   } catch {
     return isoString;
   }
@@ -200,6 +226,9 @@ function locationKey(loc: Location): string {
 // ==========================================
 
 export function LocationComparison({ initialLocation }: { initialLocation?: Location }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   // 1. Comparison Location State (2 to 4 locations)
   const [locations, setLocations] = useState<Location[]>(() => {
     if (initialLocation) {
@@ -370,7 +399,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
   // Comparative Analytics & Variance Synthesis
   // ------------------------------------------
 
-  // Chart 1 Data: Time-Series Comparison
+  // Chart 1 Data: Time-Series Comparison formatted with timestamp key
   const timeSeriesData = useMemo(() => {
     const baselineKey = locationKey(locations[0]);
     const baselineHistory = historyData[baselineKey]?.payload?.hourly;
@@ -380,7 +409,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
     return times.map((t, timeIndex) => {
       const entry: Record<string, any> = {
         rawTime: t,
-        displayTime: formatTime(t, timeframe),
+        timestamp: formatTimestampForAxis(t, timeframe),
       };
 
       locations.forEach((loc) => {
@@ -393,6 +422,46 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       return entry;
     });
   }, [locations, historyData, parameterKey, timeframe]);
+
+  // Min / Max Extremes Summary for each location in the active timeframe
+  const locationExtremes = useMemo(() => {
+    return locations.map((loc, idx) => {
+      const key = locationKey(loc);
+      const hourly = historyData[key]?.payload?.hourly;
+      const values: number[] = hourly?.[parameterKey] || [];
+      const times: string[] = hourly?.time || [];
+
+      let minVal: number | null = null;
+      let minTime = "";
+      let maxVal: number | null = null;
+      let maxTime = "";
+
+      values.forEach((v, i) => {
+        if (typeof v === "number" && !isNaN(v)) {
+          if (minVal === null || v < minVal) {
+            minVal = v;
+            minTime = formatTimestampBadge(times[i]);
+          }
+          if (maxVal === null || v > maxVal) {
+            maxVal = v;
+            maxTime = formatTimestampBadge(times[i]);
+          }
+        }
+      });
+
+      const resolvedMin = minVal !== null ? Number((minVal as number).toFixed(1)) : null;
+      const resolvedMax = maxVal !== null ? Number((maxVal as number).toFixed(1)) : null;
+
+      return {
+        location: loc,
+        theme: LOCATION_THEMES[idx % LOCATION_THEMES.length],
+        minVal: resolvedMin,
+        minTime,
+        maxVal: resolvedMax,
+        maxTime,
+      };
+    });
+  }, [locations, historyData, parameterKey]);
 
   // Live Metric Snapshot & Best Air Quality Badge
   const { siteMetrics, bestIndex, varianceAnalysis } = useMemo(() => {
@@ -430,7 +499,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
           peakVal = Math.max(...validValues);
           const maxIdx = hist[parameterKey].indexOf(peakVal);
           if (maxIdx >= 0 && hist.time?.[maxIdx]) {
-            peakTime = formatTime(hist.time[maxIdx], timeframe);
+            peakTime = formatTimestampBadge(hist.time[maxIdx]);
           }
         }
       }
@@ -554,78 +623,77 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       {/* ---------------------------------------------------- */}
       <header className="phase-view-heading flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[var(--dash-rule)]">
         <div>
-          <span className="section-kicker flex items-center gap-2 text-xs font-mono tracking-widest text-[var(--dash-muted)]">
+          <span className="section-kicker flex items-center gap-2 text-xs sm:text-sm font-mono tracking-widest text-[var(--dash-muted)]">
             <span className="eyebrow-line w-6 h-[1px] bg-[var(--dash-accent)]" />
             TELEMETRY ENGINE · MULTI-LOCATION BENCHMARK
           </span>
-          <h1 className="text-3xl md:text-5xl font-normal tracking-tight text-[var(--dash-ink)] mt-2">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-normal tracking-tight text-[var(--dash-ink)] mt-2">
             Air, in <em>comparison.</em>
           </h1>
-          <p className="text-sm text-[var(--dash-muted)] max-w-2xl mt-1">
+          <p className="text-sm sm:text-base text-[var(--dash-muted)] max-w-2xl mt-1.5">
             Compare validated ground-truth station observations with continuous atmospheric CAMS reanalysis across global coordinates.
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-end">
-          <span className="provenance-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)]">
-            <RadioTower size={12} className="text-[var(--dash-accent)]" />
+          <span className="provenance-pill inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-mono font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm">
+            <RadioTower size={14} className="text-[var(--dash-accent)]" />
             OPENAQ V3 & WAQI GROUND PROVENANCE
           </span>
         </div>
       </header>
 
       {/* ---------------------------------------------------- */}
-      {/* Control Bar: Selector, Presets, Filters */}
+      {/* Tier 1: Search & Quick Presets */}
       {/* ---------------------------------------------------- */}
       <div className="mt-8 space-y-4">
-        {/* Presets and Location Input Bar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
           {/* Location Autocomplete Input */}
           <div className="lg:col-span-6 relative">
             <label
               htmlFor="compare-search-input"
-              className="flex items-center gap-2.5 h-11 px-3.5 rounded-lg border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm focus-within:border-[var(--dash-accent)] transition-colors"
+              className="flex items-center gap-3 h-12 px-4 rounded-xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm focus-within:border-[var(--dash-accent)] transition-colors"
             >
-              <Search size={16} className="text-[var(--dash-muted)] flex-none" />
+              <Search size={18} className="text-[var(--dash-muted)] flex-none" />
               <input
                 id="compare-search-input"
-                className="w-full bg-transparent text-xs sm:text-sm outline-none placeholder:text-[var(--dash-faint)] text-[var(--dash-ink)]"
+                className="w-full bg-transparent text-sm sm:text-base outline-none placeholder:text-[var(--dash-faint)] text-[var(--dash-ink)] font-medium"
                 placeholder={locations.length >= 4 ? "Maximum 4 locations reached" : "Search to add city or coordinate..."}
                 disabled={locations.length >= 4}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 autoComplete="off"
               />
-              <span className="font-mono text-[10px] text-[var(--dash-muted)] px-2 py-0.5 rounded bg-[var(--dash-surface-soft)]">
+              <span className="font-mono text-xs text-[var(--dash-muted)] font-semibold px-2.5 py-1 rounded-md bg-[var(--dash-surface-soft)]">
                 {locations.length}/4
               </span>
             </label>
 
             {/* Autocomplete Dropdown Suggestions */}
             {query.trim().length >= 2 && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 z-40 max-h-60 overflow-y-auto rounded-lg border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-xl divide-y divide-[var(--dash-rule)]">
+              <div className="absolute top-full left-0 right-0 mt-2 z-40 max-h-64 overflow-y-auto rounded-xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-2xl divide-y divide-[var(--dash-rule)]">
                 {searching && (
-                  <div className="p-3 text-xs text-[var(--dash-muted)] font-mono flex items-center gap-2">
-                    <Clock size={12} className="animate-spin" /> Querying geocoding registry...
+                  <div className="p-3.5 text-sm text-[var(--dash-muted)] font-mono flex items-center gap-2">
+                    <Clock size={14} className="animate-spin" /> Querying geocoding registry...
                   </div>
                 )}
                 {!searching && suggestions.length === 0 && (
-                  <div className="p-3 text-xs text-[var(--dash-muted)]">No geographic places matched.</div>
+                  <div className="p-3.5 text-sm text-[var(--dash-muted)]">No geographic places matched.</div>
                 )}
                 {suggestions.map((place) => (
                   <button
                     type="button"
                     key={place.id}
                     onClick={() => addLocation(place)}
-                    className="w-full text-left px-3.5 py-2.5 hover:bg-[var(--dash-surface-soft)] flex items-center justify-between text-xs text-[var(--dash-ink)] transition-colors"
+                    className="w-full text-left px-4 py-3 hover:bg-[var(--dash-surface-soft)] flex items-center justify-between text-sm text-[var(--dash-ink)] transition-colors"
                   >
                     <div>
-                      <strong className="font-medium text-[var(--dash-ink)] block">{place.name}</strong>
-                      <span className="text-[10px] text-[var(--dash-muted)]">
+                      <strong className="font-semibold text-[var(--dash-ink)] block">{place.name}</strong>
+                      <span className="text-xs text-[var(--dash-muted)]">
                         {[place.admin1, place.country].filter(Boolean).join(" · ")}
                       </span>
                     </div>
-                    <Plus size={14} className="text-[var(--dash-accent)]" />
+                    <Plus size={16} className="text-[var(--dash-accent)]" />
                   </button>
                 ))}
               </div>
@@ -633,113 +701,32 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
           </div>
 
           {/* Quick Comparison Preset Buttons */}
-          <div className="lg:col-span-6 flex items-center flex-wrap gap-2">
-            <span className="text-[11px] font-mono text-[var(--dash-muted)] uppercase tracking-wider mr-1">
-              Presets:
+          <div className="lg:col-span-6 flex items-center flex-wrap gap-2.5">
+            <span className="text-xs font-mono font-bold text-[var(--dash-muted)] uppercase tracking-wider mr-1">
+              PRESETS:
             </span>
             {PRESETS.map((preset) => (
               <button
                 type="button"
                 key={preset.label}
                 onClick={() => applyPreset(preset)}
-                className="px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] hover:border-[var(--dash-accent)] hover:text-[var(--dash-accent)] transition-all shadow-sm"
+                className="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] hover:border-[var(--dash-accent)] hover:text-[var(--dash-accent)] transition-all shadow-sm"
               >
                 {preset.label}
               </button>
             ))}
           </div>
         </div>
-
-        {/* Dynamic Filters Bar: Timeframe, Parameter, View Toggle */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--dash-rule)] bg-[var(--dash-surface)]">
-          {/* Timeframe Dropdown Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-[var(--dash-muted)] flex items-center gap-1.5">
-              <Calendar size={13} className="text-[var(--dash-accent)]" />
-              HORIZON:
-            </span>
-            <div className="inline-flex rounded-md border border-[var(--dash-rule)] p-0.5 bg-[var(--dash-surface-soft)]">
-              {(["24h", "7d", "30d"] as const).map((tf) => (
-                <button
-                  key={tf}
-                  type="button"
-                  onClick={() => setTimeframe(tf)}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                    timeframe === tf
-                      ? "bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm font-semibold"
-                      : "text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
-                  }`}
-                >
-                  {tf === "24h" ? "24 Hours" : tf === "7d" ? "7 Days" : "30 Days"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Parameter Dropdown Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-[var(--dash-muted)] flex items-center gap-1.5">
-              <Activity size={13} className="text-[var(--dash-accent)]" />
-              PARAMETER:
-            </span>
-            <div className="relative">
-              <select
-                value={parameterKey}
-                onChange={(e) => setParameterKey(e.target.value as ParameterKey)}
-                aria-label="Active parameter to compare"
-                className="h-8 pl-3 pr-8 rounded-md text-xs font-medium border border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] outline-none cursor-pointer appearance-none focus:border-[var(--dash-accent)]"
-              >
-                {PARAMETERS.map((p) => (
-                  <option key={p.key} value={p.key}>
-                    {p.label} ({p.unit})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={13} className="absolute right-2.5 top-2.5 text-[var(--dash-muted)] pointer-events-none" />
-            </div>
-          </div>
-
-          {/* View Mode Toggle Icons (Line vs Bar) */}
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-xs font-mono text-[var(--dash-muted)] mr-1 hidden sm:inline">VIEW:</span>
-            <button
-              type="button"
-              onClick={() => setViewMode("line")}
-              aria-label="Line trend view"
-              className={`p-1.5 rounded border transition-colors ${
-                viewMode === "line"
-                  ? "border-[var(--dash-accent)] bg-[var(--dash-surface-soft)] text-[var(--dash-accent)]"
-                  : "border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
-              }`}
-              title="Line Chart Trend"
-            >
-              <TrendingUp size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("bar")}
-              aria-label="Bar snapshot view"
-              className={`p-1.5 rounded border transition-colors ${
-                viewMode === "bar"
-                  ? "border-[var(--dash-accent)] bg-[var(--dash-surface-soft)] text-[var(--dash-accent)]"
-                  : "border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
-              }`}
-              title="Bar Chart Snapshot"
-            >
-              <BarChart2 size={16} />
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* ---------------------------------------------------- */}
-      {/* Multi-Location Metric Snapshot Cards */}
+      {/* Tier 2: Multi-Location Metric Snapshot Cards */}
       {/* ---------------------------------------------------- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
         <AnimatePresence>
           {siteMetrics.map((site, index) => {
             const isBest = bestIndex === index;
-            const theme = site.theme;
+            const locTheme = site.theme;
 
             return (
               <motion.article
@@ -748,29 +735,29 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.35, delay: index * 0.05 }}
-                className={`relative p-4 rounded-xl border transition-all ${
+                className={`relative p-5 rounded-2xl border transition-all ${
                   isBest
                     ? "border-[var(--dash-accent)] ring-1 ring-[var(--dash-accent)]/30 bg-[var(--dash-surface)] shadow-md"
                     : "border-[var(--dash-rule)] bg-[var(--dash-surface)] hover:border-[var(--dash-muted)]"
                 }`}
               >
                 {/* Header: Dot Index + Best Badge */}
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className="w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold text-white shadow-sm"
-                      style={{ backgroundColor: theme.stroke }}
+                      className="w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold text-white shadow-sm"
+                      style={{ backgroundColor: locTheme.stroke }}
                     >
                       {index + 1}
                     </span>
-                    <span className="font-mono text-[10px] text-[var(--dash-muted)] uppercase tracking-wider">
+                    <span className="font-mono text-xs text-[var(--dash-muted)] font-bold uppercase tracking-wider">
                       {index === 0 ? "BASELINE" : "COMPARISON"}
                     </span>
                   </div>
 
                   {isBest && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                      <Sparkles size={10} /> BEST AIR QUALITY
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                      <Sparkles size={12} /> BEST AIR QUALITY
                     </span>
                   )}
 
@@ -778,55 +765,55 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     <button
                       type="button"
                       onClick={() => removeLocation(index)}
-                      className="text-[var(--dash-muted)] hover:text-[var(--dash-ink)] p-1 rounded-full hover:bg-[var(--dash-surface-soft)] transition-colors"
+                      className="text-[var(--dash-muted)] hover:text-[var(--dash-ink)] p-1.5 rounded-full hover:bg-[var(--dash-surface-soft)] transition-colors"
                       aria-label={`Remove ${site.location.name}`}
                     >
-                      <X size={14} />
+                      <X size={16} />
                     </button>
                   )}
                 </div>
 
                 {/* City and Coordinates */}
-                <h2 className="text-xl font-bold tracking-tight text-[var(--dash-ink)] truncate">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--dash-ink)] truncate">
                   {site.location.name}
                 </h2>
-                <p className="text-[11px] text-[var(--dash-muted)] truncate mb-3">
+                <p className="text-xs text-[var(--dash-muted)] truncate mb-4 font-medium">
                   {[site.location.admin, site.location.country].filter(Boolean).join(" · ")}
                 </p>
 
                 {/* Current Active Parameter Highlight */}
-                <div className="flex items-baseline justify-between p-2.5 rounded-lg bg-[var(--dash-surface-soft)] mb-3">
+                <div className="flex items-baseline justify-between p-3.5 rounded-xl bg-[var(--dash-surface-soft)] mb-3.5">
                   <div>
-                    <span className="text-[10px] font-mono text-[var(--dash-muted)] block uppercase">
+                    <span className="text-xs font-mono text-[var(--dash-muted)] font-semibold block uppercase">
                       {activeParam.shortLabel} NOW
                     </span>
-                    <strong className="text-2xl font-extrabold text-[var(--dash-ink)]">
+                    <strong className="text-3xl font-extrabold text-[var(--dash-ink)]">
                       {site.currentVal !== null ? site.currentVal.toFixed(1) : "—"}
                     </strong>
-                    <span className="text-[10px] font-mono text-[var(--dash-muted)] ml-1">
+                    <span className="text-xs font-mono text-[var(--dash-muted)] font-semibold ml-1.5">
                       {activeParam.unit}
                     </span>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] font-mono text-[var(--dash-muted)] block uppercase">
+                    <span className="text-xs font-mono text-[var(--dash-muted)] font-semibold block uppercase">
                       {timeframe.toUpperCase()} AVG
                     </span>
-                    <span className="text-sm font-semibold text-[var(--dash-ink)]">
+                    <span className="text-base font-bold text-[var(--dash-ink)]">
                       {site.avgVal !== null ? site.avgVal.toFixed(1) : "—"}
                     </span>
                   </div>
                 </div>
 
                 {/* Provenance Badge & Live Metadata */}
-                <div className="space-y-1.5 pt-2 border-t border-[var(--dash-rule)] text-[10px] font-mono">
+                <div className="space-y-2 pt-2.5 border-t border-[var(--dash-rule)] text-xs font-mono">
                   <div className="flex items-center gap-1.5 text-[var(--dash-muted)]">
-                    <RadioTower size={11} className={site.provenance === "station-observation" ? "text-emerald-500" : "text-amber-500"} />
-                    <span className="truncate">{site.sourceLabel}</span>
+                    <RadioTower size={13} className={site.provenance === "station-observation" ? "text-emerald-500" : "text-amber-500"} />
+                    <span className="truncate font-medium">{site.sourceLabel}</span>
                   </div>
                   {site.live?.current?.time && (
-                    <div className="text-[var(--dash-faint)] flex items-center gap-1">
-                      <Clock size={10} />
+                    <div className="text-[var(--dash-faint)] flex items-center gap-1.5">
+                      <Clock size={12} />
                       Observed: {new Date(site.live.current.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </div>
                   )}
@@ -838,62 +825,176 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       </div>
 
       {/* ---------------------------------------------------- */}
-      {/* Chart 1: Time-Series Trend Comparison */}
+      {/* Tier 3: Selectors Bar (Directly Above Chart 1) */}
       {/* ---------------------------------------------------- */}
-      <article className="mt-8 p-5 sm:p-6 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
+        {/* Timeframe Selector (24 Hours, 7 Days, 30 Days) */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs sm:text-sm font-mono font-bold text-[var(--dash-muted)] flex items-center gap-2">
+            <Calendar size={16} className="text-[var(--dash-accent)]" />
+            HORIZON:
+          </span>
+          <div className="inline-flex rounded-lg border border-[var(--dash-rule)] p-1 bg-[var(--dash-surface-soft)]">
+            {(["24h", "7d", "30d"] as const).map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                onClick={() => setTimeframe(tf)}
+                className={`px-4 py-1.5 rounded-md text-xs sm:text-sm font-semibold transition-colors ${
+                  timeframe === tf
+                    ? "bg-[var(--dash-surface)] text-[var(--dash-ink)] shadow-sm border border-[var(--dash-rule)] font-bold text-[var(--dash-accent)]"
+                    : "text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
+                }`}
+              >
+                {tf === "24h" ? "24 Hours" : tf === "7d" ? "7 Days" : "30 Days"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Parameter Selector Dropdown */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs sm:text-sm font-mono font-bold text-[var(--dash-muted)] flex items-center gap-2">
+            <Activity size={16} className="text-[var(--dash-accent)]" />
+            PARAMETER:
+          </span>
+          <div className="relative">
+            <select
+              value={parameterKey}
+              onChange={(e) => setParameterKey(e.target.value as ParameterKey)}
+              aria-label="Active parameter to compare"
+              className="h-10 pl-4 pr-10 rounded-lg text-xs sm:text-sm font-semibold border border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] outline-none cursor-pointer appearance-none focus:border-[var(--dash-accent)] shadow-sm"
+            >
+              {PARAMETERS.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label} ({p.unit})
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={15} className="absolute right-3.5 top-3 text-[var(--dash-muted)] pointer-events-none" />
+          </div>
+        </div>
+
+        {/* View Mode Toggle Icons (Line vs Bar) */}
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-xs sm:text-sm font-mono font-bold text-[var(--dash-muted)] mr-1 hidden sm:inline">VIEW:</span>
+          <button
+            type="button"
+            onClick={() => setViewMode("line")}
+            aria-label="Line trend view"
+            className={`p-2 rounded-lg border transition-colors ${
+              viewMode === "line"
+                ? "border-[var(--dash-accent)] bg-[var(--dash-surface-soft)] text-[var(--dash-accent)] shadow-sm"
+                : "border-[var(--dash-rule)] text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
+            }`}
+            title="Line Chart Trend"
+          >
+            <TrendingUp size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("bar")}
+            aria-label="Bar snapshot view"
+            className={`p-2 rounded-lg border transition-colors ${
+              viewMode === "bar"
+                ? "border-[var(--dash-accent)] bg-[var(--dash-surface-soft)] text-[var(--dash-accent)] shadow-sm"
+                : "border-[var(--dash-rule)] text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
+            }`}
+            title="Bar Chart Snapshot"
+          >
+            <BarChart2 size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------- */}
+      {/* Tier 4: Chart 1: Time-Series Metric Trend Comparison */}
+      {/* ---------------------------------------------------- */}
+      <article className="mt-6 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
+        {/* Chart Header + Top-Right Min / Max Summary Badges */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--dash-muted)]">
+              <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
                 CHART 01 · CONTINUOUS CHRONOLOGY
               </span>
-              <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)]">
+              <span className="px-2.5 py-1 rounded text-xs font-mono font-medium bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)]">
                 CAMS Atmospheric Reanalysis
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--dash-ink)] mt-1.5">
               {activeParam.label} Dynamic Trend
             </h2>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-mono text-[var(--dash-muted)]">
-            <span className="flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-amber-500 inline-block" />
-              Threshold: {activeParam.threshold} {activeParam.unit}
-            </span>
+          {/* Top-Right Dynamic Min / Max Summary Badges */}
+          <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-end">
+            {locationExtremes.map((item) => (
+              <div
+                key={item.location.name}
+                className="flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] text-xs shadow-sm"
+              >
+                <span className="flex items-center gap-1.5 font-bold text-[var(--dash-ink)]">
+                  <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: item.theme.stroke }} />
+                  {item.location.name}:
+                </span>
+                {item.minVal !== null ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                    Min: {item.minVal} ({item.minTime})
+                  </span>
+                ) : null}
+                {item.maxVal !== null ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                    Max: {item.maxVal} ({item.maxTime})
+                  </span>
+                ) : null}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Recharts Container */}
+        {/* Recharts Canvas */}
         <div className="w-full h-80 sm:h-96">
           <ResponsiveContainer width="100%" height="100%">
             {viewMode === "line" ? (
-              <LineChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 5" stroke="var(--dash-rule)" opacity={0.6} />
-                <XAxis dataKey="displayTime" tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
+              <LineChart data={timeSeriesData} margin={{ top: 12, right: 12, left: -4, bottom: 0 }}>
+                {/* Horizontal grid lines strictly */}
+                <CartesianGrid
+                  stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="timestamp"
+                  interval="preserveStartEnd"
+                  minTickGap={40}
+                  tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
+                />
                 <YAxis
-                  tick={{ fill: "var(--dash-muted)", fontSize: 10 }}
+                  tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
                   label={{
-                    value: activeParam.unit,
+                    value: activeParam.key === "us_aqi" ? "AQI (US)" : activeParam.unit,
                     angle: -90,
                     position: "insideLeft",
                     fill: "var(--dash-muted)",
-                    fontSize: 10,
+                    fontSize: 12,
+                    offset: 10,
                   }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--dash-surface)",
                     borderColor: "var(--dash-rule)",
-                    borderRadius: "8px",
-                    fontSize: "12px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
                     color: "var(--dash-ink)",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
+                    padding: "10px 14px",
                   }}
                   formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
-                  labelStyle={{ color: "var(--dash-muted)", marginBottom: "4px", fontSize: "11px" }}
+                  labelStyle={{ color: "var(--dash-muted)", marginBottom: "6px", fontSize: "12px", fontWeight: 600 }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
                 <ReferenceLine
                   y={activeParam.threshold}
                   stroke="#f59e0b"
@@ -901,73 +1002,100 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                   label={{
                     value: activeParam.thresholdLabel,
                     fill: "#f59e0b",
-                    fontSize: 10,
+                    fontSize: 11,
                     position: "insideTopRight",
                   }}
                 />
-                {locations.map((loc, idx) => (
-                  <Line
-                    key={loc.name}
-                    type="monotone"
-                    dataKey={loc.name}
-                    name={loc.name}
-                    stroke={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
-                    strokeWidth={2.5}
-                    dot={false}
-                    activeDot={{ r: 5 }}
-                  />
-                ))}
+                {locations.map((loc, idx) => {
+                  const locTheme = LOCATION_THEMES[idx % LOCATION_THEMES.length];
+                  return (
+                    <Line
+                      key={loc.name}
+                      type="monotone"
+                      dataKey={loc.name}
+                      name={loc.name}
+                      stroke={locTheme.stroke}
+                      strokeWidth={2.5}
+                      dot={{ r: 3, fill: isDark ? "#2a342c" : "#E5E7EB", stroke: locTheme.stroke, strokeWidth: 1.5 }}
+                      activeDot={{ r: 6, stroke: locTheme.stroke, strokeWidth: 2, fill: "#ffffff" }}
+                    />
+                  );
+                })}
               </LineChart>
             ) : (
-              <AreaChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 5" stroke="var(--dash-rule)" opacity={0.6} />
-                <XAxis dataKey="displayTime" tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
-                <YAxis tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
+              <AreaChart data={timeSeriesData} margin={{ top: 12, right: 12, left: -4, bottom: 0 }}>
+                <CartesianGrid
+                  stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="timestamp"
+                  interval="preserveStartEnd"
+                  minTickGap={40}
+                  tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
+                />
+                <YAxis
+                  tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
+                  label={{
+                    value: activeParam.key === "us_aqi" ? "AQI (US)" : activeParam.unit,
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "var(--dash-muted)",
+                    fontSize: 12,
+                    offset: 10,
+                  }}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--dash-surface)",
                     borderColor: "var(--dash-rule)",
-                    borderRadius: "8px",
-                    fontSize: "12px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
                     color: "var(--dash-ink)",
                   }}
                   formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
                 <ReferenceLine y={activeParam.threshold} stroke="#f59e0b" strokeDasharray="4 4" />
-                {locations.map((loc, idx) => (
-                  <Area
-                    key={loc.name}
-                    type="monotone"
-                    dataKey={loc.name}
-                    name={loc.name}
-                    stroke={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
-                    fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].fill}
-                    fillOpacity={0.15}
-                    strokeWidth={2}
-                  />
-                ))}
+                {locations.map((loc, idx) => {
+                  const locTheme = LOCATION_THEMES[idx % LOCATION_THEMES.length];
+                  return (
+                    <Area
+                      key={loc.name}
+                      type="monotone"
+                      dataKey={loc.name}
+                      name={loc.name}
+                      stroke={locTheme.stroke}
+                      fill={locTheme.fill}
+                      fillOpacity={0.16}
+                      strokeWidth={2}
+                    />
+                  );
+                })}
               </AreaChart>
             )}
           </ResponsiveContainer>
         </div>
 
         {/* Automated Percentage Variance & Trend Narrative Callout */}
-        <div className="mt-6 p-4 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)]">
-          <span className="text-[10px] font-mono text-[var(--dash-accent)] uppercase tracking-wider flex items-center gap-1.5 font-bold mb-2">
-            <Sparkles size={12} /> AUTOMATED VARIANCE & PROVENANCE INSIGHTS:
+        <div className="mt-6 p-4 sm:p-5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)]">
+          <span className="text-xs font-mono text-[var(--dash-accent)] uppercase tracking-wider flex items-center gap-2 font-bold mb-2.5">
+            <Sparkles size={14} /> AUTOMATED VARIANCE & PROVENANCE INSIGHTS:
           </span>
-          <div className="space-y-2 text-xs text-[var(--dash-ink)] leading-relaxed">
+          <div className="space-y-2.5 text-xs sm:text-sm text-[var(--dash-ink)] leading-relaxed">
             {varianceAnalysis.map((item) => {
               const isHigher = (item.currentDeltaPct ?? 0) > 0;
               return (
-                <div key={item.targetName} className="flex items-start gap-2">
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
-                    isHigher
-                      ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
-                      : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                  }`}>
-                    {isHigher ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                <div key={item.targetName} className="flex items-start gap-2.5">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-bold ${
+                      isHigher
+                        ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                        : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                    }`}
+                  >
+                    {isHigher ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                     {item.currentDeltaPct !== null ? `${item.currentDeltaPct > 0 ? "+" : ""}${item.currentDeltaPct.toFixed(1)}%` : "0%"}
                   </span>
                   <p>
@@ -986,53 +1114,58 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       </article>
 
       {/* ---------------------------------------------------- */}
-      {/* Charts 2 & 3 Grid: Snapshot Bar & Radar Profile */}
+      {/* Tier 5: Charts 2 & 3 (Grouped Bar Snapshot & Radar Profile) */}
       {/* ---------------------------------------------------- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
         {/* Chart 2: Side-by-Side Parameter Snapshot (Grouped Bar) */}
-        <article className="lg:col-span-7 p-5 sm:p-6 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-4">
+        <article className="lg:col-span-7 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
+          <div className="flex items-center justify-between gap-3 mb-5">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--dash-muted)]">
+              <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
                 CHART 02 · MULTI-POLLUTANT SNAPSHOT
               </span>
-              <h2 className="text-xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
                 Pollutant Burden vs Benchmark
               </h2>
             </div>
-            <span className="text-[10px] font-mono px-2 py-1 rounded bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]">
+            <span className="text-xs font-mono font-semibold px-3 py-1 rounded-md bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]">
               % of EPA/WHO Limit
             </span>
           </div>
 
-          <div className="w-full h-80">
+          <div className="w-full h-80 sm:h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={snapshotData} margin={{ top: 12, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 5" stroke="var(--dash-rule)" opacity={0.6} />
-                <XAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 11 }} />
+              <BarChart data={snapshotData} margin={{ top: 14, right: 10, left: -6, bottom: 0 }}>
+                <CartesianGrid
+                  stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
+                <XAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 12 }} />
                 <YAxis
-                  tick={{ fill: "var(--dash-muted)", fontSize: 10 }}
-                  label={{ value: "% of Limit", angle: -90, position: "insideLeft", fill: "var(--dash-muted)", fontSize: 10 }}
+                  tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
+                  label={{ value: "% of Limit", angle: -90, position: "insideLeft", fill: "var(--dash-muted)", fontSize: 12 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "var(--dash-surface)",
                     borderColor: "var(--dash-rule)",
-                    borderRadius: "8px",
-                    fontSize: "12px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
                     color: "var(--dash-ink)",
+                    padding: "10px 14px",
                   }}
                   formatter={(val: any, name: any, item: any) => [
                     `${val}% (${item.payload[`${name}_raw`]} raw)`,
                     name,
                   ]}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
                 <ReferenceLine
                   y={100}
                   stroke="#ef4444"
                   strokeDasharray="4 4"
-                  label={{ value: "100% Health Standard", fill: "#ef4444", fontSize: 10, position: "insideTopRight" }}
+                  label={{ value: "100% Health Standard", fill: "#ef4444", fontSize: 11, position: "insideTopRight" }}
                 />
                 {locations.map((loc, idx) => (
                   <Bar
@@ -1046,59 +1179,62 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[11px] text-[var(--dash-muted)] mt-4">
+          <p className="text-xs sm:text-sm text-[var(--dash-muted)] mt-4 font-medium">
             Bars exceeding 100% indicate concentrations surpassing EPA or WHO clean-air benchmark thresholds.
           </p>
         </article>
 
         {/* Chart 3: Atmospheric Multi-Pollutant Fingerprint (Radar) */}
-        <article className="lg:col-span-5 p-5 sm:p-6 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm flex flex-col justify-between">
+        <article className="lg:col-span-5 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--dash-muted)]">
+                <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
                   CHART 03 · CHEMICAL SIGNATURE
                 </span>
-                <h2 className="text-xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
                   Atmospheric Profile
                 </h2>
               </div>
             </div>
 
-            <div className="w-full h-80 flex items-center justify-center">
+            <div className="w-full h-80 sm:h-96 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} outerRadius="72%">
-                  <PolarGrid stroke="var(--dash-rule)" opacity={0.7} />
-                  <PolarAngleAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 11 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "var(--dash-muted)", fontSize: 9 }} />
+                  <PolarGrid stroke={isDark ? "rgba(255, 255, 255, 0.12)" : "var(--dash-rule)"} />
+                  <PolarAngleAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 12 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "var(--dash-surface)",
                       borderColor: "var(--dash-rule)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
+                      borderRadius: "10px",
+                      fontSize: "13px",
                       color: "var(--dash-ink)",
                     }}
                     formatter={(val: any) => [`${val}% relative intensity`, "Burden"]}
                   />
-                  <Legend />
-                  {locations.map((loc, idx) => (
-                    <Radar
-                      key={loc.name}
-                      name={loc.name}
-                      dataKey={loc.name}
-                      stroke={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
-                      fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].fill}
-                      fillOpacity={0.15}
-                      strokeWidth={2}
-                    />
-                  ))}
+                  <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
+                  {locations.map((loc, idx) => {
+                    const locTheme = LOCATION_THEMES[idx % LOCATION_THEMES.length];
+                    return (
+                      <Radar
+                        key={loc.name}
+                        name={loc.name}
+                        dataKey={loc.name}
+                        stroke={locTheme.stroke}
+                        fill={locTheme.fill}
+                        fillOpacity={0.16}
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
                 </RadarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[11px] text-[var(--dash-muted)] mt-2">
+          <div className="p-3.5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-xs sm:text-sm text-[var(--dash-muted)] mt-4 font-medium">
             The radar signature demonstrates whether atmospheric stress is particulate-heavy (PM2.5/PM10) or traffic/industrial (NO2/SO2/CO).
           </div>
         </article>
