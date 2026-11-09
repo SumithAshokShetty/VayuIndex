@@ -156,20 +156,95 @@ export const PRESETS = [
 ];
 
 const LOCATION_THEMES = [
-  { stroke: "#2f7650", fill: "#83dfbd", bg: "rgba(47, 118, 80, 0.12)", badgeBg: "rgba(47, 118, 80, 0.2)", badgeText: "#2f7650" },
-  { stroke: "#bb7651", fill: "#f3a16b", bg: "rgba(187, 118, 81, 0.12)", badgeBg: "rgba(187, 118, 81, 0.2)", badgeText: "#bb7651" },
-  { stroke: "#3b7aa3", fill: "#70b1d9", bg: "rgba(59, 122, 163, 0.12)", badgeBg: "rgba(59, 122, 163, 0.2)", badgeText: "#3b7aa3" },
-  { stroke: "#8d5e8f", fill: "#ba8cb7", bg: "rgba(141, 94, 143, 0.12)", badgeBg: "rgba(141, 94, 143, 0.2)", badgeText: "#8d5e8f" },
+  { stroke: "#10b981", fill: "#34d399", bg: "rgba(16, 185, 129, 0.12)", badgeBg: "rgba(16, 185, 129, 0.2)", badgeText: "#10b981" },
+  { stroke: "#ef4444", fill: "#f87171", bg: "rgba(239, 68, 68, 0.12)", badgeBg: "rgba(239, 68, 68, 0.2)", badgeText: "#ef4444" },
+  { stroke: "#3b82f6", fill: "#60a5fa", bg: "rgba(59, 130, 246, 0.12)", badgeBg: "rgba(59, 130, 246, 0.2)", badgeText: "#3b82f6" },
+  { stroke: "#8b5cf6", fill: "#c084fc", bg: "rgba(139, 92, 246, 0.12)", badgeBg: "rgba(139, 92, 246, 0.2)", badgeText: "#8b5cf6" },
 ];
 
-const POLLUTANT_SNAPSHOT_LIST: { key: ParameterKey; label: string; limit: number }[] = [
-  { key: "pm2_5", label: "PM₂.₅", limit: 12.0 },
-  { key: "pm10", label: "PM₁₀", limit: 54.0 },
-  { key: "nitrogen_dioxide", label: "NO₂", limit: 53.0 },
-  { key: "sulphur_dioxide", label: "SO₂", limit: 35.0 },
-  { key: "carbon_monoxide", label: "CO", limit: 4400.0 },
-  { key: "ozone", label: "O₃", limit: 100.0 },
+export interface WhoBenchmarkDef {
+  key: ParameterKey;
+  label: string;
+  shortLabel: string;
+  whoLimit: number;
+  displayUnit: string;
+  whoStandard: string;
+}
+
+export const WHO_BENCHMARK_LIST: WhoBenchmarkDef[] = [
+  { key: "pm2_5", label: "PM2.5 (Fine Particles)", shortLabel: "PM₂.₅", whoLimit: 15.0, displayUnit: "µg/m³", whoStandard: "WHO 24h: 15 µg/m³" },
+  { key: "pm10", label: "PM10 (Inhalable Dust)", shortLabel: "PM₁₀", whoLimit: 45.0, displayUnit: "µg/m³", whoStandard: "WHO 24h: 45 µg/m³" },
+  { key: "nitrogen_dioxide", label: "NO2 (Nitrogen Dioxide)", shortLabel: "NO₂", whoLimit: 25.0, displayUnit: "µg/m³", whoStandard: "WHO 24h: 25 µg/m³" },
+  { key: "sulphur_dioxide", label: "SO2 (Sulphur Dioxide)", shortLabel: "SO₂", whoLimit: 40.0, displayUnit: "µg/m³", whoStandard: "WHO 24h: 40 µg/m³" },
+  { key: "carbon_monoxide", label: "CO (Carbon Monoxide)", shortLabel: "CO", whoLimit: 4.0, displayUnit: "mg/m³", whoStandard: "WHO 24h: 4.0 mg/m³ (4,000 µg/m³)" },
+  { key: "ozone", label: "O3 (Ground Ozone)", shortLabel: "O₃", whoLimit: 100.0, displayUnit: "µg/m³", whoStandard: "WHO 8h: 100 µg/m³" },
 ];
+
+export const STACKED_POLLUTANTS: {
+  key: ParameterKey;
+  label: string;
+  color: string;
+}[] = [
+  { key: "pm2_5", label: "PM₂.₅", color: "#ef4444" },
+  { key: "pm10", label: "PM₁₀", color: "#f59e0b" },
+  { key: "nitrogen_dioxide", label: "NO₂", color: "#0284c7" },
+  { key: "sulphur_dioxide", label: "SO₂", color: "#8b5cf6" },
+  { key: "carbon_monoxide", label: "CO", color: "#0d9488" },
+  { key: "ozone", label: "O₃", color: "#10b981" },
+];
+
+// Unit Normalization & Calculation Helper (WHO Guidelines)
+function normalizePollutant(
+  key: ParameterKey,
+  rawVal: number | null | undefined,
+  rawUnit?: string
+): { normalizedPct: number | null; rawFormatted: string; rawVal: number | null } {
+  if (rawVal === null || rawVal === undefined || isNaN(rawVal)) {
+    return { normalizedPct: null, rawFormatted: "—", rawVal: null };
+  }
+
+  const unitLower = (rawUnit || "").toLowerCase();
+
+  if (key === "carbon_monoxide") {
+    // If unit explicitly has "mg" or rawVal < 25 (without µg in unit), it's in mg/m³
+    const isMg = unitLower.includes("mg") || (!unitLower.includes("µg") && !unitLower.includes("ug") && rawVal < 25);
+    if (isMg) {
+      // Limit is 4.0 mg/m³
+      const pct = (rawVal / 4.0) * 100;
+      return {
+        normalizedPct: Number(pct.toFixed(1)),
+        rawFormatted: `${rawVal.toFixed(2)} mg/m³`,
+        rawVal,
+      };
+    } else {
+      // In µg/m³, limit is 4000.0 µg/m³
+      const pct = (rawVal / 4000.0) * 100;
+      return {
+        normalizedPct: Number(pct.toFixed(1)),
+        rawFormatted: `${rawVal.toFixed(1)} µg/m³`,
+        rawVal,
+      };
+    }
+  }
+
+  // Safe Limit Thresholds (WHO Guidelines):
+  // PM2.5: 15 µg/m³, PM10: 45 µg/m³, NO2: 25 µg/m³, SO2: 40 µg/m³, O3: 100 µg/m³
+  const limits: Record<string, number> = {
+    pm2_5: 15.0,
+    pm10: 45.0,
+    nitrogen_dioxide: 25.0,
+    sulphur_dioxide: 40.0,
+    ozone: 100.0,
+  };
+
+  const limit = limits[key] ?? 100.0;
+  const pct = (rawVal / limit) * 100;
+  return {
+    normalizedPct: Number(pct.toFixed(1)),
+    rawFormatted: `${rawVal.toFixed(1)} µg/m³`,
+    rawVal,
+  };
+}
 
 // Clean formatting helpers for X-axis ticks
 function formatTimestampForAxis(isoString: string, tf: Timeframe): string {
@@ -565,56 +640,141 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
     };
   }, [locations, liveData, historyData, parameterKey, timeframe]);
 
-  // Chart 2 Data: Side-by-Side Parameter Snapshot (% of EPA Good-Band Limit)
+  // Chart 2 Data: Side-by-Side Parameter Snapshot (% of WHO Benchmark Limit)
   const snapshotData = useMemo(() => {
-    return POLLUTANT_SNAPSHOT_LIST.map((pollutant) => {
+    return WHO_BENCHMARK_LIST.map((pollutant) => {
       const row: Record<string, any> = {
-        pollutant: pollutant.label,
+        pollutant: pollutant.shortLabel,
+        fullName: pollutant.label,
         key: pollutant.key,
-        limit: pollutant.limit,
+        standard: pollutant.whoStandard,
       };
 
       locations.forEach((loc) => {
         const key = locationKey(loc);
         const live = liveData[key]?.air;
+        const hist = historyData[key]?.payload?.hourly;
+
         let val: number | null = null;
+        const unit = live?.current_units?.[pollutant.key];
+
         if (live?.current && typeof live.current[pollutant.key] === "number") {
           val = Number(live.current[pollutant.key]);
+        } else if (hist?.[pollutant.key]?.length) {
+          const lastVal = hist[pollutant.key][hist[pollutant.key].length - 1];
+          if (typeof lastVal === "number" && !isNaN(lastVal)) {
+            val = Number(lastVal);
+          }
         }
-        // Percentage relative to reference standard
-        row[loc.name] = val !== null ? Number(((val / pollutant.limit) * 100).toFixed(1)) : null;
-        row[`${loc.name}_raw`] = val !== null ? Number(val.toFixed(1)) : null;
+
+        const norm = normalizePollutant(pollutant.key, val, unit);
+        // Bar height represents exact normalized percentage of WHO limit
+        row[loc.name] = norm.normalizedPct;
+        row[`${loc.name}_raw`] = norm.rawFormatted;
+        row[`${loc.name}_pct`] = norm.normalizedPct !== null ? `${norm.normalizedPct.toFixed(1)}%` : "—";
       });
 
       return row;
     });
-  }, [locations, liveData]);
+  }, [locations, liveData, historyData]);
 
-  // Chart 3 Data: Atmospheric Multi-Pollutant Fingerprint (Radar)
+  // Chart 3 Data: Atmospheric Multi-Pollutant Fingerprint (Normalized Radar)
   const radarData = useMemo(() => {
-    return POLLUTANT_SNAPSHOT_LIST.map((pollutant) => {
+    return WHO_BENCHMARK_LIST.map((pollutant) => {
       const row: Record<string, any> = {
-        pollutant: pollutant.label,
+        pollutant: pollutant.shortLabel,
+        fullName: pollutant.label,
       };
 
-      // Collect raw values
-      const values = locations.map((loc) => {
+      // Collect normalized WHO percentages for all locations on this pollutant axis
+      const cityEntries = locations.map((loc) => {
         const key = locationKey(loc);
         const live = liveData[key]?.air;
-        const val = live?.current?.[pollutant.key];
-        return typeof val === "number" && !isNaN(val) ? Number(val) : 0;
+        const hist = historyData[key]?.payload?.hourly;
+
+        let val: number | null = null;
+        const unit = live?.current_units?.[pollutant.key];
+
+        if (live?.current && typeof live.current[pollutant.key] === "number") {
+          val = Number(live.current[pollutant.key]);
+        } else if (hist?.[pollutant.key]?.length) {
+          const lastVal = hist[pollutant.key][hist[pollutant.key].length - 1];
+          if (typeof lastVal === "number" && !isNaN(lastVal)) {
+            val = Number(lastVal);
+          }
+        }
+
+        const norm = normalizePollutant(pollutant.key, val, unit);
+        return {
+          name: loc.name,
+          burdenPct: norm.normalizedPct ?? 0,
+          rawFormatted: norm.rawFormatted,
+        };
       });
 
-      const maxVal = Math.max(...values, pollutant.limit, 0.001);
+      // Axis max for 0 to 100 relative index normalization
+      const peakBurdenOnAxis = Math.max(...cityEntries.map((c) => c.burdenPct), 100, 1);
 
-      locations.forEach((loc, idx) => {
-        const pct = Math.min(100, Math.round((values[idx] / maxVal) * 100));
-        row[loc.name] = pct;
+      cityEntries.forEach((c) => {
+        // Expand into readable polygon while preserving relative burdens
+        const scaledIndex = Math.min(100, Math.max(10, Math.round((c.burdenPct / peakBurdenOnAxis) * 100)));
+        row[c.name] = scaledIndex;
+        row[`${c.name}_burden`] = `${c.burdenPct.toFixed(1)}% WHO limit`;
+        row[`${c.name}_raw`] = c.rawFormatted;
       });
 
       return row;
     });
-  }, [locations, liveData]);
+  }, [locations, liveData, historyData]);
+
+  // Chart 4 Data: Relative Pollutant Composition & Load Contribution (Stacked Bar)
+  const stackedCompositionData = useMemo(() => {
+    return locations.map((loc) => {
+      const key = locationKey(loc);
+      const live = liveData[key]?.air;
+      const hist = historyData[key]?.payload?.hourly;
+
+      const burdens: Record<string, number> = {};
+      const rawStrs: Record<string, string> = {};
+      let totalBurden = 0;
+
+      STACKED_POLLUTANTS.forEach((p) => {
+        let val: number | null = null;
+        const unit = live?.current_units?.[p.key];
+
+        if (live?.current && typeof live.current[p.key] === "number") {
+          val = Number(live.current[p.key]);
+        } else if (hist?.[p.key]?.length) {
+          const lastVal = hist[p.key][hist[p.key].length - 1];
+          if (typeof lastVal === "number" && !isNaN(lastVal)) {
+            val = Number(lastVal);
+          }
+        }
+
+        const norm = normalizePollutant(p.key, val, unit);
+        const b = norm.normalizedPct ?? 0;
+        burdens[p.key] = b;
+        rawStrs[p.key] = norm.rawFormatted;
+        totalBurden += b;
+      });
+
+      const row: Record<string, any> = {
+        location: loc.name,
+        totalBurden: Number(totalBurden.toFixed(1)),
+      };
+
+      STACKED_POLLUTANTS.forEach((p) => {
+        const b = burdens[p.key] || 0;
+        // Percentage share of total atmospheric stress (summing to 100%)
+        const share = totalBurden > 0 ? Number(((b / totalBurden) * 100).toFixed(1)) : 0;
+        row[p.key] = share;
+        row[`${p.key}_raw`] = rawStrs[p.key];
+        row[`${p.key}_burden`] = `${b.toFixed(1)}% WHO`;
+      });
+
+      return row;
+    });
+  }, [locations, liveData, historyData]);
 
   return (
     <section className="phase-view comparison-view w-full pb-16">
@@ -1117,34 +1277,44 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       {/* Tier 5: Charts 2 & 3 (Grouped Bar Snapshot & Radar Profile) */}
       {/* ---------------------------------------------------- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
-        {/* Chart 2: Side-by-Side Parameter Snapshot (Grouped Bar) */}
+        {/* Chart 2: Side-by-Side Parameter Snapshot (Grouped Bar Normalized) */}
         <article className="lg:col-span-7 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
-                CHART 02 · MULTI-POLLUTANT SNAPSHOT
+                CHART 02 · MULTI-POLLUTANT BURDEN VS BENCHMARK
               </span>
               <h2 className="text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
-                Pollutant Burden vs Benchmark
+                Pollutant Burden vs WHO Safe Limit
               </h2>
             </div>
-            <span className="text-xs font-mono font-semibold px-3 py-1 rounded-md bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]">
-              % of EPA/WHO Limit
+            <span className="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)] self-start sm:self-auto">
+              % of WHO Safe Limit
             </span>
           </div>
 
           <div className="w-full h-80 sm:h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={snapshotData} margin={{ top: 14, right: 10, left: -6, bottom: 0 }}>
+              <BarChart data={snapshotData} margin={{ top: 16, right: 12, left: 4, bottom: 0 }}>
                 <CartesianGrid
                   stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
                   strokeDasharray="3 3"
                   vertical={false}
                 />
-                <XAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 12 }} />
+                <XAxis
+                  dataKey="pollutant"
+                  tick={{ fill: "var(--dash-muted)", fontSize: 13, fontWeight: 600 }}
+                />
                 <YAxis
                   tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
-                  label={{ value: "% of Limit", angle: -90, position: "insideLeft", fill: "var(--dash-muted)", fontSize: 12 }}
+                  label={{
+                    value: "% of WHO Safe Limit",
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "var(--dash-muted)",
+                    fontSize: 12,
+                    offset: 8,
+                  }}
                 />
                 <Tooltip
                   contentStyle={{
@@ -1156,7 +1326,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     padding: "10px 14px",
                   }}
                   formatter={(val: any, name: any, item: any) => [
-                    `${val}% (${item.payload[`${name}_raw`]} raw)`,
+                    `${Number(val).toFixed(1)}% of WHO limit (${item.payload[`${name}_raw`]})`,
                     name,
                   ]}
                 />
@@ -1164,8 +1334,15 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                 <ReferenceLine
                   y={100}
                   stroke="#ef4444"
+                  strokeWidth={2}
                   strokeDasharray="4 4"
-                  label={{ value: "100% Health Standard", fill: "#ef4444", fontSize: 11, position: "insideTopRight" }}
+                  label={{
+                    value: "100% WHO Safe Limit",
+                    fill: "#ef4444",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    position: "insideTopRight",
+                  }}
                 />
                 {locations.map((loc, idx) => (
                   <Bar
@@ -1179,12 +1356,17 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-xs sm:text-sm text-[var(--dash-muted)] mt-4 font-medium">
-            Bars exceeding 100% indicate concentrations surpassing EPA or WHO clean-air benchmark thresholds.
-          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-[var(--dash-muted)] font-medium">
+            <span>
+              <strong>WHO Benchmarks:</strong> PM₂.₅: 15 µg/m³ · PM₁₀: 45 µg/m³ · NO₂: 25 µg/m³ · SO₂: 40 µg/m³ · CO: 4.0 mg/m³ · O₃: 100 µg/m³
+            </span>
+            <span className="text-rose-500 font-semibold">
+              Bars &gt; 100% exceed safe limits
+            </span>
+          </div>
         </article>
 
-        {/* Chart 3: Atmospheric Multi-Pollutant Fingerprint (Radar) */}
+        {/* Chart 3: Atmospheric Multi-Pollutant Fingerprint (Normalized Radar) */}
         <article className="lg:col-span-5 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
@@ -1196,13 +1378,16 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                   Atmospheric Profile
                 </h2>
               </div>
+              <span className="text-xs font-mono font-medium px-2.5 py-1 rounded bg-[var(--dash-surface-soft)] text-[var(--dash-muted)] border border-[var(--dash-rule)]">
+                Spider-Web Index
+              </span>
             </div>
 
             <div className="w-full h-80 sm:h-96 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} outerRadius="72%">
                   <PolarGrid stroke={isDark ? "rgba(255, 255, 255, 0.12)" : "var(--dash-rule)"} />
-                  <PolarAngleAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 12 }} />
+                  <PolarAngleAxis dataKey="pollutant" tick={{ fill: "var(--dash-muted)", fontSize: 13, fontWeight: 600 }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "var(--dash-muted)", fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{
@@ -1212,7 +1397,10 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                       fontSize: "13px",
                       color: "var(--dash-ink)",
                     }}
-                    formatter={(val: any) => [`${val}% relative intensity`, "Burden"]}
+                    formatter={(val: any, name: any, item: any) => [
+                      `${item.payload[`${name}_burden`]} (${item.payload[`${name}_raw`]})`,
+                      name,
+                    ]}
                   />
                   <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
                   {locations.map((loc, idx) => {
@@ -1224,7 +1412,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                         dataKey={loc.name}
                         stroke={locTheme.stroke}
                         fill={locTheme.fill}
-                        fillOpacity={0.16}
+                        fillOpacity={0.25}
                         strokeWidth={2}
                       />
                     );
@@ -1235,10 +1423,101 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
           </div>
 
           <div className="p-3.5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-xs sm:text-sm text-[var(--dash-muted)] mt-4 font-medium">
-            The radar signature demonstrates whether atmospheric stress is particulate-heavy (PM2.5/PM10) or traffic/industrial (NO2/SO2/CO).
+            Expanded spider-web profile illustrates the chemical fingerprint: broad rightward skew highlights particulate overload (PM₂.₅/PM₁₀), whereas leftward extensions indicate vehicular NO₂/CO and industrial SO₂.
           </div>
         </article>
       </div>
+
+      {/* ---------------------------------------------------- */}
+      {/* Tier 6: Chart 4: Relative Pollutant Composition (Stacked Bar) */}
+      {/* ---------------------------------------------------- */}
+      <article className="mt-8 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
+                CHART 04 · ATMOSPHERIC COMPOSITION BREAKDOWN
+              </span>
+              <span className="px-2.5 py-1 rounded text-xs font-mono font-medium bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)]">
+                100% Normalized Load
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--dash-ink)] mt-1.5">
+              Relative Pollutant Composition &amp; Burden Breakdown
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-[var(--dash-muted)] font-medium max-w-md md:text-right">
+            Side-by-side stacked distribution showing the percentage contribution of each active pollutant to the city&apos;s overall atmospheric burden.
+          </p>
+        </div>
+
+        <div className="w-full h-72 sm:h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={stackedCompositionData}
+              layout="horizontal"
+              margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
+            >
+              <CartesianGrid
+                stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
+                strokeDasharray="3 3"
+                vertical={false}
+              />
+              <XAxis dataKey="location" tick={{ fill: "var(--dash-muted)", fontSize: 13, fontWeight: 600 }} />
+              <YAxis
+                tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
+                domain={[0, 100]}
+                label={{
+                  value: "% of Total Atmospheric Load",
+                  angle: -90,
+                  position: "insideLeft",
+                  fill: "var(--dash-muted)",
+                  fontSize: 12,
+                  offset: 8,
+                }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "var(--dash-surface)",
+                  borderColor: "var(--dash-rule)",
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  color: "var(--dash-ink)",
+                  padding: "10px 14px",
+                }}
+                formatter={(val: any, name: any, item: any) => {
+                  const pollutantDef = STACKED_POLLUTANTS.find((p) => p.key === name);
+                  const label = pollutantDef?.label || name;
+                  return [
+                    `${Number(val).toFixed(1)}% contribution (${item.payload[`${name}_raw`]} · ${item.payload[`${name}_burden`]})`,
+                    label,
+                  ];
+                }}
+              />
+              <Legend
+                wrapperStyle={{ paddingTop: 10, fontSize: 13 }}
+                formatter={(value: string) => {
+                  const def = STACKED_POLLUTANTS.find((p) => p.key === value);
+                  return def?.label || value;
+                }}
+              />
+              {STACKED_POLLUTANTS.map((p) => (
+                <Bar
+                  key={p.key}
+                  dataKey={p.key}
+                  name={p.key}
+                  stackId="load"
+                  fill={p.color}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="mt-4 p-4 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-xs sm:text-sm text-[var(--dash-muted)] leading-relaxed">
+          <strong>Atmospheric Load Synthesis:</strong> Identifies which pollutants dominate each city&apos;s air space. A dominant red/amber block indicates fine and coarse particulate dust (PM₂.₅ and PM₁₀) requiring filtration masks, while high cyan/purple/teal segments signal combustion gas pollutants (NO₂, SO₂, CO) typical of dense commuter traffic and fossil energy infrastructure.
+        </div>
+      </article>
     </section>
   );
 }
