@@ -23,7 +23,7 @@ const OverviewSpatialMap = dynamic(() => import("@/components/OverviewSpatialMap
 });
 
 export default function OverviewPage() {
-  const theme = useTheme();
+  const { theme } = useTheme();
   const [selectedCity, setSelectedCity] = useState<SpatialHotspot>(INITIAL_HOTSPOTS[0]);
 
   return (

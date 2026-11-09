@@ -1,0 +1,746 @@
+"use client";
+
+import React from "react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  CloudFog,
+  Factory,
+  Flame,
+  Globe,
+  HeartPulse,
+  RadioTower,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  Wind,
+  Zap,
+} from "lucide-react";
+import { useTheme } from "@/lib/use-theme";
+
+export function AboutView() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <div
+      className="about-wrapper min-h-screen transition-colors duration-250 py-10 px-4 sm:px-8 lg:px-14 max-w-[1600px] mx-auto space-y-16 sm:space-y-24"
+      style={{
+        color: isDark ? "#f2f7f4" : "#172620",
+      }}
+    >
+      {/* ------------------------------------------------------------------ */}
+      {/* 1. Hero Section (Vayu Editorial Style) */}
+      {/* ------------------------------------------------------------------ */}
+      <section className="relative min-h-[420px] flex flex-col justify-center overflow-hidden pt-6 pb-10 border-b border-[var(--dash-rule,rgba(15,56,44,0.14))]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-8 space-y-5 z-10">
+            <span className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[var(--dash-accent,#277b56)]">
+              <span className="w-5 h-[1.5px] bg-[var(--dash-accent,#277b56)]" />
+              ARCHITECTURAL FOUNDATION &amp; PHILOSOPHY
+            </span>
+
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.03]">
+              Make the air{" "}
+              <em
+                className="not-italic font-medium"
+                style={{ color: isDark ? "#83dfbd" : "#1e754f" }}
+              >
+                easier to understand.
+              </em>
+            </h1>
+
+            <p className="max-w-2xl text-base sm:text-lg leading-relaxed opacity-80">
+              Vayu Index brings together ground-truth station telemetry, atmospheric models, and health benchmarks, making the origin and safe limits of every reading completely transparent.
+            </p>
+
+            <div className="pt-2 flex flex-wrap items-center gap-4">
+              <a
+                href="/overview"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-xs sm:text-sm font-bold shadow-md hover:opacity-90 transition-all no-underline"
+                style={{
+                  backgroundColor: isDark ? "#83dfbd" : "#0f382c",
+                  color: isDark ? "#081410" : "#ffffff",
+                }}
+              >
+                <span>Explore the Dashboard</span>
+                <ArrowRight size={16} />
+              </a>
+
+              <span
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-full text-xs font-mono border"
+                style={{
+                  borderColor: isDark ? "rgba(147, 226, 197, 0.2)" : "rgba(15, 56, 44, 0.2)",
+                  background: isDark ? "rgba(22, 38, 32, 0.4)" : "rgba(255, 255, 255, 0.6)",
+                  color: isDark ? "#b6cbbf" : "#5d6e64",
+                }}
+              >
+                <RadioTower size={14} style={{ color: isDark ? "#83dfbd" : "#1e754f" }} />
+                <span>Zero-Hallucination Pipeline</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Minimal Abstract Orbit Graphic */}
+          <div className="lg:col-span-4 relative flex items-center justify-center min-h-[260px] pointer-events-none">
+            <div
+              className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full border border-dashed flex items-center justify-center animate-spin"
+              style={{
+                borderColor: isDark ? "rgba(131, 223, 189, 0.25)" : "rgba(39, 123, 86, 0.22)",
+                animationDuration: "40s",
+              }}
+            >
+              <div
+                className="w-44 h-44 rounded-full border flex items-center justify-center"
+                style={{
+                  borderColor: isDark ? "rgba(131, 223, 189, 0.35)" : "rgba(39, 123, 86, 0.28)",
+                }}
+              >
+                <div
+                  className="w-24 h-24 rounded-full border flex items-center justify-center shadow-inner"
+                  style={{
+                    borderColor: isDark ? "rgba(131, 223, 189, 0.5)" : "rgba(39, 123, 86, 0.4)",
+                    background: isDark ? "rgba(131, 223, 189, 0.05)" : "rgba(39, 123, 86, 0.04)",
+                  }}
+                >
+                  <Wind
+                    size={28}
+                    style={{ color: isDark ? "#83dfbd" : "#1e754f" }}
+                    className="opacity-70 animate-pulse"
+                  />
+                </div>
+              </div>
+
+              {/* Orbiting Telemetry Nodes */}
+              <span
+                className="absolute top-2 left-10 w-2.5 h-2.5 rounded-full shadow-sm"
+                style={{ backgroundColor: isDark ? "#83dfbd" : "#277b56" }}
+              />
+              <span
+                className="absolute bottom-6 right-8 w-2 h-2 rounded-full shadow-sm"
+                style={{ backgroundColor: isDark ? "#f3a16b" : "#c7773d" }}
+              />
+              <span
+                className="absolute top-1/2 -right-1 w-2 h-2 rounded-full shadow-sm"
+                style={{ backgroundColor: isDark ? "#60a5fa" : "#2563eb" }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 2. Mission Statement Section (Reference Image 2) */}
+      {/* ------------------------------------------------------------------ */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--dash-accent,#277b56)]">
+            SECTION 01 · CORE MISSION
+          </span>
+        </div>
+
+        <div
+          className="rounded-3xl p-6 sm:p-10 lg:p-12 border shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center overflow-hidden transition-all"
+          style={{
+            backgroundColor: isDark ? "#121b17" : "#ffffff",
+            borderColor: isDark ? "rgba(147, 226, 197, 0.18)" : "#e2e9e4",
+          }}
+        >
+          {/* Mission Narrative Left Block */}
+          <div className="lg:col-span-7 space-y-6">
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold tracking-wider uppercase border"
+              style={{
+                backgroundColor: isDark ? "rgba(131, 223, 189, 0.12)" : "rgba(39, 123, 86, 0.1)",
+                color: isDark ? "#83dfbd" : "#1e754f",
+                borderColor: isDark ? "rgba(131, 223, 189, 0.3)" : "rgba(39, 123, 86, 0.25)",
+              }}
+            >
+              <Sparkles size={12} /> ENVIRONMENTAL INTELLIGENCE FOR ALL
+            </span>
+
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight leading-snug">
+              Democratizing air quality telemetry with uncompromised clarity.
+            </h2>
+
+            <p className="text-sm sm:text-base leading-relaxed opacity-85">
+              We believe clean air transparency is a fundamental right. Our mission is to democratize environmental intelligence by delivering an intuitive platform that translates complex meteorological and chemical data into clear, actionable health insights for everyone.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div
+                className="p-4 rounded-2xl border"
+                style={{
+                  backgroundColor: isDark ? "#17231e" : "#f8faf9",
+                  borderColor: isDark ? "#283930" : "#e6ece8",
+                }}
+              >
+                <strong className="block text-xl font-bold font-mono">100%</strong>
+                <span className="text-xs opacity-70">Physical Provenance</span>
+              </div>
+              <div
+                className="p-4 rounded-2xl border"
+                style={{
+                  backgroundColor: isDark ? "#17231e" : "#f8faf9",
+                  borderColor: isDark ? "#283930" : "#e6ece8",
+                }}
+              >
+                <strong className="block text-xl font-bold font-mono">300+</strong>
+                <span className="text-xs opacity-70">CPCB Active Stations</span>
+              </div>
+              <div
+                className="p-4 rounded-2xl border"
+                style={{
+                  backgroundColor: isDark ? "#17231e" : "#f8faf9",
+                  borderColor: isDark ? "#283930" : "#e6ece8",
+                }}
+              >
+                <strong className="block text-xl font-bold font-mono">Zero</strong>
+                <span className="text-xs opacity-70">Simulated Hallucinations</span>
+              </div>
+            </div>
+          </div>
+
+          {/* High-Resolution Landscape Image Right Block */}
+          <div className="lg:col-span-5 relative w-full h-[280px] sm:h-[360px] lg:h-[400px] rounded-2xl overflow-hidden shadow-lg border border-black/10">
+            <img
+              src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"
+              alt="Pristine mountain and forest landscape representing pure atmospheric air"
+              className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6">
+              <span className="text-white text-xs font-mono tracking-wider backdrop-blur-md px-3 py-1.5 rounded-lg bg-black/40 border border-white/20">
+                Pristine Atmosphere · The Clean Air Standard
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* 3. How We Get Our Data (Multi-Source Pipeline Architecture) */}
+      {/* ---------------------------------------------------- */}
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--dash-accent,#277b56)] block mb-1">
+              SECTION 02 · PIPELINE ARCHITECTURE
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight">
+              How We Ingest &amp; Verify Atmospheric Data
+            </h2>
+          </div>
+          <span className="text-xs font-mono opacity-70">
+            Strict Fallback Hierarchy · Real-Time Resolution
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: CPCB */}
+          <div
+            className="p-7 rounded-3xl border shadow-sm flex flex-col justify-between space-y-5 transition-all hover:-translate-y-1"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "rgba(147, 226, 197, 0.2)" : "#e2e9e4",
+            }}
+          >
+            <div className="space-y-3">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{
+                  backgroundColor: isDark ? "rgba(131, 223, 189, 0.15)" : "rgba(39, 123, 86, 0.1)",
+                  color: isDark ? "#83dfbd" : "#1e754f",
+                }}
+              >
+                <RadioTower size={24} />
+              </div>
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--dash-accent,#277b56)]">
+                PRIMARY TIER · INDIA
+              </span>
+              <h3 className="text-xl font-bold tracking-tight">
+                CPCB Official Telemetry
+              </h3>
+              <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+                Direct ground-truth station observations from India&apos;s Central Pollution Control Board via data.gov.in and state boards (DPCC, MPCB, BSPCB). Provides verified hourly sub-indices across 300+ city stations.
+              </p>
+            </div>
+            <div
+              className="pt-3 border-t text-[11px] font-mono font-medium flex items-center justify-between"
+              style={{ borderColor: isDark ? "#283930" : "#edf2ee" }}
+            >
+              <span>Provenance: Physical CAAQMS</span>
+              <CheckCircle2 size={15} style={{ color: isDark ? "#83dfbd" : "#1e754f" }} />
+            </div>
+          </div>
+
+          {/* Card 2: OpenAQ & WAQI */}
+          <div
+            className="p-7 rounded-3xl border shadow-sm flex flex-col justify-between space-y-5 transition-all hover:-translate-y-1"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "rgba(147, 226, 197, 0.2)" : "#e2e9e4",
+            }}
+          >
+            <div className="space-y-3">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{
+                  backgroundColor: isDark ? "rgba(96, 165, 250, 0.15)" : "rgba(37, 99, 235, 0.1)",
+                  color: isDark ? "#93c5fd" : "#2563eb",
+                }}
+              >
+                <Globe size={24} />
+              </div>
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                SECONDARY TIER · GLOBAL
+              </span>
+              <h3 className="text-xl font-bold tracking-tight">
+                OpenAQ v3 &amp; WAQI
+              </h3>
+              <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+                Worldwide physical ground stations aggregating government sensor feeds across 100+ nations. Enforces strict unit conversions and timestamps before inferring international composite standards.
+              </p>
+            </div>
+            <div
+              className="pt-3 border-t text-[11px] font-mono font-medium flex items-center justify-between"
+              style={{ borderColor: isDark ? "#283930" : "#edf2ee" }}
+            >
+              <span>Coverage: 100+ Nations</span>
+              <CheckCircle2 size={15} className="text-sky-600 dark:text-sky-400" />
+            </div>
+          </div>
+
+          {/* Card 3: Open-Meteo & Copernicus */}
+          <div
+            className="p-7 rounded-3xl border shadow-sm flex flex-col justify-between space-y-5 transition-all hover:-translate-y-1"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "rgba(147, 226, 197, 0.2)" : "#e2e9e4",
+            }}
+          >
+            <div className="space-y-3">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{
+                  backgroundColor: isDark ? "rgba(245, 158, 11, 0.15)" : "rgba(217, 119, 6, 0.1)",
+                  color: isDark ? "#fbbf24" : "#d97706",
+                }}
+              >
+                <Wind size={24} />
+              </div>
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                TERTIARY TIER · REANALYSIS
+              </span>
+              <h3 className="text-xl font-bold tracking-tight">
+                Open-Meteo &amp; Copernicus
+              </h3>
+              <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+                Copernicus Atmosphere Monitoring Service (CAMS) 11km reanalysis models and Open-Meteo weather grids. Delivers continuous spatial wind vectors, multi-day historical slices, and 72-hour forecasts.
+              </p>
+            </div>
+            <div
+              className="pt-3 border-t text-[11px] font-mono font-medium flex items-center justify-between"
+              style={{ borderColor: isDark ? "#283930" : "#edf2ee" }}
+            >
+              <span>Model: CAMS Reanalysis</span>
+              <CheckCircle2 size={15} className="text-amber-600 dark:text-amber-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Data Integrity Statement */}
+        <div
+          className="p-5 sm:p-6 rounded-2xl border flex items-start gap-4"
+          style={{
+            backgroundColor: isDark ? "rgba(18, 27, 23, 0.7)" : "#f8faf9",
+            borderColor: isDark ? "rgba(147, 226, 197, 0.25)" : "#d8e4dc",
+          }}
+        >
+          <ShieldCheck
+            size={22}
+            className="flex-none mt-0.5"
+            style={{ color: isDark ? "#83dfbd" : "#1e754f" }}
+          />
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold tracking-tight">
+              Strict Zero-Hallucination &amp; Provenance Tagging Policy
+            </h4>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Vayu Index strictly forbids fabricated or AI-hallucinated telemetry. Every data point is tagged with its authentic provenance badge—identifying whether it originates from a verified physical CPCB monitoring station, an OpenAQ sensor, or a CAMS reanalysis numerical model.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* 4. Understanding CPCB Indian NAQI & Health Bands (6-Card Grid) */}
+      {/* ---------------------------------------------------- */}
+      <section className="space-y-6">
+        <div>
+          <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--dash-accent,#277b56)] block mb-1">
+            SECTION 03 · NATIONAL AIR QUALITY INDEX
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight">
+            Understanding Air Quality Standards (CPCB NAQI 0–500 Scale)
+          </h2>
+          <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-3xl">
+            Established by the Central Pollution Control Board (CPCB), the National Air Quality Index transforms complex concentrations of eight criteria pollutants into a single color-coded health risk metric.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {/* 1. Good (0-50) */}
+          <div
+            className="p-5 rounded-2xl border shadow-xs space-y-3"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-bold text-white shadow-xs"
+                style={{ backgroundColor: "#00B050" }}
+              >
+                Good (0–50)
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                #00B050
+              </span>
+            </div>
+            <h3 className="text-base font-bold">Minimal Risk</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Air quality is minimal risk. Clean atmospheric conditions posing virtually no health hazards for all age groups.
+            </p>
+          </div>
+
+          {/* 2. Satisfactory (51-100) */}
+          <div
+            className="p-5 rounded-2xl border shadow-xs space-y-3"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-bold text-neutral-900 shadow-xs"
+                style={{ backgroundColor: "#92D050" }}
+              >
+                Satisfactory (51–100)
+              </span>
+              <span className="text-xs font-mono font-bold text-lime-600 dark:text-lime-400">
+                #92D050
+              </span>
+            </div>
+            <h3 className="text-base font-bold">Acceptable Quality</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Minor breathing discomfort to sensitive individuals. Generally tolerable for healthy adults and children.
+            </p>
+          </div>
+
+          {/* 3. Moderate (101-200) */}
+          <div
+            className="p-5 rounded-2xl border shadow-xs space-y-3"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-bold text-neutral-900 shadow-xs"
+                style={{ backgroundColor: "#EAB308" }}
+              >
+                Moderate (101–200)
+              </span>
+              <span className="text-xs font-mono font-bold text-yellow-600 dark:text-yellow-400">
+                #EAB308
+              </span>
+            </div>
+            <h3 className="text-base font-bold">Sensitive Caution</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Breathing discomfort for people with asthma, heart, or lung diseases. Vulnerable groups should limit prolonged outdoor exertion.
+            </p>
+          </div>
+
+          {/* 4. Poor (201-300) */}
+          <div
+            className="p-5 rounded-2xl border shadow-xs space-y-3"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-bold text-white shadow-xs"
+                style={{ backgroundColor: "#FF9900" }}
+              >
+                Poor (201–300)
+              </span>
+              <span className="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">
+                #FF9900
+              </span>
+            </div>
+            <h3 className="text-base font-bold">General Discomfort</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Breathing discomfort to most people on prolonged exposure. Significant distress to persons with chronic cardiac or pulmonary conditions.
+            </p>
+          </div>
+
+          {/* 5. Very Poor (301-400) */}
+          <div
+            className="p-5 rounded-2xl border shadow-xs space-y-3"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-bold text-white shadow-xs"
+                style={{ backgroundColor: "#FF0000" }}
+              >
+                Very Poor (301–400)
+              </span>
+              <span className="text-xs font-mono font-bold text-red-600 dark:text-red-400">
+                #FF0000
+              </span>
+            </div>
+            <h3 className="text-base font-bold">Respiratory Illness Risk</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Respiratory illness on prolonged exposure. Pronounced effect on asthma, bronchitis, and cardiovascular patients.
+            </p>
+          </div>
+
+          {/* 6. Severe (401-500) */}
+          <div
+            className="p-5 rounded-2xl border shadow-xs space-y-3"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-bold text-white shadow-xs"
+                style={{ backgroundColor: "#C00000" }}
+              >
+                Severe (401–500)
+              </span>
+              <span className="text-xs font-mono font-bold text-rose-700 dark:text-rose-400">
+                #C00000
+              </span>
+            </div>
+            <h3 className="text-base font-bold">Emergency Warning</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Affects healthy people and seriously impacts those with existing conditions. Outdoor physical activity should be strictly avoided.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* 5. Key Pollutants We Monitor (2x3 Grid) */}
+      {/* ---------------------------------------------------- */}
+      <section className="space-y-6">
+        <div>
+          <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--dash-accent,#277b56)] block mb-1">
+            SECTION 04 · CHEMICAL TELEMETRY
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight">
+            Pollutants We Monitor
+          </h2>
+          <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-2xl">
+            Vayu Index ingests physical micro-climatic sensor readings for 6 primary criteria air contaminants defined by WHO &amp; CPCB.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* PM2.5 */}
+          <div
+            className="p-6 rounded-2xl border shadow-xs space-y-3 transition-all hover:border-[var(--dash-accent,#277b56)]"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-rose-500/15 text-rose-500"
+              >
+                <HeartPulse size={20} />
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                &lt; 2.5 µm
+              </span>
+            </div>
+            <h3 className="text-lg font-bold tracking-tight">PM2.5 (Fine Particles)</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Fine particulate matter smaller than 2.5 microns that penetrates deep into pulmonary alveoli and enters systemic bloodstream, exacerbating cardiovascular disease.
+            </p>
+          </div>
+
+          {/* PM10 */}
+          <div
+            className="p-6 rounded-2xl border shadow-xs space-y-3 transition-all hover:border-[var(--dash-accent,#277b56)]"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-500/15 text-amber-500"
+              >
+                <CloudFog size={20} />
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                &lt; 10 µm
+              </span>
+            </div>
+            <h3 className="text-lg font-bold tracking-tight">PM10 (Coarse Particles)</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Inhalable coarse particulate matter from road dust, construction, and pollen causing mucosal irritation in the eyes, nasal pathways, and upper respiratory tract.
+            </p>
+          </div>
+
+          {/* NO2 */}
+          <div
+            className="p-6 rounded-2xl border shadow-xs space-y-3 transition-all hover:border-[var(--dash-accent,#277b56)]"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-500/15 text-sky-500"
+              >
+                <Flame size={20} />
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                NO₂ Gas
+              </span>
+            </div>
+            <h3 className="text-lg font-bold tracking-tight">NO2 (Nitrogen Dioxide)</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Highly reactive gaseous oxidant emitted primarily by vehicular combustion and thermal power generation, inflaming bronchial airways and triggering asthma attacks.
+            </p>
+          </div>
+
+          {/* O3 */}
+          <div
+            className="p-6 rounded-2xl border shadow-xs space-y-3 transition-all hover:border-[var(--dash-accent,#277b56)]"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-500/15 text-emerald-500"
+              >
+                <Zap size={20} />
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                O₃ Gas
+              </span>
+            </div>
+            <h3 className="text-lg font-bold tracking-tight">O3 (Ground-Level Ozone)</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Secondary photochemical smog created when nitrogen oxides react with volatile organic compounds (VOCs) in solar heat, reducing vital lung capacity.
+            </p>
+          </div>
+
+          {/* CO */}
+          <div
+            className="p-6 rounded-2xl border shadow-xs space-y-3 transition-all hover:border-[var(--dash-accent,#277b56)]"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-500/15 text-purple-500"
+              >
+                <ShieldAlert size={20} />
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                CO Gas
+              </span>
+            </div>
+            <h3 className="text-lg font-bold tracking-tight">CO (Carbon Monoxide)</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Colorless, odorless toxic gas generated by incomplete fossil fuel combustion that binds irreversibly to hemoglobin, impeding oxygen circulation to critical organs.
+            </p>
+          </div>
+
+          {/* SO2 */}
+          <div
+            className="p-6 rounded-2xl border shadow-xs space-y-3 transition-all hover:border-[var(--dash-accent,#277b56)]"
+            style={{
+              backgroundColor: isDark ? "#121b17" : "#ffffff",
+              borderColor: isDark ? "#283930" : "#e2e9e4",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-500/15 text-teal-500"
+              >
+                <Factory size={20} />
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                SO₂ Gas
+              </span>
+            </div>
+            <h3 className="text-lg font-bold tracking-tight">SO2 (Sulfur Dioxide)</h3>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              Pungent industrial gas discharged during coal burning and metallurgical smelting, causing acute mucosal spasms and precipitating chronic bronchitis.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* Footer Navigation */}
+      {/* ---------------------------------------------------- */}
+      <footer
+        className="pt-8 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono opacity-80"
+        style={{ borderColor: isDark ? "#283930" : "#e2e9e4" }}
+      >
+        <span>VAYU INDEX · REAL-TIME GLOBAL ATMOSPHERIC INTELLIGENCE</span>
+        <div className="flex items-center gap-4">
+          <a
+            href="/"
+            className="hover:underline flex items-center gap-1"
+            style={{ color: isDark ? "#83dfbd" : "#1e754f" }}
+          >
+            Home
+          </a>
+          <span>·</span>
+          <a
+            href="/overview"
+            className="hover:underline flex items-center gap-1"
+            style={{ color: isDark ? "#83dfbd" : "#1e754f" }}
+          >
+            Overview
+          </a>
+          <span>·</span>
+          <a
+            href="/dashboard"
+            className="hover:underline flex items-center gap-1"
+            style={{ color: isDark ? "#83dfbd" : "#1e754f" }}
+          >
+            3D Globe
+          </a>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default AboutView;
