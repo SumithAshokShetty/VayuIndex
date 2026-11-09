@@ -460,12 +460,18 @@ body{font-family:var(--font)}
 /* Phase 4 history, comparison, and forecast views */
 :root{--chart-grid:#dfe3d9;--chart-muted:#677166}
 .dashboard-app[data-theme="dark"]{--chart-grid:#465045;--chart-muted:#b8c2b2}
-.dashboard-view-tabs{display:flex;align-items:stretch;gap:5px;margin:18px 0 12px;padding:5px;border:1px solid var(--dash-rule);border-radius:9px;background:rgba(255,253,248,.78);overflow-x:auto;scrollbar-width:thin}
-.dashboard-view-tabs button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:42px;flex:1;min-width:max-content;padding:0 16px;border:0;border-radius:6px;background:transparent;color:var(--dash-muted);font:500 12px var(--font);cursor:pointer;transition:background .22s,color .22s,box-shadow .22s}
-.dashboard-view-tabs button span{color:var(--dash-faint);font:9px var(--mono)}
-.dashboard-view-tabs button:hover{background:rgba(47,118,80,.07);color:var(--dash-ink)}
-.dashboard-view-tabs button.active{background:var(--dash-surface);color:var(--dash-ink);box-shadow:0 2px 10px rgba(39,50,36,.08)}
-.dashboard-view-tabs button.active span{color:var(--dash-accent)}
+.dashboard-view-tabs{display:flex;align-items:stretch;gap:5px;margin:18px 0 12px;padding:5px;border:1px solid var(--dash-rule);border-radius:9px;background:rgba(235,238,233,.85);overflow-x:auto;scrollbar-width:thin}
+.dashboard-view-tabs button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:42px;flex:1;min-width:max-content;padding:0 16px;border:0;border-radius:6px;background:transparent;color:#38423c;font:600 12px var(--font);cursor:pointer;transition:background .22s,color .22s,box-shadow .22s}
+.dashboard-view-tabs button span{color:#556359;font:600 9px var(--mono)}
+.dashboard-view-tabs button:hover{background:rgba(47,118,80,.09);color:#16241e}
+.dashboard-view-tabs button.active{background:#ffffff;color:#16241e;box-shadow:0 2px 10px rgba(39,50,36,.12)}
+.dashboard-view-tabs button.active span{color:#1f724d;font-weight:700}
+[data-theme="dark"] .dashboard-view-tabs,.dashboard-app[data-theme="dark"] .dashboard-view-tabs{background:rgba(22,28,24,.85);border-color:#3b463b}
+[data-theme="dark"] .dashboard-view-tabs button,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button{color:#cdd9d1;font-weight:500}
+[data-theme="dark"] .dashboard-view-tabs button span,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button span{color:#8fa398;font-weight:600}
+[data-theme="dark"] .dashboard-view-tabs button:hover,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button:hover{background:rgba(131,223,189,.12);color:#ffffff}
+[data-theme="dark"] .dashboard-view-tabs button.active,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button.active{background:#252e26;color:#f2f7f4;box-shadow:0 4px 14px rgba(0,0,0,.3);border:1px solid rgba(147,226,197,.22)}
+[data-theme="dark"] .dashboard-view-tabs button.active span,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button.active span{color:#83dfbd;font-weight:700}
 .dashboard-active-view{min-height:400px}
 .phase-view{max-width:1600px;margin:0 auto;padding:20px 0 8px;color:var(--dash-ink)}
 .phase-view-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:20px 0 24px;border-bottom:1px solid var(--dash-rule)}
@@ -479,7 +485,8 @@ body{font-family:var(--font)}
 .dashboard-app[data-theme="dark"] .station-pill{background:#3a362a;border-color:#5b5340;color:#dfd3a9}
 .phase-controls,.forecast-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:18px 0}
 .segmented-control{display:inline-flex;align-items:center;gap:3px;padding:4px;border:1px solid var(--dash-rule);border-radius:7px;background:var(--dash-surface)}
-.segmented-control button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:32px;padding:0 12px;border:0;border-radius:5px;background:transparent;color:var(--dash-muted);font:11px var(--font);cursor:pointer;transition:background .2s,color .2s}
+.segmented-control button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:32px;padding:0 12px;border:0;border-radius:5px;background:transparent;color:#38423c;font:600 11px var(--font);cursor:pointer;transition:background .2s,color .2s}
+[data-theme="dark"] .segmented-control button,.dashboard-app[data-theme="dark"] .segmented-control button{color:#cdd9d1;font-weight:500}
 .segmented-control button.selected{background:#e8eee3;color:#285c3b}.dashboard-app[data-theme="dark"] .segmented-control button.selected{background:#3a4a39;color:#d4e4d0}
 .variance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
 .variance-card,.phase-chart-card,.comparison-site{border:1px solid var(--dash-rule);border-radius:12px;background:var(--dash-surface);box-shadow:var(--dash-shadow)}
