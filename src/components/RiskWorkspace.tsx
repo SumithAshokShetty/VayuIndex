@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, LocateFixed, ShieldCheck } from "lucide-react";
 import { AiAssistant } from "@/components/AiAssistant";
 import { PersonalRiskCalculator, type RiskProfile } from "@/components/PersonalRiskCalculator";
+import { AreaAirScore } from "@/components/AreaAirScore";
 import type { AirQualityResponse, Location } from "@/lib/types";
 
 const INITIAL_LOCATION: Location = { name: "New Delhi", admin: "Delhi", country: "India", latitude: 28.6139, longitude: 77.209 };
@@ -12,7 +13,7 @@ type ForecastPoint = Record<string, number | string | null>;
 type HistoricalReadings = Record<string, number[]>;
 
 export function RiskWorkspace() {
-  const [location] = useState(INITIAL_LOCATION);
+  const [location, setLocation] = useState<Location>(INITIAL_LOCATION);
   const [air, setAir] = useState<AirQualityResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,12 @@ export function RiskWorkspace() {
       <PersonalRiskCalculator aqi={typeof air?.current.aqi === "number" ? air.current.aqi : null} locationName={location.name} sourceLabel={loading ? "Fetching air data…" : air?.sourceLabel ?? "No source available"} provenance={air?.provenance ?? null} profile={profile} onProfileChange={setProfile}/>
       <aside className="risk-principles-card"><span className="risk-principles-icon"><ShieldCheck size={19}/></span><span className="risk-eyebrow">HOW TO READ THIS</span><h2>A context score, not a diagnosis.</h2><p>The weighted score illustrates how the selected profile changes relative exposure. The AQI and source reading remain visible, and modeled estimates are identified separately from station observations.</p><a href="/about">Explore data sources <ArrowUpRight size={14}/></a><small>General public information. Follow local health authority guidance.</small></aside>
     </div>
-      <AiAssistant air={air} location={location} profile={profile} forecast={forecast} weather={weather} history={air?.provider === "open-meteo" ? history : undefined}/>
+
+    {/* Area Air Score Station Breakdown & Safer Nearby Havens Engine */}
+    <div className="mt-8">
+      <AreaAirScore currentLocation={location} onSwitchLocation={setLocation} />
+    </div>
+
+    <AiAssistant air={air} location={location} profile={profile} forecast={forecast} weather={weather} history={air?.provider === "open-meteo" ? history : undefined}/>
   </main>;
 }

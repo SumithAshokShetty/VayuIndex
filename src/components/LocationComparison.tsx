@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -246,7 +247,7 @@ function normalizePollutant(
   };
 }
 
-// Clean formatting helpers for X-axis ticks
+// Clean formatting helpers for X-axis ticks (Dynamic Rolling 24-Hour & Multi-Day)
 function formatTimestampForAxis(isoString: string, tf: Timeframe): string {
   try {
     const d = new Date(isoString);
@@ -254,7 +255,7 @@ function formatTimestampForAxis(isoString: string, tf: Timeframe): string {
 
     const hours = d.getHours();
     const minutes = d.getMinutes();
-    const ampm = hours >= 12 ? "pm" : "am";
+    const ampm = hours >= 12 ? "PM" : "AM";
     const h12 = hours % 12 === 0 ? 12 : hours % 12;
     const h12Pad = String(h12).padStart(2, "0");
     const minPad = String(minutes).padStart(2, "0");
@@ -262,12 +263,16 @@ function formatTimestampForAxis(isoString: string, tf: Timeframe): string {
     const month = d.toLocaleDateString([], { month: "short" });
 
     if (tf === "24h") {
-      // Clean 12-hour format: 12:00am, 03:00am, 06:00am, 09:00am
-      return `${h12Pad}:${minPad}${ampm}`;
+      // Midnight crossing point indicates day transition
+      if (hours === 0 && minutes === 0) {
+        return `12:00 AM (${month} ${day})`;
+      }
+      // "hh:mm a" clean 2-3 hour interval format (e.g., 05:00 PM, 08:00 PM, 11:00 PM)
+      return `${h12Pad}:${minPad} ${ampm}`;
     }
     if (tf === "7d") {
       // 12am 2 Nov, 12pm 2 Nov, 12am 3 Nov
-      return `${h12}${ampm} ${day} ${month}`;
+      return `${h12}${ampm.toLowerCase()} ${day} ${month}`;
     }
     // 30d
     return `${day} ${month}`;
@@ -482,9 +487,24 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
 
     const times: string[] = baselineHistory.time;
     return times.map((t, timeIndex) => {
+      let dateLabel = t;
+      try {
+        const d = new Date(t);
+        const day = d.getDate();
+        const month = d.toLocaleDateString([], { month: "short" });
+        const hours = d.getHours();
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const h12 = hours % 12 === 0 ? 12 : hours % 12;
+        const minPad = String(d.getMinutes()).padStart(2, "0");
+        dateLabel = `${month} ${day}, ${String(h12).padStart(2, "0")}:${minPad} ${ampm}`;
+      } catch {
+        dateLabel = t;
+      }
+
       const entry: Record<string, any> = {
         rawTime: t,
         timestamp: formatTimestampForAxis(t, timeframe),
+        dateLabel,
       };
 
       locations.forEach((loc) => {
@@ -1152,6 +1172,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     padding: "10px 14px",
                   }}
                   formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.dateLabel || label}
                   labelStyle={{ color: "var(--dash-muted)", marginBottom: "6px", fontSize: "12px", fontWeight: 600 }}
                 />
                 <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
@@ -1215,6 +1236,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     color: "var(--dash-ink)",
                   }}
                   formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.dateLabel || label}
                 />
                 <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
                 <ReferenceLine y={activeParam.threshold} stroke="#f59e0b" strokeDasharray="4 4" />

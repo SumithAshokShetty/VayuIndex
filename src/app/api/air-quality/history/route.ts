@@ -21,12 +21,17 @@ export async function GET(request: Request) {
   const targetDays = validDays.includes(days) ? days : 7;
 
   const url = new URL("https://air-quality-api.open-meteo.com/v1/air-quality");
+  // For 1 day (24-hour rolling window), fetch 2 past days + 1 forecast day so we can slice
+  // exactly the 24 or 25 hours ending at the current local hour.
+  const pastDaysParam = targetDays === 1 ? "2" : String(targetDays);
+  const forecastDaysParam = targetDays === 1 ? "1" : "0";
+
   url.search = new URLSearchParams({
     latitude: String(latitude),
     longitude: String(longitude),
     hourly: "pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,ozone,carbon_monoxide,us_aqi",
-    past_days: String(targetDays),
-    forecast_days: "0",
+    past_days: pastDaysParam,
+    forecast_days: forecastDaysParam,
     timezone: "auto",
   }).toString();
 
@@ -41,6 +46,31 @@ export async function GET(request: Request) {
     }
 
     const payload = await response.json();
+
+    // Slicing for Rolling 24-Hour window ending at current time
+    if (targetDays === 1 && payload?.hourly?.time?.length) {
+      const times: string[] = payload.hourly.time;
+      const now = new Date();
+      // Find the index of the hour closest to or immediately preceding the current time
+      let currentHourIndex = times.findIndex((t) => new Date(t).getTime() > now.getTime()) - 1;
+      if (currentHourIndex < 0) {
+        currentHourIndex = times.length - 1;
+      }
+      // Exact rolling 24-hour window (25 hourly points from [now - 24h] to [now])
+      const startIndex = Math.max(0, currentHourIndex - 24);
+      const endIndex = currentHourIndex + 1;
+
+      const slicedHourly: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(payload.hourly)) {
+        if (Array.isArray(val)) {
+          slicedHourly[key] = val.slice(startIndex, endIndex);
+        } else {
+          slicedHourly[key] = val;
+        }
+      }
+      payload.hourly = slicedHourly;
+    }
+
     return NextResponse.json(
       {
         ...payload,
@@ -48,7 +78,7 @@ export async function GET(request: Request) {
         source: "Open-Meteo Air Quality · CAMS model archive",
       },
       {
-        headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1800" },
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900" },
       }
     );
   } catch {

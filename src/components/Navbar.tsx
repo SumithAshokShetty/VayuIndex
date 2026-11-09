@@ -86,6 +86,16 @@ export function Navbar() {
               <a
                 className="relative py-2 text-[14px] sm:text-[15px] font-medium no-underline transition-colors"
                 style={{
+                  color: isDark ? "#a4b6ad" : "#5a655c",
+                  fontWeight: 500,
+                }}
+                href="/overview"
+              >
+                Overview
+              </a>
+              <a
+                className="relative py-2 text-[14px] sm:text-[15px] font-medium no-underline transition-colors"
+                style={{
                   color: currentPath === "/about"
                     ? (isDark ? "#83dfbd" : "#0f382c")
                     : (isDark ? "#a4b6ad" : "#5a655c"),
@@ -189,6 +199,7 @@ export function Navbar() {
         <nav className="main-nav h-full flex items-center gap-3 sm:gap-6 lg:gap-8" aria-label="Main navigation">
           {[
             { href: "/", label: "Home" },
+            { href: "/overview", label: "Overview" },
             { href: "/dashboard", label: "Global view" },
             { href: "/compare", label: "Compare" },
             { href: "/risk", label: "Personal risk" },
