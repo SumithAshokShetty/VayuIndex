@@ -178,26 +178,6 @@ export function Dashboard() {
     <div className="app-shell dashboard-app min-h-screen bg-dashboard-canvas text-dashboard-ink" data-theme={theme}>
       <DashboardMotion />
       <div className="dashboard-frame">
-        <header className="topbar dashboard-topbar">
-          <a className="brand" href="/" aria-label="Vayu Index home">
-            <span className="brand-mark" aria-hidden="true"><i/><i/><i/></span>
-            <span className="brand-copy"><strong>VAYU<span>INDEX</span></strong><small>GLOBAL AIR INTELLIGENCE</small></span>
-          </a>
-          <nav className="main-nav" aria-label="Main navigation">
-            <a className="nav-link" href="/">Home</a>
-            <a className="nav-link active" href="/dashboard">Global view</a>
-            <a className="nav-link" href="/compare">Compare</a>
-            <a className="nav-link" href="/about">About</a>
-            <a className="nav-link" href="/risk">Personal risk <span className="soon">NEXT</span></a>
-          </nav>
-          <div className="top-actions">
-            <span className={`dashboard-status ${error ? "has-error" : ""}`}><i/>{providerBadge}</span>
-            <button className="icon-button theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`} title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
-              {theme === "light" ? <Moon size={16}/> : <Sun size={16}/>}
-            </button>
-          </div>
-        </header>
-
         <main className="dashboard-page">
           <motion.div className="dashboard-masthead" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div><span className="eyebrow"><span className="eyebrow-line"/> LIVE AIR INTELLIGENCE <span className="masthead-index">/ 02</span></span><h1>Air, in <em>perspective.</em></h1></div>

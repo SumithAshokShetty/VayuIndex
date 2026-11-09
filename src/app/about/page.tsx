@@ -1,7 +1,6 @@
 import { ArrowLeft, ArrowUpRight, CircleCheck, CloudSun, MapPin, RadioTower, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { AboutMotion } from "@/components/about-motion";
-import EditorialNav from "@/components/EditorialNav";
 
 export const metadata: Metadata = {
   title: "About | Vayu Index",
@@ -18,7 +17,6 @@ export default function AboutPage() {
   return (
     <main className="about-page">
       <AboutMotion />
-      <EditorialNav current="about" />
 
       <section className="about-hero">
         <span className="eyebrow"><span className="eyebrow-line"/> WHY VAYU INDEX</span>

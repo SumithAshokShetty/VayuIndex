@@ -7,7 +7,6 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Activity, BrainCircuit, HeartPulse
 import { AQI_COLORS } from "@/lib/aqi-calculator";
 import type { AirQualityResponse } from "@/lib/types";
 import { Footer } from "@/components/Footer";
-import EditorialNav from "@/components/EditorialNav";
 
 const InteractiveLandingGlobe = dynamic(() => import("@/components/InteractiveLandingGlobe").then((module) => module.InteractiveLandingGlobe), { ssr: false, loading: () => <div className="landing-globe-loading">Preparing the atmosphere…</div> });
 
@@ -100,8 +99,6 @@ export function LandingEditorial() {
   function resetTilt(){tiltX.set(0);tiltY.set(0);}
 
   return <main className="editorial-landing">
-    <EditorialNav current="home"/>
-
     <section className="editorial-hero" aria-labelledby="landing-title">
       <div className="hero-copy">
         <motion.span className="editorial-kicker" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:.55,delay:.1}}> <span/> THE AIR AROUND US, MADE CLEAR</motion.span>

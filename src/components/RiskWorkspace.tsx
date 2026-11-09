@@ -57,7 +57,6 @@ export function RiskWorkspace() {
   }, [location]);
 
   return <main className="risk-page">
-    <header className="risk-nav"><a className="risk-brand" href="/">VAYU <span>INDEX</span></a><nav aria-label="Main navigation"><a href="/">Home</a><a href="/dashboard">Global view</a><a href="/compare">Compare</a><a href="/about">About</a><a className="current" aria-current="page" href="/risk">Personal risk</a></nav></header>
     <section className="risk-page-intro"><span className="risk-eyebrow"><i/> PHASE 5 · PERSONAL EXPOSURE</span><h1>Air quality is shared.<br/><em>Exposure is personal.</em></h1><p>Put local air readings in context with age, health, activity, and time outdoors. The profile stays in this page; asking the assistant sends it with your question to Groq for that response.</p></section>
     <div className="risk-current-place"><LocateFixed size={15}/><span>{location.name}, {location.country}</span><span>{loading ? "FETCHING CURRENT AIR" : error ? "SOURCE UNAVAILABLE" : air?.sourceLabel ?? "NO DATA SOURCE"}</span></div>
     {error && <p className="risk-fetch-error" role="status">{error}</p>}
