@@ -692,3 +692,43 @@ body{font-family:var(--font)}
 @media(max-width:420px){.about-page .editorial-nav{width:calc(100vw - 26px)}}
 [data-theme="dark"] .about-page{--landing-paper:#0b1511;--landing-ink:#f2f7f4;--landing-green:#83dfbd;--landing-line:rgba(147,226,197,.18);background:#0b1511;color:#f2f7f4}
 [data-theme="dark"] .about-page .editorial-brand small{color:#a7b9af}
+
+[data-theme="dark"] .about-hero h1{color:#f2f7f4}
+[data-theme="dark"] .about-hero h1 em{color:#83dfbd}
+[data-theme="dark"] .about-hero>p{color:#a7b9af}
+[data-theme="dark"] .about-hero-orbit{border-color:rgba(147,226,197,.22)}
+[data-theme="dark"] .about-hero-orbit:before,[data-theme="dark"] .about-hero-orbit:after{border-color:rgba(147,226,197,.15)}
+[data-theme="dark"] .about-hero-orbit span{background:#83dfbd}
+[data-theme="dark"] .about-principles article,[data-theme="dark"] .provider-card,[data-theme="dark"] .about-note,[data-theme="dark"] .about-terms{background:#12211c!important;border-color:rgba(147,226,197,.18)!important;color:#eef6f2!important}
+[data-theme="dark"] .about-principles article:hover,[data-theme="dark"] .provider-card:hover{border-color:#83dfbd!important;box-shadow:0 16px 38px rgba(0,0,0,.35)!important}
+[data-theme="dark"] .about-principles article>span{color:#83dfbd}
+[data-theme="dark"] .about-principles h2,[data-theme="dark"] .provider-card h3,[data-theme="dark"] .about-note h2{color:#f2f7f4!important}
+[data-theme="dark"] .about-principles p,[data-theme="dark"] .provider-card p,[data-theme="dark"] .about-note p,[data-theme="dark"] .about-terms p{color:#a7b9af!important}
+[data-theme="dark"] .provider-role{color:#83dfbd}
+[data-theme="dark"] .provider-icon,[data-theme="dark"] .about-note-icon{background:#172a24!important;color:#83dfbd!important;border-color:rgba(147,226,197,.2)!important}
+[data-theme="dark"] .provider-check{color:#83dfbd!important}
+[data-theme="dark"] .about-section-heading h2{color:#f2f7f4}
+[data-theme="dark"] .about-section-heading h2 em{color:#83dfbd}
+[data-theme="dark"] .about-next h2{color:#f2f7f4}
+[data-theme="dark"] .about-next h2 em{color:#83dfbd}
+[data-theme="dark"] .about-back{color:#83dfbd}
+[data-theme="dark"] .about-terms a{color:#83dfbd}
+[data-theme="dark"] .risk-page{background:#0b1412!important;color:#eef6f2!important}
+[data-theme="dark"] .risk-brand{color:#f2f7f4!important}
+[data-theme="dark"] .risk-brand span{color:#83dfbd!important}
+[data-theme="dark"] .risk-nav{border-color:rgba(147,226,197,.16)!important}
+[data-theme="dark"] .risk-nav nav a{color:#a7b9af!important}
+[data-theme="dark"] .risk-nav nav a:hover{color:#83dfbd!important}
+[data-theme="dark"] .risk-page-intro h1{color:#f2f7f4!important}
+[data-theme="dark"] .risk-page-intro h1 em{color:#83dfbd!important}
+[data-theme="dark"] .risk-page-intro>p{color:#a7b9af!important}
+[data-theme="dark"] .risk-calculator-card,[data-theme="dark"] .risk-principles-card{background:#12211c!important;border-color:rgba(147,226,197,.18)!important;color:#eef6f2!important}
+[data-theme="dark"] .risk-card-heading h2,[data-theme="dark"] .risk-principles-card h2{color:#f2f7f4!important}
+[data-theme="dark"] .risk-card-heading p,[data-theme="dark"] .risk-principles-card p{color:#a7b9af!important}
+[data-theme="dark"] .risk-field select{background:#162a23!important;border-color:rgba(147,226,197,.24)!important;color:#eef6f2!important}
+[data-theme="dark"] .risk-score-row{border-color:rgba(147,226,197,.16)!important}
+[data-theme="dark"] .risk-score-row strong{color:#83dfbd!important}
+[data-theme="dark"] .risk-score-row small{color:#a7b9af!important}
+[data-theme="dark"] .risk-principles-icon{background:#172a24!important;color:#83dfbd!important;border-color:rgba(147,226,197,.2)!important}
+[data-theme="dark"] .risk-principles-card>a{color:#83dfbd!important}
+[data-theme="dark"] .risk-guidance-drawer,[data-theme="dark"] .assistant-drawer{background:#0e1d18!important;color:#eef6f2!important;box-shadow:-25px 0 70px rgba(0,0,0,.5)!important}

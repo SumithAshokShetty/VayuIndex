@@ -92,7 +92,7 @@ export function Footer() {
               Compare Places
             </a>
             <a href="/about" className="hover:text-neutral-900 transition-colors">
-              About Vayu
+              About
             </a>
           </div>
 

@@ -12,8 +12,8 @@ export function EditorialNav({ current }: { current: "home" | "about" }) {
       <span><strong>VAYU <em>INDEX</em></strong><small>GLOBAL AIR INTELLIGENCE</small></span>
     </a>
     <nav aria-label="Main navigation">
-      <a className={current === "home" ? "current" : undefined} aria-current={current === "home" ? "page" : undefined} href="/">Home</a>
-      <a className={current === "about" ? "current" : undefined} aria-current={current === "about" ? "page" : undefined} href="/about">About Vayu</a>
+      <a className={current === "home" ? "current" : undefined} aria-current={current === "home" ? "page" : undefined} href="/">Overview</a>
+      <a className={current === "about" ? "current" : undefined} aria-current={current === "about" ? "page" : undefined} href="/about">About</a>
     </nav>
     <div className="editorial-nav-actions">
       <a className="nav-explore" href="/dashboard">Explore the air <ArrowRight size={15}/></a>
