@@ -191,8 +191,7 @@ export function Navbar() {
             { href: "/", label: "Home" },
             { href: "/dashboard", label: "Global view" },
             { href: "/compare", label: "Compare" },
-            { href: "/about", label: "About" },
-            { href: "/risk", label: "Personal risk", badge: "NEXT" },
+            { href: "/risk", label: "Personal risk" },
           ].map((item) => {
             const isActive = currentPath === item.href;
             return (
@@ -208,17 +207,6 @@ export function Navbar() {
                 href={item.href}
               >
                 {item.label}
-                {item.badge && (
-                  <span
-                    className="soon font-mono text-[8px] rounded px-1.5 py-0.5 ml-1.5 border"
-                    style={{
-                      borderColor: isDark ? "rgba(147, 226, 197, 0.25)" : "#dedfd5",
-                      color: isDark ? "#83dfbd" : "#718682",
-                    }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
                 {isActive && (
                   <span
                     className="absolute bottom-0 left-0 right-0 h-[2px]"
