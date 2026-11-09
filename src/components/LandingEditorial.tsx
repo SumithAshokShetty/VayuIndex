@@ -88,6 +88,7 @@ export function LandingEditorial() {
   const { scrollY } = useScroll();
   const globeOpacity = useSpring(useTransform(scrollY, [0, 600], [1, 0]), { stiffness: 90, damping: 26, mass: .7 });
   const globeScale = useSpring(useTransform(scrollY, [0, 600], [1, .85]), { stiffness: 90, damping: 26, mass: .7 });
+  const globeY = useSpring(useTransform(scrollY, [0, 600], [-50, -90]), { stiffness: 90, damping: 26, mass: .7 });
   const tiltX = useSpring(useMotionValue(0),{stiffness:110,damping:20,mass:.7});
   const tiltY = useSpring(useMotionValue(0),{stiffness:110,damping:20,mass:.7});
   function tiltGlobe(event: React.PointerEvent<HTMLDivElement>) {
@@ -111,7 +112,7 @@ export function LandingEditorial() {
         <motion.div className="hero-actions" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.6,delay:.84}}><a className="hero-primary" href="/dashboard">Explore air intelligence <ArrowUpRight size={15}/></a><a className="hero-secondary" href="#intelligence">Discover the system <ArrowDown size={14}/></a></motion.div>
         <motion.div className="hero-proofline" initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.6,delay:1.1}}><span><i/> STATION + MODEL PROVENANCE</span><span>BUILT FOR A LIVING PLANET</span></motion.div>
       </div>
-      <motion.div className="hero-globe-wrap" style={{opacity:globeOpacity,scale:globeScale,rotateX:tiltX,rotateY:tiltY}} onPointerMove={tiltGlobe} onPointerLeave={resetTilt}>
+      <motion.div className="hero-globe-wrap" style={{y:globeY,opacity:globeOpacity,scale:globeScale,rotateX:tiltX,rotateY:tiltY}} onPointerMove={tiltGlobe} onPointerLeave={resetTilt}>
         <div className="globe-haze haze-a"/><div className="globe-haze haze-b"/><InteractiveLandingGlobe/>
         <div className="hero-coordinate-tag"><Wind size={13}/><span>ONE SHARED ATMOSPHERE</span></div>
       </motion.div>
