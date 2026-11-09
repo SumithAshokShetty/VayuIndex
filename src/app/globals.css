@@ -898,10 +898,24 @@ html[data-theme="dark"] body {
   color: #f2f7f4 !important;
 }
 
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+  color: #f2f7f4 !important;
+}
+
 [data-theme="light"] body,
 html[data-theme="light"],
 html[data-theme="light"] body {
   background-color: #f7f6f0 !important;
+  color: #111111 !important;
+}
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
   color: #111111 !important;
 }
 

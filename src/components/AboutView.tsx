@@ -30,6 +30,7 @@ export function AboutView() {
   const inkColor = isDark ? "#f2f7f4" : "#111111";
   const mutedColor = isDark ? "#9cb0a5" : "#5d6e64";
   const accentGreen = isDark ? "#83dfbd" : "#1e754f";
+  const displayFont = "'DM Serif Display', Georgia, serif";
 
   return (
     <div
@@ -58,7 +59,13 @@ export function AboutView() {
                 ARCHITECTURAL FOUNDATION &amp; PHILOSOPHY
               </span>
 
-              <h1 className="font-['DM_Serif_Display',Georgia,serif] text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight leading-[1.04] sm:leading-[1.01] font-normal">
+              <h1
+                className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight leading-[1.04] sm:leading-[1.01] font-normal"
+                style={{
+                  fontFamily: displayFont,
+                  color: inkColor,
+                }}
+              >
                 Make the air{" "}
                 <em className="italic" style={{ color: accentGreen }}>
                   easier to understand.
@@ -104,27 +111,27 @@ export function AboutView() {
               <div
                 className="relative w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 rounded-full border border-dashed flex items-center justify-center animate-spin"
                 style={{
-                  borderColor: isDark ? "rgba(131, 223, 189, 0.28)" : "rgba(39, 123, 86, 0.24)",
+                  borderColor: isDark ? "rgba(131, 223, 189, 0.35)" : "rgba(39, 123, 86, 0.28)",
                   animationDuration: "40s",
                 }}
               >
                 <div
                   className="w-36 h-36 sm:w-44 sm:h-44 rounded-full border flex items-center justify-center"
                   style={{
-                    borderColor: isDark ? "rgba(131, 223, 189, 0.38)" : "rgba(39, 123, 86, 0.28)",
+                    borderColor: isDark ? "rgba(131, 223, 189, 0.45)" : "rgba(39, 123, 86, 0.35)",
                   }}
                 >
                   <div
                     className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border flex items-center justify-center shadow-inner"
                     style={{
-                      borderColor: isDark ? "rgba(131, 223, 189, 0.55)" : "rgba(39, 123, 86, 0.4)",
-                      background: isDark ? "rgba(131, 223, 189, 0.06)" : "rgba(39, 123, 86, 0.05)",
+                      borderColor: isDark ? "rgba(131, 223, 189, 0.65)" : "rgba(39, 123, 86, 0.5)",
+                      background: isDark ? "rgba(131, 223, 189, 0.08)" : "rgba(39, 123, 86, 0.05)",
                     }}
                   >
                     <Wind
                       size={24}
                       style={{ color: accentGreen }}
-                      className="opacity-80 animate-pulse"
+                      className="opacity-90 animate-pulse"
                     />
                   </div>
                 </div>
@@ -180,11 +187,17 @@ export function AboutView() {
                 <Sparkles size={12} /> ENVIRONMENTAL INTELLIGENCE FOR ALL
               </span>
 
-              <h2 className="font-['DM_Serif_Display',Georgia,serif] text-2xl sm:text-3xl md:text-4xl tracking-tight leading-snug font-normal">
+              <h2
+                className="text-2xl sm:text-3xl md:text-4xl tracking-tight leading-snug font-normal"
+                style={{
+                  fontFamily: displayFont,
+                  color: inkColor,
+                }}
+              >
                 Democratizing air quality telemetry with uncompromised clarity.
               </h2>
 
-              <p className="text-xs sm:text-sm md:text-base leading-relaxed opacity-85">
+              <p className="text-xs sm:text-sm md:text-base leading-relaxed opacity-85" style={{ color: mutedColor }}>
                 We believe clean air transparency is a fundamental right. Our mission is to democratize environmental intelligence by delivering an intuitive platform that translates complex meteorological and chemical data into clear, actionable health insights for everyone.
               </p>
 
@@ -196,7 +209,7 @@ export function AboutView() {
                     borderColor: borderRule,
                   }}
                 >
-                  <strong className="block text-lg sm:text-xl font-bold font-mono">100%</strong>
+                  <strong className="block text-lg sm:text-xl font-bold font-mono" style={{ color: inkColor }}>100%</strong>
                   <span className="text-[11px] sm:text-xs" style={{ color: mutedColor }}>
                     Physical Provenance
                   </span>
@@ -208,7 +221,7 @@ export function AboutView() {
                     borderColor: borderRule,
                   }}
                 >
-                  <strong className="block text-lg sm:text-xl font-bold font-mono">300+</strong>
+                  <strong className="block text-lg sm:text-xl font-bold font-mono" style={{ color: inkColor }}>300+</strong>
                   <span className="text-[11px] sm:text-xs" style={{ color: mutedColor }}>
                     CPCB Active Stations
                   </span>
@@ -220,7 +233,7 @@ export function AboutView() {
                     borderColor: borderRule,
                   }}
                 >
-                  <strong className="block text-lg sm:text-xl font-bold font-mono">Zero</strong>
+                  <strong className="block text-lg sm:text-xl font-bold font-mono" style={{ color: inkColor }}>Zero</strong>
                   <span className="text-[11px] sm:text-xs" style={{ color: mutedColor }}>
                     Simulated Hallucinations
                   </span>
@@ -257,7 +270,13 @@ export function AboutView() {
               >
                 SECTION 02 · PIPELINE ARCHITECTURE
               </span>
-              <h2 className="font-['DM_Serif_Display',Georgia,serif] text-2xl sm:text-3xl md:text-4xl tracking-tight font-normal">
+              <h2
+                className="text-2xl sm:text-3xl md:text-4xl tracking-tight font-normal"
+                style={{
+                  fontFamily: displayFont,
+                  color: inkColor,
+                }}
+              >
                 How We Ingest &amp; Verify Atmospheric Data
               </h2>
             </div>
@@ -291,7 +310,7 @@ export function AboutView() {
                 >
                   PRIMARY TIER · INDIA
                 </span>
-                <h3 className="text-lg sm:text-xl font-bold tracking-tight">
+                <h3 className="text-lg sm:text-xl font-bold tracking-tight" style={{ color: inkColor }}>
                   CPCB Official Telemetry
                 </h3>
                 <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
@@ -328,7 +347,7 @@ export function AboutView() {
                 <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">
                   SECONDARY TIER · GLOBAL
                 </span>
-                <h3 className="text-lg sm:text-xl font-bold tracking-tight">
+                <h3 className="text-lg sm:text-xl font-bold tracking-tight" style={{ color: inkColor }}>
                   OpenAQ v3 &amp; WAQI
                 </h3>
                 <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
@@ -365,7 +384,7 @@ export function AboutView() {
                 <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
                   TERTIARY TIER · REANALYSIS
                 </span>
-                <h3 className="text-lg sm:text-xl font-bold tracking-tight">
+                <h3 className="text-lg sm:text-xl font-bold tracking-tight" style={{ color: inkColor }}>
                   Open-Meteo &amp; Copernicus
                 </h3>
                 <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
@@ -396,10 +415,10 @@ export function AboutView() {
               style={{ color: accentGreen }}
             />
             <div className="space-y-1">
-              <h4 className="text-xs sm:text-sm font-bold tracking-tight">
+              <h4 className="text-xs sm:text-sm font-bold tracking-tight" style={{ color: inkColor }}>
                 Strict Zero-Hallucination &amp; Provenance Tagging Policy
               </h4>
-              <p className="text-xs sm:text-sm leading-relaxed opacity-80">
+              <p className="text-xs sm:text-sm leading-relaxed opacity-80" style={{ color: mutedColor }}>
                 Vayu Index strictly forbids fabricated or AI-hallucinated telemetry. Every data point is tagged with its authentic provenance badge—identifying whether it originates from a verified physical CPCB monitoring station, an OpenAQ sensor, or a CAMS reanalysis numerical model.
               </p>
             </div>
@@ -417,10 +436,16 @@ export function AboutView() {
             >
               SECTION 03 · NATIONAL AIR QUALITY INDEX
             </span>
-            <h2 className="font-['DM_Serif_Display',Georgia,serif] text-2xl sm:text-3xl md:text-4xl tracking-tight font-normal">
+            <h2
+              className="text-2xl sm:text-3xl md:text-4xl tracking-tight font-normal"
+              style={{
+                fontFamily: displayFont,
+                color: inkColor,
+              }}
+            >
               Understanding Air Quality Standards (CPCB NAQI 0–500 Scale)
             </h2>
-            <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-3xl">
+            <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-3xl" style={{ color: mutedColor }}>
               Established by the Central Pollution Control Board (CPCB), the National Air Quality Index transforms complex concentrations of eight criteria pollutants into a single color-coded health risk metric.
             </p>
           </div>
@@ -445,7 +470,7 @@ export function AboutView() {
                   #00B050
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-bold">Minimal Risk</h3>
+              <h3 className="text-sm sm:text-base font-bold" style={{ color: inkColor }}>Minimal Risk</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Air quality is minimal risk. Clean atmospheric conditions posing virtually no health hazards for all age groups.
               </p>
@@ -470,7 +495,7 @@ export function AboutView() {
                   #92D050
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-bold">Acceptable Quality</h3>
+              <h3 className="text-sm sm:text-base font-bold" style={{ color: inkColor }}>Acceptable Quality</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Minor breathing discomfort to sensitive individuals. Generally tolerable for healthy adults and children.
               </p>
@@ -495,7 +520,7 @@ export function AboutView() {
                   #EAB308
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-bold">Sensitive Caution</h3>
+              <h3 className="text-sm sm:text-base font-bold" style={{ color: inkColor }}>Sensitive Caution</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Breathing discomfort for people with asthma, heart, or lung diseases. Vulnerable groups should limit prolonged outdoor exertion.
               </p>
@@ -520,7 +545,7 @@ export function AboutView() {
                   #FF9900
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-bold">General Discomfort</h3>
+              <h3 className="text-sm sm:text-base font-bold" style={{ color: inkColor }}>General Discomfort</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Breathing discomfort to most people on prolonged exposure. Significant distress to persons with chronic cardiac or pulmonary conditions.
               </p>
@@ -545,7 +570,7 @@ export function AboutView() {
                   #FF0000
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-bold">Respiratory Illness Risk</h3>
+              <h3 className="text-sm sm:text-base font-bold" style={{ color: inkColor }}>Respiratory Illness Risk</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Respiratory illness on prolonged exposure. Pronounced effect on asthma, bronchitis, and cardiovascular patients.
               </p>
@@ -570,7 +595,7 @@ export function AboutView() {
                   #C00000
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-bold">Emergency Warning</h3>
+              <h3 className="text-sm sm:text-base font-bold" style={{ color: inkColor }}>Emergency Warning</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Affects healthy people and seriously impacts those with existing conditions. Outdoor physical activity should be strictly avoided.
               </p>
@@ -589,10 +614,16 @@ export function AboutView() {
             >
               SECTION 04 · CHEMICAL TELEMETRY
             </span>
-            <h2 className="font-['DM_Serif_Display',Georgia,serif] text-2xl sm:text-3xl md:text-4xl tracking-tight font-normal">
+            <h2
+              className="text-2xl sm:text-3xl md:text-4xl tracking-tight font-normal"
+              style={{
+                fontFamily: displayFont,
+                color: inkColor,
+              }}
+            >
               Pollutants We Monitor
             </h2>
-            <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-2xl">
+            <p className="text-xs sm:text-sm opacity-75 mt-1 max-w-2xl" style={{ color: mutedColor }}>
               Vayu Index ingests physical micro-climatic sensor readings for 6 primary criteria air contaminants defined by WHO &amp; CPCB.
             </p>
           </div>
@@ -614,7 +645,7 @@ export function AboutView() {
                   &lt; 2.5 µm
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold tracking-tight">PM2.5 (Fine Particles)</h3>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: inkColor }}>PM2.5 (Fine Particles)</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Fine particulate matter smaller than 2.5 microns that penetrates deep into pulmonary alveoli and enters systemic bloodstream, exacerbating cardiovascular disease.
               </p>
@@ -636,7 +667,7 @@ export function AboutView() {
                   &lt; 10 µm
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold tracking-tight">PM10 (Coarse Particles)</h3>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: inkColor }}>PM10 (Coarse Particles)</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Inhalable coarse particulate matter from road dust, construction, and pollen causing mucosal irritation in the eyes, nasal pathways, and upper respiratory tract.
               </p>
@@ -658,7 +689,7 @@ export function AboutView() {
                   NO₂ Gas
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold tracking-tight">NO2 (Nitrogen Dioxide)</h3>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: inkColor }}>NO2 (Nitrogen Dioxide)</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Highly reactive gaseous oxidant emitted primarily by vehicular combustion and thermal power generation, inflaming bronchial airways and triggering asthma attacks.
               </p>
@@ -680,7 +711,7 @@ export function AboutView() {
                   O₃ Gas
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold tracking-tight">O3 (Ground-Level Ozone)</h3>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: inkColor }}>O3 (Ground-Level Ozone)</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Secondary photochemical smog created when nitrogen oxides react with volatile organic compounds (VOCs) in solar heat, reducing vital lung capacity.
               </p>
@@ -702,7 +733,7 @@ export function AboutView() {
                   CO Gas
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold tracking-tight">CO (Carbon Monoxide)</h3>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: inkColor }}>CO (Carbon Monoxide)</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Colorless, odorless toxic gas generated by incomplete fossil fuel combustion that binds irreversibly to hemoglobin, impeding oxygen circulation to critical organs.
               </p>
@@ -724,7 +755,7 @@ export function AboutView() {
                   SO₂ Gas
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold tracking-tight">SO2 (Sulfur Dioxide)</h3>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: inkColor }}>SO2 (Sulfur Dioxide)</h3>
               <p className="text-xs sm:text-sm leading-relaxed" style={{ color: mutedColor }}>
                 Pungent industrial gas discharged during coal burning and metallurgical smelting, causing acute mucosal spasms and precipitating chronic bronchitis.
               </p>
