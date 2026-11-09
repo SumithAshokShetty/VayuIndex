@@ -58,7 +58,7 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     lng: 72.8777,
     aqi: 98,
     status: "Moderate",
-    advisory: "Air quality is acceptable; however, for some pollutants there may be a moderate health concern for sensitive individuals.",
+    advisory: "Air quality is acceptable; however, there may be a moderate concern for sensitive individuals.",
     pollutants: { pm2_5: 35.0, pm10: 75.0, ozone: 54.0, no2: 32.0, so2: 18.0, co: 620.0 },
     provenance: "OpenAQ Physical Station (MPCB)",
     updatedAt: "Today, 5:15 PM IST",
@@ -234,12 +234,12 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
 ];
 
 function getAqiCategory(aqi: number) {
-  if (aqi <= 50) return { category: "Good", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" };
-  if (aqi <= 100) return { category: "Moderate", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" };
-  if (aqi <= 150) return { category: "Unhealthy for Sensitive Groups", color: "#f97316", bg: "rgba(249, 115, 22, 0.15)" };
-  if (aqi <= 200) return { category: "Unhealthy", color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)" };
-  if (aqi <= 300) return { category: "Very Unhealthy", color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.15)" };
-  return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.15)" };
+  if (aqi <= 50) return { category: "Good", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)" };
+  if (aqi <= 100) return { category: "Moderate", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.2)" };
+  if (aqi <= 150) return { category: "Unhealthy for Sensitive", color: "#f97316", bg: "rgba(249, 115, 22, 0.2)" };
+  if (aqi <= 200) return { category: "Unhealthy", color: "#ef4444", bg: "rgba(239, 68, 68, 0.2)" };
+  if (aqi <= 300) return { category: "Very Unhealthy", color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)" };
+  return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.2)" };
 }
 
 interface OverviewSpatialMapProps {
@@ -271,7 +271,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
   // Update markers helper
   const renderMarkers = (L: typeof import("leaflet"), map: LeafletMap) => {
-    // Clear old markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -280,10 +279,10 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
       // Outer heat glow
       const halo = L.circle([spot.lat, spot.lng], {
-        radius: spot.aqi > 150 ? 45000 : 25000,
+        radius: spot.aqi > 150 ? 55000 : 30000,
         color: cat.color,
         fillColor: cat.color,
-        fillOpacity: 0.22,
+        fillOpacity: 0.25,
         weight: 0,
       }).addTo(map);
 
@@ -306,7 +305,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               height: 24px;
               border-radius: 50%;
               background: ${cat.color};
-              opacity: 0.4;
+              opacity: 0.5;
               animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
             "></span>
             <span style="
@@ -316,7 +315,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               border-radius: 50%;
               background: ${cat.color};
               border: 2px solid #ffffff;
-              box-shadow: 0 0 8px ${cat.color};
+              box-shadow: 0 0 10px ${cat.color};
             "></span>
           </div>
         `,
@@ -336,15 +335,19 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     });
   };
 
+interface LeafletContainer extends HTMLDivElement {
+  _leaflet_id?: number | string;
+}
+
   // Initialize Leaflet Map safely in React 18/19 StrictMode
   useEffect(() => {
     let canceled = false;
+    const currentContainer = mapContainerRef.current as LeafletContainer | null;
 
     async function initMap() {
-      const container = mapContainerRef.current;
+      const container = mapContainerRef.current as LeafletContainer | null;
       if (!container) return;
 
-      // Clean up previous instance if already assigned
       if (mapInstanceRef.current) {
         try {
           mapInstanceRef.current.remove();
@@ -354,19 +357,17 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         mapInstanceRef.current = null;
       }
 
-      // Completely clear any leftover Leaflet ID and DOM children
-      if ((container as any)._leaflet_id) {
-        delete (container as any)._leaflet_id;
+      if (container._leaflet_id) {
+        delete container._leaflet_id;
         container.innerHTML = "";
       }
 
       const L = await import("leaflet");
       if (canceled || !mapContainerRef.current) return;
 
-      // Double-check clean state immediately before initialization
-      const targetContainer = mapContainerRef.current;
-      if ((targetContainer as any)._leaflet_id) {
-        delete (targetContainer as any)._leaflet_id;
+      const targetContainer = mapContainerRef.current as LeafletContainer;
+      if (targetContainer._leaflet_id) {
+        delete targetContainer._leaflet_id;
         targetContainer.innerHTML = "";
       }
 
@@ -377,10 +378,10 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         attributionControl: false,
       });
 
-      // Free standard OpenStreetMap tile layer (zero watermarks, no API key required)
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // Dark Mode Cartography Provider (CartoDB Dark All)
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
         maxZoom: 19,
-        subdomains: ["a", "b", "c"],
+        subdomains: "abcd",
       }).addTo(map);
 
       // Custom zoom control in bottom right
@@ -388,7 +389,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
       mapInstanceRef.current = map;
 
-      // Render hot spot circles and glowing heat halos
       renderMarkers(L, map);
     }
 
@@ -404,10 +404,11 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         }
         mapInstanceRef.current = null;
       }
-      if (mapContainerRef.current) {
-        delete (mapContainerRef.current as any)._leaflet_id;
+      if (currentContainer && currentContainer._leaflet_id) {
+        delete currentContainer._leaflet_id;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -431,37 +432,35 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const aqiInfo = getAqiCategory(activeHotspot.aqi);
 
   return (
-    <div className="overview-spatial-explorer w-full relative rounded-3xl overflow-hidden border border-[var(--dash-rule)] shadow-lg bg-stone-100 dark:bg-stone-900 min-h-[640px] sm:min-h-[720px] flex flex-col justify-between">
+    <div className="space-y-4 w-full">
       {/* ------------------------------------------------------------------ */}
-      {/* Top Floating App Bar (Search, Live Indicator, Theme, Share) */}
+      {/* Search Header Row (Above Map to Prevent Overlap) */}
       {/* ------------------------------------------------------------------ */}
-      <div className="absolute top-4 left-4 right-4 z-[400] flex flex-wrap items-center justify-between gap-3 pointer-events-none">
-        {/* Search Bar on Left / Center */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <form
           onSubmit={handleSearchSubmit}
-          className="pointer-events-auto flex items-center bg-white/95 dark:bg-stone-900/95 backdrop-blur-md px-4 py-2 rounded-full border border-[var(--dash-rule)] shadow-md w-full max-w-sm sm:max-w-md transition-all focus-within:ring-2 focus-within:ring-[var(--dash-accent)]"
+          className="flex items-center bg-neutral-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-neutral-800 shadow-md w-full max-w-md transition-all focus-within:ring-2 focus-within:ring-emerald-500"
         >
-          <Search size={18} className="text-[var(--dash-muted)] mr-2 flex-none" />
+          <Search size={16} className="text-neutral-400 mr-2.5 flex-none" />
           <input
             type="text"
-            placeholder="Search any city or region (e.g. Delhi, Mumbai, Bengaluru)..."
+            placeholder="Search city (e.g. Delhi, Mumbai, Bengaluru)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-xs sm:text-sm text-[var(--dash-ink)] outline-none placeholder:text-[var(--dash-muted)]"
+            className="w-full bg-transparent text-xs sm:text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
           />
           <button
             type="submit"
-            className="ml-2 px-3 py-1 rounded-full bg-[var(--dash-accent)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+            className="ml-2 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
           >
             GO
           </button>
         </form>
 
-        {/* Live Badge & Actions */}
-        <div className="pointer-events-auto flex items-center gap-2">
-          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] text-xs font-mono font-medium text-[var(--dash-ink)] shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Live Telemetry
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900/90 border border-neutral-800 text-xs font-mono text-neutral-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Live Ground Telemetry
           </span>
           <button
             type="button"
@@ -470,8 +469,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                 navigator.share({ title: "Vayu Index", url: window.location.href });
               }
             }}
-            className="p-2 rounded-full bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] text-[var(--dash-ink)] hover:text-[var(--dash-accent)] shadow-sm transition-colors"
-            title="Share Spatial Telemetry"
+            className="p-2 rounded-xl bg-neutral-900/90 border border-neutral-800 text-neutral-300 hover:text-emerald-400 transition-colors"
+            title="Share"
           >
             <Share2 size={16} />
           </button>
@@ -479,22 +478,23 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Full-bleed Leaflet Map Container */}
+      {/* 1. Dedicated Leaflet Container (Clean Bounds & Dark Theme) */}
       {/* ------------------------------------------------------------------ */}
-      <div ref={mapContainerRef} className="absolute inset-0 z-0 w-full h-full" />
+      <div className="relative w-full h-[650px] rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950">
+        {/* Full Spatial Map Canvas */}
+        <div ref={mapContainerRef} className="absolute inset-0 z-0 w-full h-full" />
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Left Floating Card: City Telemetry, AQI, Health Advisory & Pollutants */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="absolute top-20 left-4 z-[400] w-full max-w-xs sm:max-w-sm pointer-events-auto">
-        <div className="p-5 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] shadow-xl space-y-4">
+        {/* ------------------------------------------------------------------ */}
+        {/* Left Floating Drawer: Absolute Pinning with Dark Theme */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-neutral-900/90 border border-neutral-800 text-white rounded-xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-2.5">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
             <div>
-              <h2 className="text-xl font-extrabold text-[var(--dash-ink)] tracking-tight">
+              <h2 className="text-xl font-extrabold text-white tracking-tight">
                 {activeHotspot.name}
               </h2>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-[var(--dash-muted)]">
+              <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400">
                 CURRENT AIR QUALITY · {activeHotspot.state}
               </span>
             </div>
@@ -502,32 +502,25 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               type="button"
               onClick={() => setIsFavorite(!isFavorite)}
               aria-label="Bookmark location"
-              className="p-1.5 rounded-lg text-[var(--dash-muted)] hover:text-amber-500 transition-colors"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-amber-400 transition-colors"
             >
-              <Star size={18} className={isFavorite ? "fill-amber-500 text-amber-500" : ""} />
+              <Star size={18} className={isFavorite ? "fill-amber-400 text-amber-400" : ""} />
             </button>
           </div>
 
-          {/* Big AQI Banner with India Gate Silhouette Backdrop */}
+          {/* Big AQI Banner */}
           <div
-            className="p-5 rounded-xl border border-stone-200 dark:border-stone-800 relative overflow-hidden flex flex-col justify-between"
+            className="p-4 rounded-xl border border-neutral-800 relative overflow-hidden flex flex-col justify-between"
             style={{
-              background: `linear-gradient(135deg, ${aqiInfo.bg}, rgba(255, 255, 255, 0.4))`,
+              background: `linear-gradient(135deg, ${aqiInfo.bg}, rgba(23, 23, 23, 0.7))`,
             }}
           >
-            {/* Subtle Urban Silhouette Background */}
-            <div className="absolute right-0 bottom-0 opacity-15 pointer-events-none">
-              <svg width="120" height="70" viewBox="0 0 120 70" fill="currentColor">
-                <path d="M10 70 L10 40 L25 40 L25 25 L40 25 L40 10 L50 10 L50 70 Z M60 70 L60 20 L75 20 L75 70 Z M85 70 L85 35 L100 35 L100 15 L110 15 L110 70 Z" />
-              </svg>
-            </div>
-
             <div className="relative z-10">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)]">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-neutral-400">
                 US AQI
               </span>
               <div className="flex items-baseline gap-2 mt-0.5">
-                <span className="text-5xl font-black font-mono tracking-tight" style={{ color: aqiInfo.color }}>
+                <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight" style={{ color: aqiInfo.color }}>
                   {activeHotspot.aqi}
                 </span>
                 <span className="text-base font-bold" style={{ color: aqiInfo.color }}>
@@ -536,101 +529,99 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               </div>
             </div>
 
-            <span className="relative z-10 text-[10px] font-mono text-[var(--dash-muted)] mt-2">
+            <span className="relative z-10 text-[10px] font-mono text-neutral-400 mt-2">
               US AQI · forecast model · as of {activeHotspot.updatedAt}
             </span>
           </div>
 
           {/* Health Advisory Box */}
-          <div className="p-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-[var(--dash-rule)]">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--dash-accent)] block mb-1">
+          <div className="p-3 rounded-lg bg-neutral-950/70 border border-neutral-800 text-neutral-300">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-1">
               HEALTH ADVISORY
             </span>
-            <p className="text-xs text-[var(--dash-ink)] leading-relaxed">
+            <p className="text-xs leading-relaxed text-neutral-300">
               {activeHotspot.advisory}
             </p>
           </div>
 
           {/* Individual Pollutants Progress Bars */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-mono text-[var(--dash-muted)]">
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 border-b border-neutral-800 pb-1">
               <span>Pollutants</span>
-              <span>µg/m³</span>
+              <span>Concentration (µg/m³)</span>
             </div>
 
             {/* PM2.5 */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" /> PM2.5
+              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-sm bg-rose-500" /> PM2.5
               </span>
-              <span className="font-mono font-bold text-[var(--dash-ink)]">
+              <span className="font-mono font-bold text-white">
                 {activeHotspot.pollutants.pm2_5}
               </span>
             </div>
 
             {/* PM10 */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500" /> PM10
+              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-sm bg-amber-500" /> PM10
               </span>
-              <span className="font-mono font-bold text-[var(--dash-ink)]">
+              <span className="font-mono font-bold text-white">
                 {activeHotspot.pollutants.pm10}
               </span>
             </div>
 
             {/* O3 */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> O₃
+              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-sm bg-emerald-500" /> O₃
               </span>
-              <span className="font-mono font-bold text-[var(--dash-ink)]">
+              <span className="font-mono font-bold text-white">
                 {activeHotspot.pollutants.ozone}
               </span>
             </div>
 
             {/* NO2 */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-sky-500" /> NO₂
+              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-sm bg-sky-500" /> NO₂
               </span>
-              <span className="font-mono font-bold text-[var(--dash-ink)]">
+              <span className="font-mono font-bold text-white">
                 {activeHotspot.pollutants.no2}
               </span>
             </div>
 
             {/* SO2 */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-purple-500" /> SO₂
+              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-sm bg-purple-500" /> SO₂
               </span>
-              <span className="font-mono font-bold text-[var(--dash-ink)]">
+              <span className="font-mono font-bold text-white">
                 {activeHotspot.pollutants.so2}
               </span>
             </div>
 
             {/* CO */}
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-teal-500" /> CO
+              <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-sm bg-teal-500" /> CO
               </span>
-              <span className="font-mono font-bold text-[var(--dash-ink)]">
+              <span className="font-mono font-bold text-white">
                 {activeHotspot.pollutants.co}
               </span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Right Floating Control Panel: MAP LAYERS (AQI, PM2.5, PM10, etc.) */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="absolute top-20 right-4 z-[400] w-52 sm:w-60 pointer-events-auto hidden md:block">
-        <div className="p-4 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] shadow-xl space-y-3.5">
-          <span className="text-[11px] font-mono font-bold tracking-widest text-[var(--dash-muted)] uppercase block border-b border-[var(--dash-rule)] pb-2">
+        {/* ------------------------------------------------------------------ */}
+        {/* Right Floating Map Layers Panel: Absolute Pinning */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="absolute top-4 right-4 z-20 backdrop-blur-md bg-neutral-900/90 border border-neutral-800 rounded-xl p-3.5 text-white w-48 sm:w-52 hidden md:block shadow-2xl pointer-events-auto">
+          <span className="text-[11px] font-mono font-bold tracking-widest text-neutral-400 uppercase block border-b border-neutral-800 pb-2">
             MAP LAYERS
           </span>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1 mt-2">
             {[
               { key: "aqi", label: "Air Quality (AQI)" },
               { key: "pm2_5", label: "PM2.5" },
@@ -642,10 +633,10 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             ].map((layer) => (
               <label
                 key={layer.key}
-                className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs cursor-pointer transition-colors ${
                   activeLayer === layer.key
-                    ? "bg-[var(--dash-surface-soft)] text-[var(--dash-accent)] font-bold"
-                    : "text-[var(--dash-ink)] hover:bg-[var(--dash-surface-soft)]"
+                    ? "bg-neutral-800 text-emerald-400 font-bold"
+                    : "text-neutral-300 hover:bg-neutral-800/60"
                 }`}
               >
                 <input
@@ -654,33 +645,33 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                   value={layer.key}
                   checked={activeLayer === layer.key}
                   onChange={() => setActiveLayer(layer.key as MapLayerKey)}
-                  className="accent-[var(--dash-accent)] cursor-pointer"
+                  className="accent-emerald-500 cursor-pointer"
                 />
                 <span>{layer.label}</span>
               </label>
             ))}
           </div>
 
-          <div className="border-t border-[var(--dash-rule)] pt-3 space-y-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)] block">
+          <div className="border-t border-neutral-800 pt-2.5 mt-2.5 space-y-1.5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block">
               OVERLAYS
             </span>
-            <div className="flex items-center justify-between text-xs text-[var(--dash-ink)]">
+            <div className="flex items-center justify-between text-xs text-neutral-300">
               <span>Weather</span>
               <input
                 type="checkbox"
                 checked={weatherOverlay}
                 onChange={(e) => setWeatherOverlay(e.target.checked)}
-                className="accent-[var(--dash-accent)] cursor-pointer"
+                className="accent-emerald-500 cursor-pointer"
               />
             </div>
-            <div className="flex items-center justify-between text-xs text-[var(--dash-ink)]">
+            <div className="flex items-center justify-between text-xs text-neutral-300">
               <span>Wind</span>
               <input
                 type="checkbox"
                 checked={windOverlay}
                 onChange={(e) => setWindOverlay(e.target.checked)}
-                className="accent-[var(--dash-accent)] cursor-pointer"
+                className="accent-emerald-500 cursor-pointer"
               />
             </div>
           </div>
@@ -688,50 +679,53 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Bottom Floating Card: AQI SCALE (US) with active range highlight */}
+      {/* AQI Scale Bar: Cleanly Placed Directly Underneath Map Canvas */}
       {/* ------------------------------------------------------------------ */}
-      <div className="absolute bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 z-[400] pointer-events-auto w-auto md:w-full md:max-w-3xl">
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-[var(--dash-rule)] shadow-xl">
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[var(--dash-muted)] mb-3">
+      <div className="w-full p-4 sm:p-5 rounded-2xl border border-neutral-800 bg-neutral-900/90 backdrop-blur-md shadow-md text-white">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-neutral-300">
             <span>AQI SCALE (US)</span>
-            <Info size={13} className="text-[var(--dash-muted)]" />
+            <Info size={13} className="text-neutral-400" />
           </div>
+          <span className="text-[11px] font-mono text-neutral-400">
+            Current Range Active: <strong className="text-white">{activeHotspot.status}</strong>
+          </span>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
-            {[
-              { range: "0–50", label: "Good", color: "#10b981", active: activeHotspot.aqi <= 50 },
-              { range: "51–100", label: "Moderate", color: "#f59e0b", active: activeHotspot.aqi > 50 && activeHotspot.aqi <= 100 },
-              {
-                range: "101–150",
-                label: "Unhealthy for Sensitive",
-                color: "#f97316",
-                active: activeHotspot.aqi > 100 && activeHotspot.aqi <= 150,
-              },
-              { range: "151–200", label: "Unhealthy", color: "#ef4444", active: activeHotspot.aqi > 150 && activeHotspot.aqi <= 200 },
-              { range: "201–300", label: "Very Unhealthy", color: "#8b5cf6", active: activeHotspot.aqi > 200 && activeHotspot.aqi <= 300 },
-              { range: "301+", label: "Hazardous", color: "#881337", active: activeHotspot.aqi > 300 },
-            ].map((tier) => (
-              <div
-                key={tier.range}
-                className={`p-2.5 rounded-xl border text-center transition-all ${
-                  tier.active
-                    ? "border-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.25)] bg-rose-500/10 scale-105 z-10"
-                    : "border-[var(--dash-rule)] bg-[var(--dash-surface-soft)] opacity-85"
-                }`}
-              >
-                <span
-                  className="w-full h-1.5 rounded-full inline-block mb-1"
-                  style={{ backgroundColor: tier.color }}
-                />
-                <span className="text-[11px] font-mono font-bold text-[var(--dash-ink)] block">
-                  {tier.range}
-                </span>
-                <span className="text-[10px] text-[var(--dash-muted)] font-medium leading-tight line-clamp-1">
-                  {tier.label}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+          {[
+            { range: "0–50", label: "Good", color: "#10b981", active: activeHotspot.aqi <= 50 },
+            { range: "51–100", label: "Moderate", color: "#f59e0b", active: activeHotspot.aqi > 50 && activeHotspot.aqi <= 100 },
+            {
+              range: "101–150",
+              label: "Unhealthy for Sensitive",
+              color: "#f97316",
+              active: activeHotspot.aqi > 100 && activeHotspot.aqi <= 150,
+            },
+            { range: "151–200", label: "Unhealthy", color: "#ef4444", active: activeHotspot.aqi > 150 && activeHotspot.aqi <= 200 },
+            { range: "201–300", label: "Very Unhealthy", color: "#8b5cf6", active: activeHotspot.aqi > 200 && activeHotspot.aqi <= 300 },
+            { range: "301+", label: "Hazardous", color: "#881337", active: activeHotspot.aqi > 300 },
+          ].map((tier) => (
+            <div
+              key={tier.range}
+              className={`p-3 rounded-xl border text-center transition-all ${
+                tier.active
+                  ? "border-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] bg-rose-500/15 scale-102 z-10"
+                  : "border-neutral-800 bg-neutral-950/60 opacity-80"
+              }`}
+            >
+              <span
+                className="w-full h-1.5 rounded-full inline-block mb-1.5"
+                style={{ backgroundColor: tier.color }}
+              />
+              <span className="text-xs font-mono font-bold text-white block">
+                {tier.range}
+              </span>
+              <span className="text-[11px] text-neutral-400 font-medium leading-tight line-clamp-1 mt-0.5">
+                {tier.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
