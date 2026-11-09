@@ -17,12 +17,18 @@ export function Navbar() {
 
   // 2. Render Public Marketing Navbar (When isPublicRoute is TRUE)
   if (isPublicRoute) {
+    const isDark = theme === "dark";
     return (
       <header
-        className="public-navbar-wrapper w-full bg-[var(--landing-paper,#f7f6f0)] dark:bg-[#0b1412] text-[var(--landing-ink,#111)] dark:text-[#eef6f2] transition-colors duration-200 relative z-30"
+        className="public-navbar-wrapper w-full transition-colors duration-200 relative z-30"
         data-theme={theme}
+        style={{
+          backgroundColor: isDark ? "#0b1412" : "#f7f6f0",
+          color: isDark ? "#f2f7f4" : "#111111",
+          borderBottom: isDark ? "1px solid rgba(147, 226, 197, 0.16)" : "1px solid rgba(15, 56, 44, 0.15)",
+        }}
       >
-        <div className="editorial-nav">
+        <div className="editorial-nav" style={{ borderBottom: "none" }}>
           {/* Brand on Left: VAYU INDEX title + GLOBAL AIR INTELLIGENCE monospaced subtext */}
           <a className="editorial-brand" href="/" aria-label="Vayu Index home">
             <span className="brand-mark" aria-hidden="true">
@@ -31,10 +37,12 @@ export function Navbar() {
               <i />
             </span>
             <span>
-              <strong>
-                VAYU <em>INDEX</em>
+              <strong style={{ color: isDark ? "#f2f7f4" : "#111111" }}>
+                VAYU <em style={{ color: isDark ? "#83dfbd" : "#0f382c", fontStyle: "normal" }}>INDEX</em>
               </strong>
-              <small>GLOBAL AIR INTELLIGENCE</small>
+              <small style={{ color: isDark ? "#8fa398" : "#777f76" }}>
+                GLOBAL AIR INTELLIGENCE
+              </small>
             </span>
           </a>
 
@@ -67,10 +75,10 @@ export function Navbar() {
               className="icon-button theme-toggle"
               type="button"
               onClick={toggleTheme}
-              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-              title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+              title={`Switch to ${isDark ? "light" : "dark"} mode`}
             >
-              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
         </div>
@@ -79,10 +87,16 @@ export function Navbar() {
   }
 
   // 3. Render App Workspace Navbar (When isPublicRoute is FALSE: /dashboard, /compare, /risk, etc.)
+  const isDark = theme === "dark";
   return (
     <header
-      className="app-workspace-navbar-wrapper dashboard-app w-full border-b border-[var(--dash-rule,#dedfd5)] dark:border-[#343e38] bg-[var(--dash-canvas,#f3f0e7)] dark:bg-[#111614] text-[var(--dash-ink,#242720)] dark:text-[#eff4ef] transition-colors duration-200 sticky top-0 z-50"
+      className="app-workspace-navbar-wrapper dashboard-app w-full border-b transition-colors duration-200 sticky top-0 z-50"
       data-theme={theme}
+      style={{
+        backgroundColor: isDark ? "#111614" : "rgba(247, 245, 238, 0.96)",
+        borderColor: isDark ? "#343e38" : "#dedfd5",
+        color: isDark ? "#eff4ef" : "#242720",
+      }}
     >
       <div className="dashboard-frame">
         <div className="topbar dashboard-topbar border-b-0 h-[72px] flex items-center justify-between">
@@ -150,10 +164,10 @@ export function Navbar() {
               className="icon-button theme-toggle"
               type="button"
               onClick={toggleTheme}
-              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-              title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+              title={`Switch to ${isDark ? "light" : "dark"} mode`}
             >
-              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
         </div>
