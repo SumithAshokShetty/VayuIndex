@@ -90,16 +90,19 @@ export function Navbar() {
   const isDark = theme === "dark";
   return (
     <header
-      className="app-workspace-navbar-wrapper dashboard-app w-full border-b transition-colors duration-200 sticky top-0 z-50"
+      className="app-workspace-navbar-wrapper w-full border-b transition-colors duration-200 sticky top-0 z-50 h-[72px]"
       data-theme={theme}
       style={{
+        height: "72px",
+        minHeight: "72px",
+        maxHeight: "72px",
         backgroundColor: isDark ? "#111614" : "rgba(247, 245, 238, 0.96)",
         borderColor: isDark ? "#343e38" : "#dedfd5",
         color: isDark ? "#eff4ef" : "#242720",
       }}
     >
-      <div className="dashboard-frame">
-        <div className="topbar dashboard-topbar border-b-0 h-[72px] flex items-center justify-between">
+      <div className="dashboard-frame h-full">
+        <div className="topbar dashboard-topbar border-b-0 h-full flex items-center justify-between">
           {/* Brand on Left: VAYU INDEX title + GLOBAL AIR INTELLIGENCE monospaced subtext */}
           <a className="brand" href="/" aria-label="Vayu Index home">
             <span className="brand-mark" aria-hidden="true">
