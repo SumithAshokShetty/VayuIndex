@@ -1,4 +1,5 @@
 import type { AirCurrent, AirQualityResponse } from "@/lib/types";
+import { calculateCompositeAqi, type ConcentrationUnit, type Pollutant, type PollutantConcentration } from "@/lib/aqi-calculator";
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_STATION_AGE_MS = 6 * 60 * 60 * 1000;
@@ -134,19 +135,41 @@ async function fetchOpenAQ({ latitude, longitude }: Coordinates, apiKey: string)
     for (const field of POLLUTANTS) current[field] ??= null;
     if (!POLLUTANTS.some((field) => current[field] !== null)) continue;
 
+    const concentrations: Partial<Record<Pollutant, PollutantConcentration>> = {};
+    if (typeof current.pm2_5 === "number" && Number.isFinite(current.pm2_5)) {
+      concentrations.pm2_5 = { value: current.pm2_5, unit: (units.pm2_5 as ConcentrationUnit) || "µg/m³" };
+    }
+    if (typeof current.pm10 === "number" && Number.isFinite(current.pm10)) {
+      concentrations.pm10 = { value: current.pm10, unit: (units.pm10 as ConcentrationUnit) || "µg/m³" };
+    }
+    if (typeof current.nitrogen_dioxide === "number" && Number.isFinite(current.nitrogen_dioxide)) {
+      concentrations.no2 = { value: current.nitrogen_dioxide, unit: (units.nitrogen_dioxide as ConcentrationUnit) || "ppb" };
+    }
+    if (typeof current.sulphur_dioxide === "number" && Number.isFinite(current.sulphur_dioxide)) {
+      concentrations.so2 = { value: current.sulphur_dioxide, unit: (units.sulphur_dioxide as ConcentrationUnit) || "ppb" };
+    }
+    if (typeof current.carbon_monoxide === "number" && Number.isFinite(current.carbon_monoxide)) {
+      concentrations.co = { value: current.carbon_monoxide, unit: (units.carbon_monoxide as ConcentrationUnit) || "ppm" };
+    }
+    if (typeof current.ozone === "number" && Number.isFinite(current.ozone)) {
+      concentrations.o3 = { value: current.ozone, unit: (units.ozone as ConcentrationUnit) || "ppm" };
+    }
+
+    const aqiResult = calculateCompositeAqi(concentrations, "epa");
+
     const newest = readings[0];
     const distanceKm = haversineKm(latitude, longitude, location.coordinates!.latitude!, location.coordinates!.longitude!);
     const stationName = [location.name, location.locality].filter(Boolean).join(", ") || "OpenAQ monitoring location";
     const currentData: AirCurrent = {
       ...current,
       time: newest?.datetime?.local ?? newest?.datetime?.utc ?? new Date().toISOString(),
-      aqi: null,
-      us_aqi_pm2_5: null,
-      us_aqi_pm10: null,
-      us_aqi_ozone: null,
-      us_aqi_nitrogen_dioxide: null,
-      us_aqi_sulphur_dioxide: null,
-      us_aqi_carbon_monoxide: null,
+      aqi: aqiResult.aqi,
+      us_aqi_pm2_5: aqiResult.subIndices.pm2_5?.value ?? null,
+      us_aqi_pm10: aqiResult.subIndices.pm10?.value ?? null,
+      us_aqi_ozone: aqiResult.subIndices.o3?.value ?? null,
+      us_aqi_nitrogen_dioxide: aqiResult.subIndices.no2?.value ?? null,
+      us_aqi_sulphur_dioxide: aqiResult.subIndices.so2?.value ?? null,
+      us_aqi_carbon_monoxide: aqiResult.subIndices.co?.value ?? null,
     };
     return {
       provider: "openaq",
@@ -157,7 +180,9 @@ async function fetchOpenAQ({ latitude, longitude }: Coordinates, apiKey: string)
       stationUrl: `https://explore.openaq.org/locations/${location.id}`,
       stationLatitude: location.coordinates!.latitude!,
       stationLongitude: location.coordinates!.longitude!,
-      fallbackNote: `Nearest station · ${distanceKm.toFixed(1)} km away. AQI is not supplied by this measurement feed.`,
+      fallbackNote: aqiResult.aqi !== null
+        ? `Nearest station · ${distanceKm.toFixed(1)} km away. Calculated US EPA AQI from station sensor observations.`
+        : `Nearest station · ${distanceKm.toFixed(1)} km away. AQI is not supplied by this measurement feed.`,
       attribution: [
         { name: "OpenAQ", url: "https://openaq.org/" },
         ...(location.provider?.name ? [{ name: location.provider.name }] : []),
@@ -251,7 +276,28 @@ async function loadAirQuality(coordinates: Coordinates): Promise<AirQualityRespo
   if (openAQKey) {
     try {
       const station = await fetchOpenAQ(coordinates, openAQKey);
-      if (station) return station;
+      if (station && station.current.aqi !== null) return station;
+      if (station && !waqiKey) return station;
+      if (station && waqiKey) {
+        try {
+          const waqiStation = await fetchWAQI(coordinates, waqiKey);
+          if (waqiStation && waqiStation.current.aqi !== null) {
+            return {
+              ...station,
+              current: {
+                ...station.current,
+                aqi: waqiStation.current.aqi,
+              },
+              fallbackNote: `Station observations from ${station.stationName}. AQI supplied by ${waqiStation.stationName} (WAQI).`,
+              attribution: [
+                ...station.attribution,
+                ...waqiStation.attribution,
+              ],
+            };
+          }
+        } catch {}
+        return station;
+      }
     } catch {
       openAQFailed = true;
     }

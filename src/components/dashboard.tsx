@@ -12,6 +12,7 @@ import { MapLayersPanel, type MapLayer } from "@/components/MapLayersPanel";
 import { HistoricalTracker } from "@/components/HistoricalTracker";
 import { LocationComparison } from "@/components/LocationComparison";
 import { AqiForecast } from "@/components/AqiForecast";
+import { useTheme } from "@/lib/use-theme";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
 
 const GlobeEngine = dynamic(() => import("@/components/GlobeEngine").then((module) => module.GlobeEngine), { ssr: false, loading: () => <div className="globe-loading">Loading spatial engine…</div> });
@@ -85,8 +86,15 @@ export function Dashboard() {
   const [windEnabled, setWindEnabled] = useState(false);
   const [temperatureEnabled, setTemperatureEnabled] = useState(false);
   const [weather, setWeather] = useState<{ temperature_2m?: number; wind_speed_10m?: number; wind_direction_10m?: number; time?: string } | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { theme, toggleTheme } = useTheme();
   const [activeView, setActiveView] = useState<DashboardView>("live");
+
+  useEffect(() => {
+    const requestedView = new URLSearchParams(window.location.search).get("view");
+    if (requestedView === "live" || requestedView === "history" || requestedView === "compare" || requestedView === "forecast") {
+      setActiveView(requestedView);
+    }
+  }, []);
 
   const selectLocation = useCallback((nextLocation: Location) => setLocation(nextLocation), []);
 
@@ -183,7 +191,7 @@ export function Dashboard() {
           </nav>
           <div className="top-actions">
             <span className={`dashboard-status ${error ? "has-error" : ""}`}><i/>{providerBadge}</span>
-            <button className="icon-button theme-toggle" type="button" onClick={() => setTheme((value) => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`} title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
+            <button className="icon-button theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`} title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
               {theme === "light" ? <Moon size={16}/> : <Sun size={16}/>}
             </button>
           </div>

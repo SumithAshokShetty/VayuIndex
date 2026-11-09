@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpRight, CircleCheck, CloudSun, MapPin, RadioTower, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, CircleCheck, CloudSun, MapPin, RadioTower, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { AboutMotion } from "@/components/about-motion";
 
@@ -17,12 +17,13 @@ export default function AboutPage() {
   return (
     <main className="about-page">
       <AboutMotion />
-      <header className="about-nav">
-        <a className="brand" href="/" aria-label="Vayu Index home">
+      <header className="editorial-nav">
+        <a className="editorial-brand" href="/" aria-label="Vayu Index home">
           <span className="brand-mark" aria-hidden="true"><i/><i/><i/></span>
-          <span className="brand-copy"><strong>VAYU<span>INDEX</span></strong><small>GLOBAL AIR INTELLIGENCE</small></span>
+          <span><strong>VAYU <em>INDEX</em></strong><small>GLOBAL AIR INTELLIGENCE</small></span>
         </a>
-        <nav aria-label="Main navigation"><a href="/">Overview</a><a href="/dashboard">Air dashboard</a><a className="about-current" href="/about">About</a></nav>
+        <nav aria-label="Main navigation"><a href="/">Home</a><a className="current" aria-current="page" href="/about">About Vayu</a></nav>
+        <div className="editorial-nav-actions"><a className="nav-explore" href="/dashboard">Explore the air <ArrowRight size={15}/></a></div>
       </header>
 
       <section className="about-hero">
