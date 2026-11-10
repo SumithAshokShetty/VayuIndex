@@ -1626,12 +1626,38 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               });
 
               const marker = L.marker([latitude, longitude], { icon: pinIcon, zIndexOffset: 1200 }).addTo(mapInstanceRef.current);
-              marker.bindTooltip(`<strong>📍 Your Location: ${placeName}</strong>`, {
-                permanent: false,
-                direction: "top",
-                offset: [0, -14],
-                className: "theme-adaptive-tooltip font-mono text-xs",
-              });
+              marker.bindTooltip(
+                `
+                  <div style="
+                    background: var(--dash-surface, #1e293b);
+                    color: var(--dash-ink, #f8fafc);
+                    border: 1px solid rgba(2, 132, 199, 0.5);
+                    border-radius: 12px;
+                    padding: 8px 12px;
+                    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.45), 0 0 14px rgba(2, 132, 199, 0.35);
+                    backdrop-filter: blur(14px);
+                    -webkit-backdrop-filter: blur(14px);
+                    font-size: 11px;
+                    font-family: inherit;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    line-height: 1.2;
+                  ">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #0284c7; box-shadow: 0 0 8px #0284c7;"></span>
+                    <div>
+                      <div style="font-size: 9px; font-family: monospace; font-weight: 700; text-transform: uppercase; color: #0284c7; letter-spacing: 0.05em;">Your Location</div>
+                      <strong style="font-size: 13px; font-weight: 800;">${placeName}</strong>
+                    </div>
+                  </div>
+                `,
+                {
+                  permanent: false,
+                  direction: "top",
+                  offset: [0, -14],
+                  className: "custom-telemetry-tooltip",
+                }
+              );
               userMarkerRef.current = marker;
 
               if (flyImmediately) {
@@ -1893,17 +1919,96 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
         const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
 
-        // Leaflet Tooltip with comprehensive pollutant and atmospheric telemetry
+        // Enhanced Glassmorphic Telemetry HUD Tooltip on Hover
         marker.bindTooltip(
-          `<strong>${spot.name}</strong> (${spot.country})<br/>` +
-          `${metric.metricLabel}: <span style="color:${metric.color};font-weight:bold">${metric.formattedValue} ${metric.unit}</span> · ${metric.category}<br/>` +
-          `<span style="color:#0284c7;font-weight:600">🌡️ Temp: ${weather.temp}°C · 💧 Humidity: ${weather.humidity}%</span><br/>` +
-          `<span style="color:#0284c7;font-weight:600">💨 Wind: ${weather.windSpeed} km/h ${cardinal} (${weather.windDirection}°)</span><br/>` +
-          `<span style="font-size:10px;opacity:0.75">Overall AQI: ${spot.aqi}</span>`,
+          `
+            <div style="
+              min-width: 220px;
+              background: var(--dash-surface, #1e293b);
+              color: var(--dash-ink, #f8fafc);
+              border: 1px solid var(--dash-rule, rgba(255, 255, 255, 0.15));
+              border-radius: 14px;
+              padding: 11px 13px;
+              box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 0 16px -2px ${metric.color}40;
+              backdrop-filter: blur(16px);
+              -webkit-backdrop-filter: blur(16px);
+              font-family: inherit;
+              pointer-events: none;
+              line-height: 1.35;
+            ">
+              <!-- Top Row: Location & Country -->
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px;">
+                <span style="font-size: 14px; font-weight: 800; letter-spacing: -0.01em;">
+                  ${spot.name}
+                </span>
+                <span style="font-size: 9px; font-family: monospace; font-weight: 700; text-transform: uppercase; opacity: 0.55; letter-spacing: 0.05em;">
+                  ${spot.country}
+                </span>
+              </div>
+
+              <!-- Active Metric Chip -->
+              <div style="
+                background: linear-gradient(135deg, ${metric.color}22, transparent);
+                border: 1px solid ${metric.color}45;
+                border-radius: 9px;
+                padding: 6px 9px;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              ">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: ${metric.color}; box-shadow: 0 0 6px ${metric.color};"></span>
+                  <span style="font-size: 10px; font-family: monospace; font-weight: 700; text-transform: uppercase;">
+                    ${metric.metricLabel}
+                  </span>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-size: 13px; font-weight: 900; font-family: monospace; color: ${metric.color};">
+                    ${metric.formattedValue} ${metric.unit}
+                  </span>
+                  <span style="font-size: 9px; font-weight: 700; color: ${metric.color}; margin-left: 4px;">
+                    · ${metric.category}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Atmospheric & Weather Telemetry Grid -->
+              <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 5px;
+                padding-top: 6px;
+                border-top: 1px solid var(--dash-rule, rgba(255, 255, 255, 0.1));
+                font-size: 10px;
+                font-family: monospace;
+                color: var(--dash-muted, #94a3b8);
+              ">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span>🌡️</span>
+                  <strong style="color: var(--dash-ink, #f8fafc);">${weather.temp}°C</strong>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span>💧</span>
+                  <strong style="color: var(--dash-ink, #f8fafc);">${weather.humidity}%</strong>
+                </div>
+                <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; padding-top: 2px;">
+                  <span>💨</span>
+                  <strong style="color: var(--dash-ink, #f8fafc);">${weather.windSpeed} km/h ${cardinal}</strong>
+                  <span style="opacity: 0.65; font-size: 9px;">(${weather.windDirection}°)</span>
+                </div>
+              </div>
+
+              <!-- Footer Prompt -->
+              <div style="margin-top: 7px; padding-top: 5px; border-top: 1px solid var(--dash-rule, rgba(255, 255, 255, 0.08)); font-size: 9px; font-family: monospace; opacity: 0.65; text-align: center;">
+                Click pin to inspect full telemetry →
+              </div>
+            </div>
+          `,
           {
             direction: "top",
             offset: [0, -14],
-            className: "theme-adaptive-tooltip font-mono text-xs",
+            className: "custom-telemetry-tooltip",
           }
         );
 

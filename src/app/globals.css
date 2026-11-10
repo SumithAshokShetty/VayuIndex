@@ -919,3 +919,19 @@ html[data-theme="light"] body {
   color: #111111 !important;
 }
 
+/* Custom Leaflet Hover Telemetry HUD Tooltip */
+.leaflet-tooltip.custom-telemetry-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  pointer-events: none !important;
+}
+
+.leaflet-tooltip.custom-telemetry-tooltip::before {
+  display: none !important;
+}
+
+
