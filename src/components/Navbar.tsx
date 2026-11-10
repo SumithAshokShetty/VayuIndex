@@ -192,6 +192,7 @@ export function Navbar() {
             { href: "/overview", label: "Overview" },
             { href: "/dashboard", label: "Global view" },
             { href: "/compare", label: "Compare" },
+            { href: "/health", label: "Health & Safety" },
             { href: "/risk", label: "Personal risk" },
           ].map((item) => {
             const isActive = currentPath === item.href;

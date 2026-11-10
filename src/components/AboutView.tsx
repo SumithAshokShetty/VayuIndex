@@ -3,6 +3,7 @@
 import React from "react";
 import {
   ArrowRight,
+  BookOpen,
   CheckCircle2,
   CloudFog,
   Factory,
@@ -90,6 +91,18 @@ export function AboutView() {
                 >
                   <span>Explore the Dashboard</span>
                   <ArrowRight size={16} />
+                </a>
+
+                <a
+                  href="/health"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-xs sm:text-sm font-semibold border hover:bg-emerald-500/10 transition-colors no-underline"
+                  style={{
+                    borderColor: borderRule,
+                    color: inkColor,
+                  }}
+                >
+                  <BookOpen size={15} style={{ color: accentGreen }} />
+                  <span>3D Health &amp; Safety Journal</span>
                 </a>
 
                 <span
