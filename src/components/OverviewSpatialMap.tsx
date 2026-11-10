@@ -1752,7 +1752,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       list: SpatialHotspot[],
       layer: MapLayerKey,
       showWeather: boolean,
-      showWind: boolean,
       showHeatmap: boolean
     ) => {
       markersRef.current.forEach((m) => m.remove());
@@ -1834,36 +1833,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
           `;
         }
 
-        // 4. Optional Wind Direction indicator with rotated vector arrow
-        let windVaneHtml = "";
-        if (showWind) {
-          windVaneHtml = `
-            <div style="
-              position: absolute;
-              bottom: -20px;
-              white-space: nowrap;
-              background: rgba(2, 132, 199, 0.92);
-              color: white;
-              border: 1px solid rgba(255, 255, 255, 0.45);
-              border-radius: 9999px;
-              padding: 1.5px 6px;
-              font-size: 9px;
-              font-family: monospace;
-              font-weight: 700;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-              display: flex;
-              align-items: center;
-              gap: 3px;
-              pointer-events: none;
-            ">
-              <svg style="transform: rotate(${weather.windDirection}deg); width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5;" viewBox="0 0 24 24">
-                <path d="M12 2L12 22M12 2L6 8M12 2L18 8" />
-              </svg>
-              <span>${weather.windSpeed} km/h ${cardinal}</span>
-            </div>
-          `;
-        }
-
         // Interactive pulsating hotspot icon with metric value & color
         const customIcon = L.divIcon({
           className: "custom-aqi-hotspot-pin",
@@ -1910,7 +1879,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                   ${Math.round(metric.value)}
                 </span>
               </div>
-              ${windVaneHtml}
             </div>
           `,
           iconSize: [50, 50],
@@ -2127,13 +2095,12 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             hotspots,
             activeLayer,
             weatherOverlay,
-            windOverlay,
             heatmapOverlay
           );
         }
       });
     }
-  }, [hotspots, activeLayer, weatherOverlay, windOverlay, heatmapOverlay, renderMarkers]);
+  }, [hotspots, activeLayer, weatherOverlay, heatmapOverlay, renderMarkers]);
 
   // Initialize Leaflet Map safely in React 18/19 StrictMode
   useEffect(() => {
@@ -2211,7 +2178,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         hotspots,
         activeLayer,
         weatherOverlay,
-        windOverlay,
         heatmapOverlay
       );
 
@@ -2478,27 +2444,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                     {activeHotspot.weather?.windSpeed ?? 10} km/h
                   </span>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Wind Vector Vane when Wind Overlay is Active */}
-          {windOverlay && (
-            <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-[var(--dash-ink)] flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block mb-0.5">
-                  WIND DIRECTION & VECTOR
-                </span>
-                <span className="text-xs font-mono font-bold text-[var(--dash-ink)]">
-                  {activeHotspot.weather?.windSpeed ?? 10} km/h {getCardinalDirection(activeHotspot.weather?.windDirection ?? 60)} ({activeHotspot.weather?.windDirection ?? 60}°)
-                </span>
-              </div>
-              <div
-                className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-500 font-bold shadow-xs transition-transform"
-                style={{ transform: `rotate(${activeHotspot.weather?.windDirection ?? 60}deg)` }}
-                title={`Wind bearing: ${activeHotspot.weather?.windDirection ?? 60}°`}
-              >
-                ↑
               </div>
             </div>
           )}
