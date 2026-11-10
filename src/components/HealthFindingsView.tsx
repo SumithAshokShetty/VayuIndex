@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThreeBookCanvas } from "@/components/ThreeBookCanvas";
 import {
   ArrowLeft,
   ArrowRight,
@@ -451,80 +452,50 @@ export function HealthFindingsView() {
             </div>
           </div>
 
-          {/* 3D Notebook Open-Spread Container */}
-          <div
-            className="relative perspective-[1800px] w-full"
-            style={{
-              perspective: "1800px",
+          {/* 3D WebGL Hardcover & Interactive Page-Turn Canvas */}
+          <ThreeBookCanvas
+            currentChapter={currentChapter}
+            onChapterChange={(chap, dir) => {
+              setTurnDirection(dir);
+              setCurrentChapter(chap);
             }}
+            isDark={isDark}
           >
-            {/* Hardcover Drop Shadow & Base Matting */}
-            <div
-              className="relative w-full rounded-3xl p-3 sm:p-5 border shadow-2xl transition-all"
-              style={{
-                backgroundColor: isDark ? "#08100e" : "#e9e7dc",
-                borderColor: isDark ? "rgba(147, 226, 197, 0.16)" : "rgba(40, 60, 50, 0.18)",
-                boxShadow: isDark
-                  ? "0 28px 70px -15px rgba(0, 0, 0, 0.9), inset 0 2px 8px rgba(131, 223, 189, 0.05)"
-                  : "0 24px 60px -15px rgba(50, 45, 35, 0.28), inset 0 2px 6px rgba(255, 255, 255, 0.8)",
-              }}
-            >
-              {/* Spine Gold/Bronze Accents at Edge */}
-              <div
-                className="absolute left-0 top-6 bottom-6 w-2 sm:w-3 rounded-r-sm opacity-60"
-                style={{
-                  background:
-                    "linear-gradient(180deg, #b8860b 0%, #daa520 25%, #8b6508 50%, #daa520 75%, #b8860b 100%)",
+            {/* The Open Two-Page Spread Hybrid UI Overlay */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentChapter}
+                initial={{
+                  opacity: 0,
+                  x: turnDirection === "next" ? 24 : -24,
+                  scale: 0.98,
                 }}
-              />
-
-              {/* Bookmark Ribbon Hanging from Top Center */}
-              <div
-                className="absolute left-1/2 -top-4 -translate-x-1/2 w-4 sm:w-5 h-16 z-30 pointer-events-none rounded-b-sm shadow-md"
-                style={{
-                  background: isDark
-                    ? "linear-gradient(180deg, #10b981 0%, #059669 100%)"
-                    : "linear-gradient(180deg, #047857 0%, #065f46 100%)",
-                  clipPath: "polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)",
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  scale: 1,
                 }}
-              />
-
-              {/* The Open Two-Page Spread */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentChapter}
-                  initial={{
-                    opacity: 0,
-                    rotateY: turnDirection === "next" ? 18 : -18,
-                    scale: 0.98,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    rotateY: 0,
-                    scale: 1,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    rotateY: turnDirection === "next" ? -18 : 18,
-                    scale: 0.98,
-                  }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border relative"
+                exit={{
+                  opacity: 0,
+                  x: turnDirection === "next" ? -24 : 24,
+                  scale: 0.98,
+                }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border relative shadow-xl backdrop-blur-xs"
+                style={{
+                  backgroundColor: isDark ? "rgba(18, 29, 26, 0.96)" : "rgba(253, 251, 247, 0.96)",
+                  borderColor: isDark ? "rgba(147, 226, 197, 0.16)" : "rgba(15, 56, 44, 0.14)",
+                }}
+              >
+                {/* Center Book Crease / Gutter Shadow Divider */}
+                <div
+                  className="hidden lg:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 pointer-events-none z-20"
                   style={{
-                    backgroundColor: isDark ? "#121d1a" : "#fdfbf7",
-                    borderColor: isDark ? "rgba(147, 226, 197, 0.12)" : "rgba(15, 56, 44, 0.12)",
-                    transformStyle: "preserve-3d",
+                    background: isDark
+                      ? "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.5) 100%)"
+                      : "linear-gradient(90deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.07) 40%, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.07) 60%, rgba(0,0,0,0.2) 100%)",
                   }}
-                >
-                  {/* Center Book Crease / Gutter Shadow Divider */}
-                  <div
-                    className="hidden lg:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 pointer-events-none z-20"
-                    style={{
-                      background: isDark
-                        ? "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.45) 100%)"
-                        : "linear-gradient(90deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 40%, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.06) 60%, rgba(0,0,0,0.18) 100%)",
-                    }}
-                  />
+                />
 
                   {/* -------------------------------------------------------- */}
                   {/* LEFT PAGE: Concept, Philosophy & Narrative Storytelling */}
@@ -1192,8 +1163,7 @@ export function HealthFindingsView() {
                   </div>
                 </motion.div>
               </AnimatePresence>
-            </div>
-          </div>
+          </ThreeBookCanvas>
         </main>
       ) : (
         /* ------------------------------------------------------------------ */
