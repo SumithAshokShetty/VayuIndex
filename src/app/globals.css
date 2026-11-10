@@ -781,6 +781,106 @@ footer.editorial-footer{border-top:none!important}
 @media(max-width:420px){.editorial-nav nav{margin-left:auto}.editorial-nav{width:calc(100% - 26px)}.editorial-hero{width:calc(100% - 30px)}.hero-actions{gap:14px}.hero-primary{gap:9px;padding:13px 12px;font-size:10px}.hero-secondary{font-size:10px}.hero-bottomline{font-size:6px}.feature-card-bottom{align-items:flex-end}.feature-tags{max-width:68%}.feature-tags span{font-size:6px}.feature-reveal{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.ticker-track{animation:none}.editorial-feature-card,.hero-primary,.nav-explore{transition:none}}
 
+/* High-Contrast Crisp Typography for Dark Emerald Accent Containers (Card 03 & CTA Banner) */
+.feature-dark,
+[data-theme="light"] .feature-dark,
+.editorial-landing .feature-dark {
+  background: #0f382c !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.feature-dark h3,
+.feature-dark .feature-card-main h3,
+[data-theme="light"] .feature-dark h3,
+[data-theme="light"] .feature-dark .feature-card-main h3 {
+  color: #ffffff !important;
+}
+
+.feature-dark p,
+.feature-dark .feature-card-main p,
+[data-theme="light"] .feature-dark p,
+[data-theme="light"] .feature-dark .feature-card-main p {
+  color: rgba(235, 245, 238, 0.88) !important;
+}
+
+.feature-dark .feature-number,
+.feature-dark .feature-kicker,
+[data-theme="light"] .feature-dark .feature-number,
+[data-theme="light"] .feature-dark .feature-kicker {
+  color: #83dfbd !important;
+}
+
+.feature-dark .feature-icon,
+[data-theme="light"] .feature-dark .feature-icon {
+  border-color: rgba(131, 223, 189, 0.35) !important;
+  color: #83dfbd !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.feature-dark .feature-tags span,
+[data-theme="light"] .feature-dark .feature-tags span {
+  border-color: rgba(131, 223, 189, 0.3) !important;
+  color: #d1ece2 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.feature-dark .feature-reveal,
+[data-theme="light"] .feature-dark .feature-reveal {
+  color: #83dfbd !important;
+  opacity: 1 !important;
+}
+
+/* Editorial CTA Banner Crisp Light Typography */
+.editorial-cta,
+[data-theme="light"] .editorial-cta,
+.editorial-landing .editorial-cta {
+  background: #07261e !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(131, 223, 189, 0.22) !important;
+  margin-bottom: clamp(100px, 12vw, 160px) !important;
+}
+
+.editorial-cta h2,
+[data-theme="light"] .editorial-cta h2,
+.editorial-landing .editorial-cta h2 {
+  color: #ffffff !important;
+}
+
+.editorial-cta p,
+[data-theme="light"] .editorial-cta p,
+.editorial-landing .editorial-cta p {
+  color: rgba(235, 245, 238, 0.88) !important;
+}
+
+.editorial-cta .editorial-kicker,
+[data-theme="light"] .editorial-cta .editorial-kicker {
+  color: #83dfbd !important;
+}
+
+.editorial-cta .editorial-kicker>span:first-child,
+[data-theme="light"] .editorial-cta .editorial-kicker>span:first-child {
+  background: #83dfbd !important;
+}
+
+.editorial-cta>a,
+[data-theme="light"] .editorial-cta>a {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+}
+
+.editorial-cta>a:hover,
+[data-theme="light"] .editorial-cta>a:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+}
+
+.editorial-cta .cta-index,
+[data-theme="light"] .editorial-cta .cta-index {
+  color: #83dfbd !important;
+}
+
 .footer-watermark-banner{width:100%;overflow:hidden;padding:3rem 0 1.5rem;background:#f7f6f0}
 .footer-watermark-text{width:max-content;min-width:100%;padding:0 .025em;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='footer-noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23footer-noise)' opacity='.32'/%3E%3C/svg%3E"),linear-gradient(180deg,#555a55 10%,#111714 92%);background-size:130px 130px,100% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;font-family:'DM Sans',sans-serif;font-size:18vw;font-weight:700;line-height:1;letter-spacing:-.105em;text-align:center;text-transform:lowercase;white-space:nowrap;user-select:none}
 .footer-legal{align-items:center;color:#73756f;font-size:clamp(.68rem,.75vw,.75rem);letter-spacing:.12em}
@@ -1018,10 +1118,10 @@ html[data-theme="light"] body {
   color: #111111 !important;
 }
 
-[data-theme="light"] h1,
-[data-theme="light"] h2,
-[data-theme="light"] h3,
-[data-theme="light"] h4 {
+[data-theme="light"] h1:not(.editorial-cta *):not(.feature-dark *),
+[data-theme="light"] h2:not(.editorial-cta *):not(.feature-dark *),
+[data-theme="light"] h3:not(.editorial-cta *):not(.feature-dark *),
+[data-theme="light"] h4:not(.editorial-cta *):not(.feature-dark *) {
   color: #111111 !important;
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 
-export function Footer() {
+export function Footer({ className }: { className?: string } = {}) {
   const [istTime, setIstTime] = useState<string>("SYNCING IST...");
 
   // Keep IST system time synchronized in real time
@@ -31,7 +31,7 @@ export function Footer() {
 
   return (
     <footer
-      className="editorial-footer relative w-full overflow-hidden bg-[#F7F6F0] dark:bg-[#091311] text-neutral-900 dark:text-[#eef6f2] pt-12 pb-8 px-6 sm:px-10 lg:px-16 transition-colors duration-300 border-none"
+      className={`editorial-footer relative w-full overflow-hidden bg-[#F7F6F0] dark:bg-[#091311] text-neutral-900 dark:text-[#eef6f2] pt-20 sm:pt-28 lg:pt-36 pb-12 px-6 sm:px-10 lg:px-16 transition-colors duration-300 border-none mt-20 sm:mt-28 lg:mt-36 ${className || ""}`}
     >
       {/* Dynamic SVG Noise / Grain Filter Layer */}
       <svg
@@ -180,7 +180,7 @@ export function Footer() {
         </div>
 
         {/* Tier 2: Centered Pulsing Anchor Dot */}
-        <div className="py-6 sm:py-8 flex items-center justify-center">
+        <div className="py-12 sm:py-16 flex items-center justify-center">
           <div className="relative flex items-center justify-center w-5 h-5">
             <span className="w-2.5 h-2.5 bg-neutral-950 dark:bg-[#83dfbd] rounded-full animate-ping absolute opacity-70" />
             <span className="w-2.5 h-2.5 bg-neutral-950 dark:bg-[#83dfbd] rounded-full relative" />
@@ -188,7 +188,7 @@ export function Footer() {
         </div>
 
         {/* Tier 3: Oversized Textured Title & Legal Bar */}
-        <div className="w-full flex items-center justify-center overflow-hidden py-2 sm:py-4">
+        <div className="w-full flex items-center justify-center overflow-hidden py-6 sm:py-10">
           <span
             className="text-[clamp(2.5rem,12.5vw,14vw)] font-extrabold leading-none tracking-[-0.065em] text-neutral-900 dark:text-[#f2f7f4] select-none uppercase text-center block w-full whitespace-nowrap will-change-transform"
             aria-hidden="true"
@@ -198,7 +198,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Metadata Bar */}
-        <div className="pt-6 pb-2 border-t border-neutral-300/40 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="pt-8 pb-4 border-t border-neutral-300/40 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Left: Copyright */}
           <div className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-[#8fa398] pl-14 sm:pl-0 text-center sm:text-left">
             © 2026 VAYU INDEX · ALL RIGHTS RESERVED
