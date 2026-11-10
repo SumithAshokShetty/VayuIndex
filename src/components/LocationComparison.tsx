@@ -1363,7 +1363,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
 
           <div className="w-full h-80 sm:h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={snapshotData} margin={{ top: 16, right: 12, left: 4, bottom: 0 }}>
+              <BarChart data={snapshotData} margin={{ top: 16, right: 12, left: 14, bottom: 0 }}>
                 <CartesianGrid
                   stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
                   strokeDasharray="3 3"
@@ -1381,7 +1381,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     position: "insideLeft",
                     fill: "var(--dash-muted)",
                     fontSize: 12,
-                    offset: 8,
+                    offset: 12,
                   }}
                 />
                 <Tooltip
@@ -1524,7 +1524,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
             <BarChart
               data={stackedCompositionData}
               layout="horizontal"
-              margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
+              margin={{ top: 12, right: 12, left: 16, bottom: 0 }}
             >
               <CartesianGrid
                 stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
@@ -1536,12 +1536,12 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                 tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
                 domain={[0, 100]}
                 label={{
-                  value: "% of Total Atmospheric Load",
+                  value: "% of Total Burden",
                   angle: -90,
                   position: "insideLeft",
                   fill: "var(--dash-muted)",
                   fontSize: 12,
-                  offset: 8,
+                  offset: 14,
                 }}
               />
               <Tooltip
