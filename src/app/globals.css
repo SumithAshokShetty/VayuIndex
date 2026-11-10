@@ -883,6 +883,23 @@ footer.editorial-footer{border-top:none!important}
 .global-ranking-row:hover .global-ranking-open{opacity:1}
 .global-ranking-empty{display:flex;align-items:center;gap:8px;padding:20px 10px;color:var(--dash-muted);font-size:12px}
 .global-ranking-footnote{margin:15px 10px 0;color:var(--dash-muted);font-size:10px;line-height:1.6}
+
+/* Top 20 Global Findings Table Controls & Pagination */
+.ranking-table-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:12px 14px;background:color-mix(in srgb,var(--dash-rule) 22%,transparent);border:1px solid var(--dash-rule);border-radius:9px;margin:18px 0 12px}
+.ranking-table-controls.bottom-controls{margin:18px 0 6px;background:transparent;border-top:1px solid var(--dash-rule);border-bottom:none;border-left:none;border-right:none;border-radius:0;padding:14px 10px 4px}
+.ranking-table-tabs{display:inline-flex;gap:6px;background:var(--dash-canvas,rgba(0,0,0,.06));padding:4px;border-radius:8px;border:1px solid var(--dash-rule)}
+.ranking-table-tab{display:flex;align-items:center;gap:8px;padding:7px 15px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--dash-muted);font:11px var(--mono);font-weight:600;cursor:pointer;transition:all .18s ease}
+.ranking-table-tab span{font-size:9px;letter-spacing:.08em;opacity:.75}
+.ranking-table-tab strong{font-size:12px;font-weight:700}
+.ranking-table-tab.is-active{background:var(--dash-surface);color:var(--dash-ink);border-color:var(--dash-rule);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.ranking-table-tab:hover:not(.is-active){color:var(--dash-ink);background:color-mix(in srgb,var(--dash-rule) 15%,transparent)}
+.ranking-nav-btns{display:flex;align-items:center;gap:8px}
+.ranking-nav-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;border:1px solid var(--dash-rule);background:var(--dash-surface);color:var(--dash-ink);font:11px var(--mono);font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .18s ease}
+.ranking-nav-btn:hover:not(:disabled){border-color:#369363;color:#369363;background:color-mix(in srgb,#369363 8%,var(--dash-surface))}
+.ranking-nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.ranking-page-indicator{font:11px var(--mono);letter-spacing:.05em;color:var(--dash-muted)}
+.spin-icon{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @media(max-width:760px){.global-ranking-heading{align-items:flex-start;flex-direction:column}.global-ranking-meta{justify-content:flex-start}.global-ranking-columns{display:none}.global-ranking-row{grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;padding:14px 4px}.global-ranking-place{grid-column:1;grid-row:1}.global-ranking-aqi{grid-column:2;grid-row:1;justify-content:flex-end}.global-ranking-provenance{grid-column:1;grid-row:2}.global-ranking-open{grid-column:2;grid-row:2;opacity:1}.global-ranking-footnote{margin-right:0;margin-left:0}}
 @media(prefers-reduced-motion:reduce){.global-ranking-row,.global-ranking-meta button{transition:none}}
 
