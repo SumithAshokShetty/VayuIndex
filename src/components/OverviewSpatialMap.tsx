@@ -1468,7 +1468,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const baseTileRef = useRef<TileLayer | null>(null);
   const refTileRef = useRef<TileLayer | null>(null);
   const markersRef = useRef<Layer[]>([]);
-  const windStreamlinesRef = useRef<Layer[]>([]);
+  const windCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const windAnimFrameRef = useRef<number | null>(null);
   const userMarkerRef = useRef<Layer | null>(null);
   const autoDetectTriggeredRef = useRef(false);
 
@@ -1989,97 +1990,181 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     [onSelectCity]
   );
 
-  // Render Wind Streamlines across the Indian Subcontinent & Surrounding Oceans (Image 1)
-  const renderWindStreamlines = useCallback(
-    (L: typeof import("leaflet"), map: LeafletMap, isLightMode: boolean) => {
-      windStreamlinesRef.current.forEach((l) => l.remove());
-      windStreamlinesRef.current = [];
-
-      // Dense regional grid spanning India, neighboring landmasses, and ocean basins
-      const points: Array<{ lat: number; lng: number; angle: number }> = [];
-
-      for (let lat = 6; lat <= 36; lat += 2.2) {
-        for (let lng = 66; lng <= 96; lng += 2.4) {
-          let baseAngle = 135;
-
-          if (lat >= 25 && lng >= 73 && lng <= 88) {
-            // Indo-Gangetic basin NW to SE winter vector
-            baseAngle = 120 + Math.sin(lng * 0.4) * 12;
-          } else if (lat < 22 && lng > 83) {
-            // Bay of Bengal cyclonic/NE monsoon curve towards SW
-            baseAngle = 215 + Math.sin(lat * 0.5) * 15;
-          } else if (lat < 22 && lng < 74) {
-            // Arabian Sea NNE to SSW flow
-            baseAngle = 205 + Math.cos(lat * 0.5) * 12;
-          } else if (lat >= 13 && lat < 25 && lng >= 74 && lng <= 83) {
-            // Central Indian plateau flow
-            baseAngle = 230 + Math.sin(lat * 0.3) * 10;
-          } else if (lat < 13) {
-            // Peninsular tip & Sri Lanka easterly flow
-            baseAngle = 245 + Math.cos(lng * 0.4) * 8;
-          } else {
-            baseAngle = Math.round((lat * 13 + lng * 17) % 360);
-          }
-
-          const angle = (baseAngle + 360) % 360;
-          points.push({ lat, lng, angle });
-        }
-      }
-
-      // Extended Asian and international coverage
-      for (let lat = 0; lat <= 48; lat += 4.5) {
-        for (let lng = 45; lng <= 125; lng += 5.5) {
-          if (lat >= 6 && lat <= 36 && lng >= 66 && lng <= 96) continue;
-          const angle = (Math.round(lat * 14 + lng * 19) % 360 + 360) % 360;
-          points.push({ lat, lng, angle });
-        }
-      }
-
-      const strokeColor = isLightMode ? "#334155" : "#94a3b8";
-
-      points.forEach((pt) => {
-        const icon = L.divIcon({
-          className: "wind-streamline-glyph",
-          html: `
-            <div style="
-              transform: rotate(${pt.angle}deg);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              width: 26px;
-              height: 16px;
-              pointer-events: none;
-              opacity: ${isLightMode ? 0.6 : 0.45};
-            ">
-              <svg viewBox="0 0 26 14" width="20" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 7 H20 M14 2.5 L20 7 L14 11.5" stroke="${strokeColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-          `,
-          iconSize: [26, 16],
-          iconAnchor: [13, 8],
-        });
-
-        const m = L.marker([pt.lat, pt.lng], { icon, interactive: false }).addTo(map);
-        windStreamlinesRef.current.push(m);
-      });
-    },
-    []
-  );
-
-  // Toggle or re-render Wind Streamlines when windOverlay or theme changes
+  // Subtle, fluid Canvas Wind Streamline Particle Animation
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
-    import("leaflet").then((L) => {
-      if (!mapInstanceRef.current) return;
-      if (windOverlay) {
-        renderWindStreamlines(L, mapInstanceRef.current, theme === "light");
-      } else {
-        windStreamlinesRef.current.forEach((l) => l.remove());
-        windStreamlinesRef.current = [];
+    const canvas = windCanvasRef.current;
+    if (!canvas) return;
+
+    if (!windOverlay) {
+      if (windAnimFrameRef.current) {
+        cancelAnimationFrame(windAnimFrameRef.current);
+        windAnimFrameRef.current = null;
       }
-    });
-  }, [windOverlay, theme, renderWindStreamlines]);
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Resize canvas to match display size
+    const updateSize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    updateSize();
+
+    // Wind vector calculation based on meteorological vectors across regions
+    const getVector = (lat: number, lng: number) => {
+      let baseAngle = 135;
+      if (lat >= 24 && lng >= 73 && lng <= 88) {
+        // Indo-Gangetic basin NW to SE winter flow
+        baseAngle = 120 + Math.sin(lng * 0.4) * 14;
+      } else if (lat < 22 && lng > 83) {
+        // Bay of Bengal cyclonic/NE monsoon curve towards SW
+        baseAngle = 215 + Math.sin(lat * 0.5) * 16;
+      } else if (lat < 22 && lng < 74) {
+        // Arabian Sea NNE to SSW flow
+        baseAngle = 205 + Math.cos(lat * 0.5) * 14;
+      } else if (lat >= 13 && lat < 25 && lng >= 74 && lng <= 83) {
+        // Central Indian plateau flow
+        baseAngle = 230 + Math.sin(lat * 0.3) * 10;
+      } else if (lat < 13) {
+        // Peninsular tip & Sri Lanka easterly flow
+        baseAngle = 245 + Math.cos(lng * 0.4) * 8;
+      } else {
+        baseAngle = Math.round((lat * 13 + lng * 17) % 360);
+      }
+
+      // Compass bearing to screen Cartesian deltas
+      const rad = (baseAngle * Math.PI) / 180;
+      const speed = 1.4 + Math.abs(Math.sin(lat * 0.2 + lng * 0.1)) * 0.9;
+      return {
+        dx: Math.sin(rad) * speed,
+        dy: -Math.cos(rad) * speed,
+      };
+    };
+
+    // Particle pool: 240 subtle, organic drifting wind particles
+    const PARTICLE_COUNT = 240;
+    interface WindParticle {
+      x: number;
+      y: number;
+      age: number;
+      maxAge: number;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    const particles: WindParticle[] = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        age: Math.floor(Math.random() * 60),
+        maxAge: 45 + Math.floor(Math.random() * 45),
+      });
+    }
+
+    const isLight = theme === "light";
+    // Subtle, semi-transparent strokes: soft slate-cyan in light mode, luminous mint in dark mode
+    const strokeColor = isLight ? "rgba(51, 65, 85, 0.42)" : "rgba(110, 231, 183, 0.48)";
+
+    let isRunning = true;
+
+    const animate = () => {
+      if (!isRunning) return;
+
+      // Soft fading trail creating smooth streamline drift
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "source-over";
+
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.35;
+      ctx.lineCap = "round";
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        // Convert screen pixel to LatLng via Leaflet
+        let lat = 20;
+        let lng = 78;
+        try {
+          const ll = map.containerPointToLatLng([p.x, p.y]);
+          lat = ll.lat;
+          lng = ll.lng;
+        } catch {
+          // Off-screen or projection boundary fallback
+        }
+
+        const v = getVector(lat, lng);
+        const nextX = p.x + v.dx;
+        const nextY = p.y + v.dy;
+
+        // Draw line segment
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(nextX, nextY);
+        ctx.stroke();
+
+        p.x = nextX;
+        p.y = nextY;
+        p.age++;
+
+        // Reset if expired or out of bounds
+        if (p.age >= p.maxAge || p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
+          p.x = Math.random() * w;
+          p.y = Math.random() * h;
+          p.age = 0;
+          p.maxAge = 45 + Math.floor(Math.random() * 45);
+        }
+      }
+
+      windAnimFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    windAnimFrameRef.current = requestAnimationFrame(animate);
+
+    // On map movement or zoom, clear canvas & reseed particles
+    const handleMapChange = () => {
+      updateSize();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const newRect = canvas.getBoundingClientRect();
+      for (const p of particles) {
+        p.x = Math.random() * newRect.width;
+        p.y = Math.random() * newRect.height;
+        p.age = Math.floor(Math.random() * 30);
+      }
+    };
+
+    map.on("move", handleMapChange);
+    map.on("zoom", handleMapChange);
+    map.on("resize", handleMapChange);
+
+    return () => {
+      isRunning = false;
+      if (windAnimFrameRef.current) {
+        cancelAnimationFrame(windAnimFrameRef.current);
+        windAnimFrameRef.current = null;
+      }
+      map.off("move", handleMapChange);
+      map.off("zoom", handleMapChange);
+      map.off("resize", handleMapChange);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+  }, [windOverlay, theme]);
 
   // Update markers when hotspots, active layer, or overlays change
   useEffect(() => {
@@ -2177,18 +2262,12 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         weatherOverlay,
         heatmapOverlay
       );
-
-      if (windOverlay) {
-        renderWindStreamlines(L, map, isLightMode);
-      }
     }
 
     initMap();
 
     return () => {
       canceled = true;
-      windStreamlinesRef.current.forEach((l) => l.remove());
-      windStreamlinesRef.current = [];
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
         userMarkerRef.current = null;
@@ -2332,6 +2411,14 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       <div className="relative w-full h-[650px] rounded-2xl overflow-hidden border border-[var(--dash-rule)] shadow-xl bg-[var(--dash-surface-soft)]">
         {/* Full Spatial Map Canvas */}
         <div ref={mapContainerRef} className="absolute inset-0 z-0 w-full h-full" />
+
+        {/* Subtle Fluid Animated Wind Vector Streamlines Overlay */}
+        <canvas
+          ref={windCanvasRef}
+          className={`absolute inset-0 z-10 w-full h-full pointer-events-none transition-opacity duration-300 ${
+            windOverlay ? "opacity-100" : "opacity-0"
+          }`}
+        />
 
         {/* ------------------------------------------------------------------ */}
         {/* Left Floating Drawer: Absolute Pinning with Theme Adaptive Card */}
