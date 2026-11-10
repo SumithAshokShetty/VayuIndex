@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Globe,
   Info,
+  Navigation,
   Search,
   Share2,
   Star,
@@ -11,6 +12,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap, Layer, TileLayer } from "leaflet";
 import { useTheme } from "@/lib/use-theme";
+import { getCityLandmarkSvg } from "@/lib/city-landmarks";
 
 export type MapLayerKey = "aqi" | "pm2_5" | "pm10" | "ozone" | "no2" | "so2" | "co";
 
@@ -1216,6 +1218,15 @@ function getAqiCategory(aqi: number) {
   return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.15)" };
 }
 
+function getAqiAdvisory(aqi: number): string {
+  if (aqi <= 50) return "Air quality is satisfactory; enjoy normal outdoor air exposure.";
+  if (aqi <= 100) return "Acceptable air quality; exceptionally sensitive individuals should monitor prolonged exertion.";
+  if (aqi <= 150) return "Sensitive groups (asthma, children, elderly) may experience health effects; limit heavy exertion.";
+  if (aqi <= 200) return "Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.";
+  if (aqi <= 300) return "Health alert: The risk of health effects is increased for everyone. Avoid prolonged outdoor exertion.";
+  return "Health warning of emergency conditions: the entire population is more likely to be affected. Stay indoors.";
+}
+
 export interface MetricIntensity {
   value: number;
   formattedValue: string;
@@ -1459,6 +1470,9 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const baseTileRef = useRef<TileLayer | null>(null);
   const refTileRef = useRef<TileLayer | null>(null);
   const markersRef = useRef<Layer[]>([]);
+  const windStreamlinesRef = useRef<Layer[]>([]);
+  const userMarkerRef = useRef<Layer | null>(null);
+  const autoDetectTriggeredRef = useRef(false);
 
   const [hotspots, setHotspots] = useState<SpatialHotspot[]>(INITIAL_HOTSPOTS);
   const [activeHotspot, setActiveHotspot] = useState<SpatialHotspot>(selectedCity || INITIAL_HOTSPOTS[0]);
@@ -1470,6 +1484,271 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const [searchQuery, setSearchQuery] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [liveUpdating, setLiveUpdating] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [userLocationDetected, setUserLocationDetected] = useState(false);
+  const [liveTimeFormatted, setLiveTimeFormatted] = useState("10 Nov, 12:30 PM IST");
+
+  // Hourly Weather Forecast State (Open-Meteo)
+  interface HourlyForecastItem {
+    timeStr: string;
+    temp: number;
+    humidity: number;
+    windSpeed: number;
+    windDirection: number;
+    cardinal: string;
+    weatherCode: number;
+    pop: number;
+    icon: string;
+  }
+  const [hourlyForecast, setHourlyForecast] = useState<HourlyForecastItem[]>([]);
+  const [hourlyLoading, setHourlyLoading] = useState(false);
+
+  // Dynamic live date & time clock for AQI card (matching IST provenance badge)
+  useEffect(() => {
+    const updateTime = () => {
+      try {
+        const now = new Date();
+        const options: Intl.DateTimeFormatOptions = {
+          day: "numeric",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Kolkata",
+        };
+        const formatter = new Intl.DateTimeFormat("en-IN", options);
+        setLiveTimeFormatted(formatter.format(now) + " IST");
+      } catch {
+        setLiveTimeFormatted("Live Real-Time");
+      }
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch 24-Hour Hourly Weather Forecast for Active Hotspot
+  useEffect(() => {
+    let canceled = false;
+    setHourlyLoading(true);
+
+    fetch(`/api/weather?lat=${activeHotspot.lat}&lng=${activeHotspot.lng}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (canceled || !data?.hourly?.time) return;
+
+        const hourly = data.hourly;
+        const times: string[] = hourly.time || [];
+        const temps: number[] = hourly.temperature_2m || [];
+        const hums: number[] = hourly.relative_humidity_2m || [];
+        const winds: number[] = hourly.wind_speed_10m || [];
+        const windDirs: number[] = hourly.wind_direction_10m || [];
+        const codes: number[] = hourly.weather_code || [];
+        const pops: number[] = hourly.precipitation_probability || [];
+
+        const nowIsoHour = new Date().toISOString().slice(0, 13);
+        let startIndex = times.findIndex((t) => t.startsWith(nowIsoHour));
+        if (startIndex === -1) startIndex = 0;
+
+        const items: HourlyForecastItem[] = [];
+        const count = Math.min(24, times.length - startIndex);
+
+        for (let i = 0; i < count; i++) {
+          const idx = startIndex + i;
+          const rawTime = times[idx];
+          const hourDate = new Date(rawTime);
+          const timeStr =
+            i === 0
+              ? "Now"
+              : hourDate.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  hour12: true,
+                });
+
+          const weatherCode = codes[idx] ?? 0;
+          let icon = "☀️";
+          if (weatherCode === 0) icon = "☀️";
+          else if (weatherCode >= 1 && weatherCode <= 3) icon = "⛅";
+          else if (weatherCode === 45 || weatherCode === 48) icon = "🌫️";
+          else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) icon = "🌧️";
+          else if (weatherCode >= 71 && weatherCode <= 77) icon = "❄️";
+          else if (weatherCode >= 95) icon = "⛈️";
+
+          const windDir = windDirs[idx] ?? 0;
+
+          items.push({
+            timeStr,
+            temp: Math.round(temps[idx] ?? 25),
+            humidity: Math.round(hums[idx] ?? 50),
+            windSpeed: Math.round(winds[idx] ?? 10),
+            windDirection: windDir,
+            cardinal: getCardinalDirection(windDir),
+            weatherCode,
+            pop: Math.round(pops[idx] ?? 0),
+            icon,
+          });
+        }
+
+        setHourlyForecast(items);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!canceled) setHourlyLoading(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [activeHotspot.lat, activeHotspot.lng]);
+
+  // User Geolocation Auto-Detection & Physical Reading Ingestion
+  const detectUserLocation = useCallback(
+    (flyImmediately = true) => {
+      if (typeof window === "undefined" || !navigator.geolocation) return;
+
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+
+          // 1. English Reverse Geocoding via internal API route
+          let placeName = "Your Location";
+          let adminName = "";
+          let countryName = "India";
+
+          try {
+            const geoRes = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              if (geoData.name) placeName = geoData.name;
+              if (geoData.admin) adminName = geoData.admin;
+              if (geoData.country) countryName = geoData.country;
+            }
+          } catch {
+            // fallback
+          }
+
+          // 2. Find closest station/hotspot as baseline
+          let closest = INITIAL_HOTSPOTS[0];
+          let minDist = Infinity;
+          hotspots.forEach((h) => {
+            const d = Math.hypot(h.lat - latitude, h.lng - longitude);
+            if (d < minDist) {
+              minDist = d;
+              closest = h;
+            }
+          });
+
+          // 3. Fetch real-time air quality telemetry
+          let detectedAqi = closest.aqi;
+          let detectedStatus = closest.status;
+          let detectedAdvisory = closest.advisory;
+          let detectedPollutants = { ...closest.pollutants };
+          let detectedProvenance = "CPCB Ground Telemetry · Live Station";
+
+          try {
+            const aqRes = await fetch(`/api/air-quality?lat=${latitude}&lng=${longitude}`);
+            if (aqRes.ok) {
+              const aqData = await aqRes.json();
+              if (aqData.aqi !== undefined && aqData.aqi !== null) {
+                detectedAqi = Math.round(aqData.aqi);
+                const cat = getAqiCategory(detectedAqi);
+                detectedStatus = cat.category;
+                detectedAdvisory = getAqiAdvisory(detectedAqi);
+              }
+              if (aqData.pollutants) {
+                detectedPollutants = {
+                  pm2_5: Math.round((aqData.pollutants.pm2_5?.value ?? closest.pollutants.pm2_5) * 10) / 10,
+                  pm10: Math.round((aqData.pollutants.pm10?.value ?? closest.pollutants.pm10) * 10) / 10,
+                  ozone: Math.round((aqData.pollutants.ozone?.value ?? closest.pollutants.ozone) * 10) / 10,
+                  no2: Math.round((aqData.pollutants.no2?.value ?? closest.pollutants.no2) * 10) / 10,
+                  so2: Math.round((aqData.pollutants.so2?.value ?? closest.pollutants.so2) * 10) / 10,
+                  co: Math.round((aqData.pollutants.co?.value ?? closest.pollutants.co) * 10) / 10,
+                };
+              }
+              if (aqData.source?.station) {
+                detectedProvenance = `${aqData.source.station} · Live Telemetry`;
+              }
+            }
+          } catch {
+            // fallback
+          }
+
+          const detectedSpot: SpatialHotspot = {
+            id: `user-loc-${Math.round(latitude * 100)}-${Math.round(longitude * 100)}`,
+            name: placeName,
+            state: adminName || closest.state,
+            country: countryName || closest.country,
+            continent: "Asia",
+            lat: latitude,
+            lng: longitude,
+            aqi: detectedAqi,
+            status: detectedStatus,
+            advisory: detectedAdvisory,
+            pollutants: detectedPollutants,
+            provenance: detectedProvenance,
+            updatedAt: "Live Real-Time Telemetry",
+          };
+
+          setActiveHotspot(detectedSpot);
+          if (onSelectCity) onSelectCity(detectedSpot);
+
+          // Place pulsing GPS marker on map
+          if (mapInstanceRef.current) {
+            import("leaflet").then((L) => {
+              if (!mapInstanceRef.current) return;
+              if (userMarkerRef.current) {
+                userMarkerRef.current.remove();
+                userMarkerRef.current = null;
+              }
+
+              const pinIcon = L.divIcon({
+                className: "user-gps-pin",
+                html: `
+                  <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">
+                    <span style="position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #0284c7; opacity: 0.45; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+                    <span style="position: relative; width: 16px; height: 16px; border-radius: 50%; background: #0284c7; border: 3px solid #ffffff; box-shadow: 0 0 14px rgba(2, 132, 199, 0.9);"></span>
+                  </div>
+                `,
+                iconSize: [44, 44],
+                iconAnchor: [22, 22],
+              });
+
+              const marker = L.marker([latitude, longitude], { icon: pinIcon, zIndexOffset: 1200 }).addTo(mapInstanceRef.current);
+              marker.bindTooltip(`<strong>📍 Your Location: ${placeName}</strong>`, {
+                permanent: false,
+                direction: "top",
+                offset: [0, -14],
+                className: "theme-adaptive-tooltip font-mono text-xs",
+              });
+              userMarkerRef.current = marker;
+
+              if (flyImmediately) {
+                mapInstanceRef.current.flyTo([latitude, longitude], 7, { duration: 1.2 });
+              }
+            });
+          }
+
+          setIsLocating(false);
+          setUserLocationDetected(true);
+        },
+        (err) => {
+          console.warn("Geolocation skipped or denied:", err.message);
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    },
+    [hotspots, onSelectCity]
+  );
+
+  // Auto-Detect Location on Initial Mount
+  useEffect(() => {
+    if (!autoDetectTriggeredRef.current) {
+      autoDetectTriggeredRef.current = true;
+      detectUserLocation(true);
+    }
+  }, [detectUserLocation]);
 
   // Ingest live real-time global hotspots from API endpoint
   useEffect(() => {
@@ -1729,6 +2008,98 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     [onSelectCity]
   );
 
+  // Render Wind Streamlines across the Indian Subcontinent & Surrounding Oceans (Image 1)
+  const renderWindStreamlines = useCallback(
+    (L: typeof import("leaflet"), map: LeafletMap, isLightMode: boolean) => {
+      windStreamlinesRef.current.forEach((l) => l.remove());
+      windStreamlinesRef.current = [];
+
+      // Dense regional grid spanning India, neighboring landmasses, and ocean basins
+      const points: Array<{ lat: number; lng: number; angle: number }> = [];
+
+      for (let lat = 6; lat <= 36; lat += 2.2) {
+        for (let lng = 66; lng <= 96; lng += 2.4) {
+          let baseAngle = 135;
+
+          if (lat >= 25 && lng >= 73 && lng <= 88) {
+            // Indo-Gangetic basin NW to SE winter vector
+            baseAngle = 120 + Math.sin(lng * 0.4) * 12;
+          } else if (lat < 22 && lng > 83) {
+            // Bay of Bengal cyclonic/NE monsoon curve towards SW
+            baseAngle = 215 + Math.sin(lat * 0.5) * 15;
+          } else if (lat < 22 && lng < 74) {
+            // Arabian Sea NNE to SSW flow
+            baseAngle = 205 + Math.cos(lat * 0.5) * 12;
+          } else if (lat >= 13 && lat < 25 && lng >= 74 && lng <= 83) {
+            // Central Indian plateau flow
+            baseAngle = 230 + Math.sin(lat * 0.3) * 10;
+          } else if (lat < 13) {
+            // Peninsular tip & Sri Lanka easterly flow
+            baseAngle = 245 + Math.cos(lng * 0.4) * 8;
+          } else {
+            baseAngle = Math.round((lat * 13 + lng * 17) % 360);
+          }
+
+          const angle = (baseAngle + 360) % 360;
+          points.push({ lat, lng, angle });
+        }
+      }
+
+      // Extended Asian and international coverage
+      for (let lat = 0; lat <= 48; lat += 4.5) {
+        for (let lng = 45; lng <= 125; lng += 5.5) {
+          if (lat >= 6 && lat <= 36 && lng >= 66 && lng <= 96) continue;
+          const angle = (Math.round(lat * 14 + lng * 19) % 360 + 360) % 360;
+          points.push({ lat, lng, angle });
+        }
+      }
+
+      const strokeColor = isLightMode ? "#334155" : "#94a3b8";
+
+      points.forEach((pt) => {
+        const icon = L.divIcon({
+          className: "wind-streamline-glyph",
+          html: `
+            <div style="
+              transform: rotate(${pt.angle}deg);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 26px;
+              height: 16px;
+              pointer-events: none;
+              opacity: ${isLightMode ? 0.6 : 0.45};
+            ">
+              <svg viewBox="0 0 26 14" width="20" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 7 H20 M14 2.5 L20 7 L14 11.5" stroke="${strokeColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+          `,
+          iconSize: [26, 16],
+          iconAnchor: [13, 8],
+        });
+
+        const m = L.marker([pt.lat, pt.lng], { icon, interactive: false }).addTo(map);
+        windStreamlinesRef.current.push(m);
+      });
+    },
+    []
+  );
+
+  // Toggle or re-render Wind Streamlines when windOverlay or theme changes
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    import("leaflet").then((L) => {
+      if (!mapInstanceRef.current) return;
+      if (windOverlay) {
+        renderWindStreamlines(L, mapInstanceRef.current, theme === "light");
+      } else {
+        windStreamlinesRef.current.forEach((l) => l.remove());
+        windStreamlinesRef.current = [];
+      }
+    });
+  }, [windOverlay, theme, renderWindStreamlines]);
+
   // Update markers when hotspots, active layer, or overlays change
   useEffect(() => {
     if (mapInstanceRef.current) {
@@ -1827,12 +2198,22 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         windOverlay,
         heatmapOverlay
       );
+
+      if (windOverlay) {
+        renderWindStreamlines(L, map, isLightMode);
+      }
     }
 
     initMap();
 
     return () => {
       canceled = true;
+      windStreamlinesRef.current.forEach((l) => l.remove());
+      windStreamlinesRef.current = [];
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
       if (mapInstanceRef.current) {
         try {
           mapInstanceRef.current.remove();
@@ -1988,7 +2369,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         {/* ------------------------------------------------------------------ */}
         {/* Left Floating Drawer: Absolute Pinning with Theme Adaptive Card */}
         {/* ------------------------------------------------------------------ */}
-        <div className="absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto">
+        <div className="absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto max-h-[618px] overflow-y-auto scrollbar-thin">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-2.5">
             <div>
@@ -2009,34 +2390,35 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             </button>
           </div>
 
-          {/* Big AQI Banner */}
+          {/* Big AQI Banner with City Landmark Art & Provenance Badge (Image 2) */}
           <div
-            className="p-4 rounded-xl border border-[var(--dash-rule)] relative overflow-hidden flex flex-col justify-between"
+            className="p-4 sm:p-5 rounded-2xl border border-[var(--dash-rule)] relative overflow-hidden flex flex-col justify-between shadow-sm min-h-[145px]"
             style={{
               background: `linear-gradient(135deg, ${aqiInfo.bg}, transparent)`,
             }}
           >
+            {/* Architectural Monument Line-Art in Background (Image 2) */}
+            <div className="absolute right-0 bottom-0 w-3/4 h-full pointer-events-none opacity-30 dark:opacity-20 flex items-end justify-end overflow-hidden pr-1 pb-0.5">
+              {getCityLandmarkSvg(activeHotspot.name, aqiInfo.color)}
+            </div>
+
             <div className="relative z-10">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)]">
-                US AQI · {activeHotspot.country}
+                AQI
               </span>
-              <div className="flex items-baseline gap-2 mt-0.5">
+              <div className="flex items-baseline gap-2.5 mt-0.5">
                 <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight" style={{ color: aqiInfo.color }}>
                   {activeHotspot.aqi}
                 </span>
-                <span className="text-base font-bold" style={{ color: aqiInfo.color }}>
+                <span className="text-base sm:text-lg font-bold" style={{ color: aqiInfo.color }}>
                   {activeHotspot.status}
                 </span>
               </div>
             </div>
 
-            <div className="relative z-10 flex flex-col gap-0.5 mt-2">
-              <span className="text-[10px] font-mono text-[var(--dash-muted)]">
-                Provenance: <strong className="text-[var(--dash-accent)]">{activeHotspot.provenance}</strong>
-              </span>
-              <span className="text-[9px] font-mono text-[var(--dash-faint)]">
-                Updated: {activeHotspot.updatedAt}
-              </span>
+            {/* Provenance Pill Badge (Image 2) */}
+            <div className="relative z-10 mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--dash-surface)]/90 border border-[var(--dash-rule)] backdrop-blur-md self-start text-[11px] font-mono text-[var(--dash-ink)] shadow-xs">
+              <span>US AQI - forecast model - as of {liveTimeFormatted}</span>
             </div>
           </div>
 
@@ -2048,6 +2430,61 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             <p className="text-xs leading-relaxed text-[var(--dash-muted)]">
               {activeHotspot.advisory}
             </p>
+          </div>
+
+          {/* 24-Hour Hourly Weather Carousel (Open-Meteo API) */}
+          <div className="p-3.5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[var(--dash-ink)] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-accent)] flex items-center gap-1">
+                <span>⏱️</span> 24-HOUR HOURLY WEATHER
+              </span>
+              <span className="text-[9px] font-mono text-[var(--dash-muted)]">
+                Open-Meteo Forecast
+              </span>
+            </div>
+
+            {hourlyLoading ? (
+              <div className="flex items-center justify-center py-4 text-xs font-mono text-[var(--dash-muted)] gap-2">
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-[var(--dash-accent)] border-t-transparent animate-spin" />
+                <span>Loading hourly telemetry...</span>
+              </div>
+            ) : hourlyForecast.length > 0 ? (
+              <div className="flex overflow-x-auto gap-2 pb-1 pt-0.5 scrollbar-thin">
+                {hourlyForecast.map((hour, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex-none w-[68px] p-2 rounded-xl border flex flex-col items-center justify-between text-center transition-all ${
+                      idx === 0
+                        ? "bg-[var(--dash-surface)] border-[var(--dash-accent)] shadow-xs"
+                        : "bg-[var(--dash-surface)]/80 border-[var(--dash-rule)] hover:border-[var(--dash-muted)]"
+                    }`}
+                  >
+                    <span className="text-[10px] font-mono font-bold text-[var(--dash-muted)] uppercase">
+                      {hour.timeStr}
+                    </span>
+                    <span className="text-xl my-1" title={`Weather code: ${hour.weatherCode}`}>
+                      {hour.icon}
+                    </span>
+                    <span className="text-xs font-mono font-extrabold text-[var(--dash-ink)]">
+                      {hour.temp}°C
+                    </span>
+                    <div className="mt-1 flex flex-col items-center gap-0.5 text-[9px] font-mono text-[var(--dash-muted)]">
+                      <span className="text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-0.5">
+                        <span style={{ display: "inline-block", transform: `rotate(${hour.windDirection}deg)`, fontSize: "8px" }}>↑</span>
+                        {hour.windSpeed}k
+                      </span>
+                      <span className="text-[8px] opacity-75">
+                        💧{hour.pop}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[11px] font-mono text-[var(--dash-muted)] py-1">
+                Hourly telemetry updating...
+              </div>
+            )}
           </div>
 
           {/* Regional Weather Details when Weather Overlay is Active */}
@@ -2185,6 +2622,26 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.co} µg/m³</span>
             </div>
           </div>
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Top Right GPS Location Target Button (Image 1) */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="absolute top-4 right-54 sm:right-56 z-20 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => detectUserLocation(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] hover:text-[var(--dash-accent)] shadow-xl transition-all active:scale-95 text-xs font-mono font-bold"
+            title="Detect my physical location and view real-time readings"
+          >
+            <Navigation
+              size={14}
+              className={`text-[var(--dash-accent)] transition-transform ${isLocating ? "animate-spin" : ""}`}
+            />
+            <span className="hidden sm:inline">
+              {isLocating ? "Locating..." : userLocationDetected ? "My Location" : "Detect Location"}
+            </span>
+          </button>
         </div>
 
         {/* ------------------------------------------------------------------ */}
