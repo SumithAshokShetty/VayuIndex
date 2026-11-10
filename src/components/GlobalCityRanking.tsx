@@ -297,7 +297,12 @@ export function GlobalCityRanking({ onSelectLocation }: { onSelectLocation: (loc
   const [currentPage, setCurrentPage] = useState<0 | 1>(0); // 0 = Table 1 (01-10), 1 = Table 2 (11-20)
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const requestController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const load = useCallback(async () => {
     requestController.current?.abort();
@@ -374,10 +379,10 @@ export function GlobalCityRanking({ onSelectLocation }: { onSelectLocation: (loc
   const displayedItems = readings.slice(currentPage * 10, (currentPage + 1) * 10);
 
   return (
-    <section className="global-city-ranking" aria-labelledby="global-city-ranking-title">
-      <header className="global-ranking-heading">
+    <section className="global-city-ranking" aria-labelledby="global-city-ranking-title" suppressHydrationWarning>
+      <header className="global-ranking-heading" suppressHydrationWarning>
         <div>
-          <span className="section-kicker">
+          <span className="section-kicker" suppressHydrationWarning>
             <span className="eyebrow-line" /> LIVE AIR INTELLIGENCE · TOP 20 GLOBAL FINDINGS
           </span>
           <h2 id="global-city-ranking-title">Global Top 20 High AQI Major City Findings</h2>
@@ -386,11 +391,11 @@ export function GlobalCityRanking({ onSelectLocation }: { onSelectLocation: (loc
             appears first.
           </p>
         </div>
-        <div className="global-ranking-meta">
+        <div className="global-ranking-meta" suppressHydrationWarning>
           <span>
             <i /> LIVE · 10 MIN REFRESH
           </span>
-          <span>UPDATED {lastUpdated ?? "—"}</span>
+          <span suppressHydrationWarning>UPDATED {mounted && lastUpdated ? lastUpdated : "—"}</span>
           <button
             type="button"
             onClick={() => void load()}
