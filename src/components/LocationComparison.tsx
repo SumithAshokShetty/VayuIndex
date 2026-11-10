@@ -481,11 +481,14 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
 
   // Chart 1 Data: Time-Series Comparison formatted with timestamp key
   const timeSeriesData = useMemo(() => {
-    const baselineKey = locationKey(locations[0]);
-    const baselineHistory = historyData[baselineKey]?.payload?.hourly;
-    if (!baselineHistory?.time?.length) return [];
+    // Find first location with available hourly timestamps
+    const referenceHistory = locations
+      .map((loc) => historyData[locationKey(loc)]?.payload?.hourly)
+      .find((h) => h?.time?.length);
 
-    const times: string[] = baselineHistory.time;
+    if (!referenceHistory?.time?.length) return [];
+
+    const times: string[] = referenceHistory.time;
     return times.map((t, timeIndex) => {
       let dateLabel = t;
       try {
@@ -510,13 +513,26 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       locations.forEach((loc) => {
         const key = locationKey(loc);
         const hourly = historyData[key]?.payload?.hourly;
-        const val = hourly?.[parameterKey]?.[timeIndex];
+        let val = hourly?.[parameterKey]?.[timeIndex];
+
+        // Fallback to live metric if point is undefined
+        if (typeof val !== "number" || isNaN(val)) {
+          const live = liveData[key]?.air?.current;
+          if (live) {
+            if (parameterKey === "us_aqi") {
+              val = live.us_aqi ?? live.aqi;
+            } else if (typeof live[parameterKey] === "number") {
+              val = live[parameterKey];
+            }
+          }
+        }
+
         entry[loc.name] = typeof val === "number" && !isNaN(val) ? Number(val.toFixed(1)) : null;
       });
 
       return entry;
     });
-  }, [locations, historyData, parameterKey, timeframe]);
+  }, [locations, historyData, liveData, parameterKey, timeframe]);
 
   // Min / Max Extremes Summary for each location in the active timeframe
   const locationExtremes = useMemo(() => {
@@ -544,19 +560,36 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
         }
       });
 
-      const resolvedMin = minVal !== null ? Number((minVal as number).toFixed(1)) : null;
-      const resolvedMax = maxVal !== null ? Number((maxVal as number).toFixed(1)) : null;
+      // Fallback: If no history array, extract live current value
+      let currentLiveVal: number | null = null;
+      const live = liveData[key]?.air?.current;
+      if (live) {
+        if (parameterKey === "us_aqi") {
+          if (typeof live.us_aqi === "number") {
+            currentLiveVal = live.us_aqi;
+          } else if (typeof live.aqi === "number") {
+            currentLiveVal = live.aqi;
+          } else if (typeof live.aqi === "string" && !isNaN(Number(live.aqi))) {
+            currentLiveVal = Number(live.aqi);
+          }
+        } else if (typeof live[parameterKey] === "number") {
+          currentLiveVal = Number(live[parameterKey]);
+        }
+      }
+
+      const resolvedMin = minVal !== null ? Number((minVal as number).toFixed(1)) : (currentLiveVal !== null ? Number(currentLiveVal.toFixed(1)) : null);
+      const resolvedMax = maxVal !== null ? Number((maxVal as number).toFixed(1)) : (currentLiveVal !== null ? Number(currentLiveVal.toFixed(1)) : null);
 
       return {
         location: loc,
         theme: LOCATION_THEMES[idx % LOCATION_THEMES.length],
         minVal: resolvedMin,
-        minTime,
+        minTime: minTime || "Live",
         maxVal: resolvedMax,
-        maxTime,
+        maxTime: maxTime || "Live",
       };
     });
-  }, [locations, historyData, parameterKey]);
+  }, [locations, historyData, liveData, parameterKey]);
 
   // Live Metric Snapshot & Best Air Quality Badge
   const { siteMetrics, bestIndex, varianceAnalysis } = useMemo(() => {
@@ -1128,13 +1161,26 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     Max: {item.maxVal} ({item.maxTime})
                   </span>
                 ) : null}
+                {item.minVal === null && item.maxVal === null && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono text-[var(--dash-muted)] bg-[var(--dash-surface)]">
+                    Syncing...
+                  </span>
+                )}
               </div>
             ))}
           </div>
         </div>
 
         {/* Recharts Canvas */}
-        <div className="w-full h-80 sm:h-96">
+        <div className="w-full h-80 sm:h-96 relative">
+          {timeSeriesData.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-[var(--dash-surface-soft)]/50 rounded-xl backdrop-blur-xs">
+              <div className="w-7 h-7 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+              <p className="text-xs font-mono text-[var(--dash-muted)]">
+                Syncing atmospheric chronology telemetry...
+              </p>
+            </div>
+          ) : null}
           <ResponsiveContainer width="100%" height="100%">
             {viewMode === "line" ? (
               <LineChart data={timeSeriesData} margin={{ top: 12, right: 12, left: -4, bottom: 0 }}>
