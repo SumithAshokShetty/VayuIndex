@@ -208,11 +208,11 @@ export function calculateSubIndex(
   standard: AqiStandard = "epa",
 ): AqiSubIndex | null {
   if (!Number.isFinite(input.value) || input.value < 0) return null;
-  if (pollutant === "o3" && standard === "epa" && input.averagingPeriod === "1h" && input.value < 0.125) return null;
-  if (pollutant === "o3" && standard === "epa" && input.averagingPeriod !== "1h" && input.value > 0.200) return null;
-  if (pollutant === "o3" && standard === "cpcb" && input.averagingPeriod === "1h") return null;
   const unit = unitFor(standard, pollutant);
   const concentration = roundForStandard(convertConcentration(input.value, input.unit, unit, pollutant), standard, pollutant);
+  if (pollutant === "o3" && standard === "epa" && input.averagingPeriod === "1h" && concentration < 0.125) return null;
+  if (pollutant === "o3" && standard === "epa" && input.averagingPeriod !== "1h" && concentration > 0.200) return null;
+  if (pollutant === "o3" && standard === "cpcb" && input.averagingPeriod === "1h") return null;
   let breakpoints = standard === "epa" ? EPA[pollutant] : CPCB[pollutant];
   if (standard === "epa" && pollutant === "o3" && input.averagingPeriod === "1h") breakpoints = EPA_OZONE_1H;
   const value = interpolate(concentration, breakpoints);

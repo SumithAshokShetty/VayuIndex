@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAirQuality } from "@/lib/api-orchestrator";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status, headers: { "Cache-Control": "no-store, max-age=0" } });
