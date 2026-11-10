@@ -27,8 +27,8 @@ export async function GET(request: Request) {
       latitude: String(latitude),
       longitude: String(longitude),
       current: "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code",
-      hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation_probability",
-      forecast_days: "2",
+      hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation_probability,is_day",
+      forecast_days: "3",
       wind_speed_unit: "kmh",
       timezone: "auto",
     }).toString();

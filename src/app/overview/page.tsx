@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ArrowRight, RadioTower } from "lucide-react";
 import { HealthCigaretteWidget } from "@/components/HealthCigaretteWidget";
 import { HealthAdviceSelector } from "@/components/HealthAdviceSelector";
+import { HourlyWeatherCard } from "@/components/HourlyWeatherCard";
 import { AreaAirScore } from "@/components/AreaAirScore";
 import { INITIAL_HOTSPOTS, type SpatialHotspot } from "@/components/OverviewSpatialMap";
 import { useTheme } from "@/lib/use-theme";
@@ -114,6 +115,17 @@ export default function OverviewPage() {
             </div>
 
             <HealthAdviceSelector aqi={selectedCity.aqi} />
+          </section>
+
+          {/* ------------------------------------------------------------------ */}
+          {/* Hourly Weather Forecast (Next 24 Hours, Local Time - Image 2) */}
+          {/* ------------------------------------------------------------------ */}
+          <section className="space-y-4">
+            <HourlyWeatherCard
+              cityName={selectedCity.name}
+              lat={selectedCity.lat}
+              lng={selectedCity.lng}
+            />
           </section>
 
           {/* ------------------------------------------------------------------ */}

@@ -1488,21 +1488,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const [userLocationDetected, setUserLocationDetected] = useState(false);
   const [liveTimeFormatted, setLiveTimeFormatted] = useState("10 Nov, 12:30 PM IST");
 
-  // Hourly Weather Forecast State (Open-Meteo)
-  interface HourlyForecastItem {
-    timeStr: string;
-    temp: number;
-    humidity: number;
-    windSpeed: number;
-    windDirection: number;
-    cardinal: string;
-    weatherCode: number;
-    pop: number;
-    icon: string;
-  }
-  const [hourlyForecast, setHourlyForecast] = useState<HourlyForecastItem[]>([]);
-  const [hourlyLoading, setHourlyLoading] = useState(false);
-
   // Dynamic live date & time clock for AQI card (matching IST provenance badge)
   useEffect(() => {
     const updateTime = () => {
@@ -1526,80 +1511,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     const timer = setInterval(updateTime, 60000);
     return () => clearInterval(timer);
   }, []);
-
-  // Fetch 24-Hour Hourly Weather Forecast for Active Hotspot
-  useEffect(() => {
-    let canceled = false;
-    setHourlyLoading(true);
-
-    fetch(`/api/weather?lat=${activeHotspot.lat}&lng=${activeHotspot.lng}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (canceled || !data?.hourly?.time) return;
-
-        const hourly = data.hourly;
-        const times: string[] = hourly.time || [];
-        const temps: number[] = hourly.temperature_2m || [];
-        const hums: number[] = hourly.relative_humidity_2m || [];
-        const winds: number[] = hourly.wind_speed_10m || [];
-        const windDirs: number[] = hourly.wind_direction_10m || [];
-        const codes: number[] = hourly.weather_code || [];
-        const pops: number[] = hourly.precipitation_probability || [];
-
-        const nowIsoHour = new Date().toISOString().slice(0, 13);
-        let startIndex = times.findIndex((t) => t.startsWith(nowIsoHour));
-        if (startIndex === -1) startIndex = 0;
-
-        const items: HourlyForecastItem[] = [];
-        const count = Math.min(24, times.length - startIndex);
-
-        for (let i = 0; i < count; i++) {
-          const idx = startIndex + i;
-          const rawTime = times[idx];
-          const hourDate = new Date(rawTime);
-          const timeStr =
-            i === 0
-              ? "Now"
-              : hourDate.toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  hour12: true,
-                });
-
-          const weatherCode = codes[idx] ?? 0;
-          let icon = "☀️";
-          if (weatherCode === 0) icon = "☀️";
-          else if (weatherCode >= 1 && weatherCode <= 3) icon = "⛅";
-          else if (weatherCode === 45 || weatherCode === 48) icon = "🌫️";
-          else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) icon = "🌧️";
-          else if (weatherCode >= 71 && weatherCode <= 77) icon = "❄️";
-          else if (weatherCode >= 95) icon = "⛈️";
-
-          const windDir = windDirs[idx] ?? 0;
-
-          items.push({
-            timeStr,
-            temp: Math.round(temps[idx] ?? 25),
-            humidity: Math.round(hums[idx] ?? 50),
-            windSpeed: Math.round(winds[idx] ?? 10),
-            windDirection: windDir,
-            cardinal: getCardinalDirection(windDir),
-            weatherCode,
-            pop: Math.round(pops[idx] ?? 0),
-            icon,
-          });
-        }
-
-        setHourlyForecast(items);
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (!canceled) setHourlyLoading(false);
-      });
-
-    return () => {
-      canceled = true;
-    };
-  }, [activeHotspot.lat, activeHotspot.lng]);
 
   // User Geolocation Auto-Detection & Physical Reading Ingestion
   const detectUserLocation = useCallback(
@@ -2430,61 +2341,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             <p className="text-xs leading-relaxed text-[var(--dash-muted)]">
               {activeHotspot.advisory}
             </p>
-          </div>
-
-          {/* 24-Hour Hourly Weather Carousel (Open-Meteo API) */}
-          <div className="p-3.5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[var(--dash-ink)] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-accent)] flex items-center gap-1">
-                <span>⏱️</span> 24-HOUR HOURLY WEATHER
-              </span>
-              <span className="text-[9px] font-mono text-[var(--dash-muted)]">
-                Open-Meteo Forecast
-              </span>
-            </div>
-
-            {hourlyLoading ? (
-              <div className="flex items-center justify-center py-4 text-xs font-mono text-[var(--dash-muted)] gap-2">
-                <span className="w-3.5 h-3.5 rounded-full border-2 border-[var(--dash-accent)] border-t-transparent animate-spin" />
-                <span>Loading hourly telemetry...</span>
-              </div>
-            ) : hourlyForecast.length > 0 ? (
-              <div className="flex overflow-x-auto gap-2 pb-1 pt-0.5 scrollbar-thin">
-                {hourlyForecast.map((hour, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex-none w-[68px] p-2 rounded-xl border flex flex-col items-center justify-between text-center transition-all ${
-                      idx === 0
-                        ? "bg-[var(--dash-surface)] border-[var(--dash-accent)] shadow-xs"
-                        : "bg-[var(--dash-surface)]/80 border-[var(--dash-rule)] hover:border-[var(--dash-muted)]"
-                    }`}
-                  >
-                    <span className="text-[10px] font-mono font-bold text-[var(--dash-muted)] uppercase">
-                      {hour.timeStr}
-                    </span>
-                    <span className="text-xl my-1" title={`Weather code: ${hour.weatherCode}`}>
-                      {hour.icon}
-                    </span>
-                    <span className="text-xs font-mono font-extrabold text-[var(--dash-ink)]">
-                      {hour.temp}°C
-                    </span>
-                    <div className="mt-1 flex flex-col items-center gap-0.5 text-[9px] font-mono text-[var(--dash-muted)]">
-                      <span className="text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-0.5">
-                        <span style={{ display: "inline-block", transform: `rotate(${hour.windDirection}deg)`, fontSize: "8px" }}>↑</span>
-                        {hour.windSpeed}k
-                      </span>
-                      <span className="text-[8px] opacity-75">
-                        💧{hour.pop}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-[11px] font-mono text-[var(--dash-muted)] py-1">
-                Hourly telemetry updating...
-              </div>
-            )}
           </div>
 
           {/* Regional Weather Details when Weather Overlay is Active */}
