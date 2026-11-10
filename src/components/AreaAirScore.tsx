@@ -10,7 +10,7 @@ interface AreaAirScoreProps {
   onSwitchLocation?: (loc: Location) => void;
 }
 
-export function AreaAirScore({ currentLocation, onSwitchLocation }: AreaAirScoreProps) {
+export function AreaAirScore({ currentLocation }: AreaAirScoreProps) {
   const [stations, setStations] = useState<StationData[]>([]);
   const [havens, setHavens] = useState<NearbyHaven[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,33 +201,15 @@ export function AreaAirScore({ currentLocation, onSwitchLocation }: AreaAirScore
                     <span className="text-xs font-mono text-[var(--dash-muted)] ml-1">AQI</span>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
+                  {/* Action Button: Direct Link to Comparative Analysis */}
+                  <div className="flex items-center">
                     <a
-                      href="/compare"
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--dash-surface-soft)] hover:bg-[var(--dash-surface)] border border-[var(--dash-rule)] text-[var(--dash-ink)] no-underline transition-colors"
-                      title="Compare with Selected"
+                      href={`/compare?city=${encodeURIComponent(haven.city)}`}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--dash-accent)] hover:opacity-90 text-white shadow-xs transition-opacity inline-flex items-center gap-1.5 no-underline"
+                      title="Compare Micro-Climate in Analytics"
                     >
-                      Compare
+                      Compare Haven <ArrowRight size={12} />
                     </a>
-                    {onSwitchLocation && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onSwitchLocation({
-                            name: haven.name,
-                            admin: haven.city,
-                            country: "India",
-                            latitude: haven.latitude,
-                            longitude: haven.longitude,
-                          })
-                        }
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--dash-accent)] hover:opacity-90 text-white shadow-xs transition-opacity"
-                        title="Switch Location"
-                      >
-                        Switch
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
