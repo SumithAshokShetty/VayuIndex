@@ -8,9 +8,8 @@ import { ArrowUpRight, LocateFixed, Map, Minus, Moon, Plus, RotateCcw, Search, S
 import { AqiScaleBar } from "@/components/AqiScaleBar";
 import { TelemetryCard } from "@/components/TelemetryCard";
 import { DashboardMotion } from "@/components/DashboardMotion";
-import { MapLayersPanel, type MapLayer } from "@/components/MapLayersPanel";
+import type { MapLayer } from "@/components/MapLayersPanel";
 import { HistoricalTracker } from "@/components/HistoricalTracker";
-import { LocationComparison } from "@/components/LocationComparison";
 import { AqiForecast } from "@/components/AqiForecast";
 import { GlobalCityRanking } from "@/components/GlobalCityRanking";
 import { useTheme } from "@/lib/use-theme";
@@ -27,10 +26,11 @@ const DEFAULT_LOCATION: Location = {
 };
 
 const LAYER_FIELDS: Record<Exclude<MapLayer, "aqi">, string> = { pm2_5: "pm2_5", pm10: "pm10", o3: "ozone", no2: "nitrogen_dioxide", so2: "sulphur_dioxide", co: "carbon_monoxide" };
-type DashboardView = "live" | "history" | "compare" | "forecast";
+type DashboardView = "live" | "history" | "forecast";
 const DASHBOARD_VIEWS: { id: DashboardView; label: string; index: string }[] = [
-  { id:"live",label:"Live telemetry",index:"01" }, { id:"history",label:"Historical trends",index:"02" },
-  { id:"compare",label:"Compare places",index:"03" }, { id:"forecast",label:"72-hour forecast",index:"04" },
+  { id: "live", label: "Live telemetry", index: "01" },
+  { id: "history", label: "Historical trends", index: "02" },
+  { id: "forecast", label: "72-hour forecast", index: "03" },
 ];
 
 const SUB_INDEX_FIELDS = [
@@ -85,7 +85,7 @@ export function Dashboard() {
   const [zoom, setZoom] = useState(1);
   const [mapLayer, setMapLayer] = useState<MapLayer>("aqi");
   const [heatmapEnabled, setHeatmapEnabled] = useState(true);
-  const [windEnabled, setWindEnabled] = useState(false);
+  const [windEnabled, setWindEnabled] = useState(true);
   const [temperatureEnabled, setTemperatureEnabled] = useState(false);
   const [weather, setWeather] = useState<{ temperature_2m?: number; wind_speed_10m?: number; wind_direction_10m?: number; time?: string } | null>(null);
   const { theme, toggleTheme } = useTheme();
@@ -93,7 +93,7 @@ export function Dashboard() {
 
   useEffect(() => {
     const requestedView = new URLSearchParams(window.location.search).get("view");
-    if (requestedView === "live" || requestedView === "history" || requestedView === "compare" || requestedView === "forecast") {
+    if (requestedView === "live" || requestedView === "history" || requestedView === "forecast") {
       setActiveView(requestedView);
     }
   }, []);
@@ -279,7 +279,6 @@ export function Dashboard() {
               <div className="spatial-canvas" id="globe">
                 <div className="spatial-grid"/><div className="spatial-orbit spatial-orbit-one"/><div className="spatial-orbit spatial-orbit-two"/>
                 <div className="spatial-location-tag"><i/>{location.name}<small>{locationCoordinates(location)}</small></div>
-                <MapLayersPanel layer={mapLayer} onLayerChange={setMapLayer} heatmap={heatmapEnabled} onHeatmapChange={setHeatmapEnabled} wind={windEnabled} onWindChange={setWindEnabled} temperature={temperatureEnabled} onTemperatureChange={setTemperatureEnabled}/>
                 <motion.div className="spatial-globe-wrap" key="globe-engine" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7, ease: "easeOut" }}>
                   <GlobeEngine location={location} air={air} layer={mapLayer} weather={weather} heatmap={heatmapEnabled} wind={windEnabled} temperature={temperatureEnabled} zoom={zoom} onLocationSelect={selectLocation}/>
                 </motion.div>
@@ -298,7 +297,6 @@ export function Dashboard() {
           <GlobalCityRanking onSelectLocation={selectLocation}/>
           </>}
           {activeView === "history" && <HistoricalTracker location={location}/>}
-          {activeView === "compare" && <LocationComparison initialLocation={location}/>}
           {activeView === "forecast" && <AqiForecast location={location}/>}
           </motion.div>
           <footer className="dashboard-footer">

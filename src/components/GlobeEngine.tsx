@@ -457,41 +457,41 @@ export function GlobeEngine({
           showGraticules
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-          /* 1. Global Air Quality Atmospheric Heatmap Plumes */
+          /* 1. Global Air Quality Atmospheric Heatmap Plumes (Translucent veil matching reference) */
           heatmapsData={heatmap ? [heatmapDataset] : []}
           heatmapPoints={(d: object) => (d as { points: Array<{ lat: number; lng: number; weight: number }> }).points}
           heatmapPointLat={(p: object) => (p as { lat: number }).lat}
           heatmapPointLng={(p: object) => (p as { lng: number }).lng}
           heatmapPointWeight={(p: object) => (p as { weight: number }).weight}
-          heatmapBandwidth={5.2}
-          heatmapColorSaturation={2.4}
-          heatmapBaseAltitude={0.007}
-          heatmapTopAltitude={0.022}
+          heatmapBandwidth={3.6}
+          heatmapColorSaturation={1.4}
+          heatmapBaseAltitude={0.004}
+          heatmapTopAltitude={0.016}
           heatmapColorFn={() => (t: number) => {
-            // Normalized KDE density from 0 to 1
-            if (t < 0.04) return "rgba(0, 0, 0, 0)";
-            if (t < 0.20) return "rgba(34, 197, 94, 0.48)";  // #22c55e Emerald green (Good air)
-            if (t < 0.40) return "rgba(234, 179, 8, 0.68)";   // #eab308 Warm amber/yellow (Moderate)
-            if (t < 0.60) return "rgba(249, 115, 22, 0.82)";  // #f97316 Deep orange (Sensitive)
-            if (t < 0.80) return "rgba(220, 38, 38, 0.92)";   // #dc2626 Crimson red (Unhealthy)
-            return "rgba(126, 34, 206, 0.96)";                // #7e22ce Deep maroon/purple (Hazardous)
+            // Normalized KDE density from 0 to 1 with smooth transparency so globe geography remains visible
+            if (t < 0.05) return "rgba(0, 0, 0, 0)";
+            if (t < 0.22) return "rgba(34, 197, 94, 0.25)";   // #22c55e Emerald green (Good air, gentle veil)
+            if (t < 0.42) return "rgba(234, 179, 8, 0.35)";   // #eab308 Warm amber/yellow (Moderate)
+            if (t < 0.62) return "rgba(249, 115, 22, 0.45)";  // #f97316 Deep orange (Sensitive)
+            if (t < 0.80) return "rgba(220, 38, 38, 0.55)";   // #dc2626 Crimson red (Unhealthy)
+            return "rgba(147, 51, 234, 0.62)";                // #9333ea Deep purple/magenta (Hazardous)
           }}
-          /* 2. Country Boundary Lines */
+          /* 2. Country Boundary Lines (High-contrast geographical outlines) */
           polygonsData={countries}
           polygonCapColor={() => "rgba(0, 0, 0, 0)"}
           polygonSideColor={() => "rgba(0, 0, 0, 0)"}
-          polygonStrokeColor={() => "rgba(125, 240, 160, 0.42)"}
-          polygonAltitude={0.005}
+          polygonStrokeColor={() => "rgba(130, 245, 175, 0.58)"}
+          polygonAltitude={0.006}
           /* 3. Atmospheric Wind Streamlines */
           pathsData={wind ? WIND_STREAMLINES : []}
           pathPoints={(d: object) => (d as { coords: Array<[number, number]> }).coords}
           pathPointLat={(p: [number, number]) => p[0]}
           pathPointLng={(p: [number, number]) => p[1]}
           pathPointAlt={() => 0.012}
-          pathColor={() => "rgba(215, 250, 235, 0.45)"}
-          pathDashLength={0.14}
-          pathDashGap={0.04}
-          pathDashAnimateTime={7500}
+          pathColor={() => "rgba(235, 255, 248, 0.55)"}
+          pathDashLength={0.16}
+          pathDashGap={0.05}
+          pathDashAnimateTime={6500}
           /* 4. Active Station Telemetry Pin */
           pointsData={[point]}
           pointLat="lat"

@@ -460,18 +460,107 @@ body{font-family:var(--font)}
 /* Phase 4 history, comparison, and forecast views */
 :root{--chart-grid:#dfe3d9;--chart-muted:#677166}
 .dashboard-app[data-theme="dark"]{--chart-grid:#465045;--chart-muted:#b8c2b2}
-.dashboard-view-tabs{display:flex;align-items:stretch;gap:5px;margin:18px 0 12px;padding:5px;border:1px solid var(--dash-rule);border-radius:9px;background:rgba(235,238,233,.85);overflow-x:auto;scrollbar-width:thin}
-.dashboard-view-tabs button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:42px;flex:1;min-width:max-content;padding:0 16px;border:0;border-radius:6px;background:transparent;color:#38423c;font:600 12px var(--font);cursor:pointer;transition:background .22s,color .22s,box-shadow .22s}
-.dashboard-view-tabs button span{color:#556359;font:600 9px var(--mono)}
-.dashboard-view-tabs button:hover{background:rgba(47,118,80,.09);color:#16241e}
-.dashboard-view-tabs button.active{background:#ffffff;color:#16241e;box-shadow:0 2px 10px rgba(39,50,36,.12)}
-.dashboard-view-tabs button.active span{color:#1f724d;font-weight:700}
-[data-theme="dark"] .dashboard-view-tabs,.dashboard-app[data-theme="dark"] .dashboard-view-tabs{background:rgba(22,28,24,.85);border-color:#3b463b}
-[data-theme="dark"] .dashboard-view-tabs button,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button{color:#cdd9d1;font-weight:500}
-[data-theme="dark"] .dashboard-view-tabs button span,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button span{color:#8fa398;font-weight:600}
-[data-theme="dark"] .dashboard-view-tabs button:hover,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button:hover{background:rgba(131,223,189,.12);color:#ffffff}
-[data-theme="dark"] .dashboard-view-tabs button.active,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button.active{background:#252e26;color:#f2f7f4;box-shadow:0 4px 14px rgba(0,0,0,.3);border:1px solid rgba(147,226,197,.22)}
-[data-theme="dark"] .dashboard-view-tabs button.active span,.dashboard-app[data-theme="dark"] .dashboard-view-tabs button.active span{color:#83dfbd;font-weight:700}
+/* Dashboard view tabs: high-contrast, modern responsive pill navigation */
+.dashboard-view-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin: 20px 0 16px;
+  padding: 6px;
+  border: 1px solid var(--dash-rule);
+  border-radius: 12px;
+  background: var(--dash-surface-soft);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.dashboard-view-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  flex: 1;
+  min-width: max-content;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dash-ink);
+  font: 700 13px var(--font);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.78;
+}
+.dashboard-view-tabs button span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--dash-accent) 15%, transparent);
+  color: var(--dash-accent);
+  font: 700 10px var(--mono);
+  letter-spacing: 0.04em;
+}
+.dashboard-view-tabs button:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--dash-accent) 8%, var(--dash-surface));
+  color: var(--dash-ink);
+}
+.dashboard-view-tabs button.active {
+  opacity: 1;
+  background: var(--dash-surface) !important;
+  color: var(--dash-ink) !important;
+  border: 1px solid var(--dash-rule) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+.dashboard-view-tabs button.active span {
+  background: var(--dash-accent) !important;
+  color: #ffffff !important;
+  font-weight: 800;
+}
+[data-theme="dark"] .dashboard-view-tabs,
+.dashboard-app[data-theme="dark"] .dashboard-view-tabs,
+html.dark .dashboard-view-tabs {
+  background: rgba(18, 25, 22, 0.9) !important;
+  border-color: rgba(147, 226, 197, 0.2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+[data-theme="dark"] .dashboard-view-tabs button,
+.dashboard-app[data-theme="dark"] .dashboard-view-tabs button,
+html.dark .dashboard-view-tabs button {
+  color: #e2ece5 !important;
+  opacity: 0.88;
+}
+[data-theme="dark"] .dashboard-view-tabs button span,
+.dashboard-app[data-theme="dark"] .dashboard-view-tabs button span,
+html.dark .dashboard-view-tabs button span {
+  background: rgba(131, 223, 189, 0.16) !important;
+  color: #6ee7b7 !important;
+}
+[data-theme="dark"] .dashboard-view-tabs button:hover,
+.dashboard-app[data-theme="dark"] .dashboard-view-tabs button:hover,
+html.dark .dashboard-view-tabs button:hover {
+  opacity: 1;
+  background: rgba(131, 223, 189, 0.1) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .dashboard-view-tabs button.active,
+.dashboard-app[data-theme="dark"] .dashboard-view-tabs button.active,
+html.dark .dashboard-view-tabs button.active {
+  background: #1c2722 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(110, 231, 183, 0.38) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme="dark"] .dashboard-view-tabs button.active span,
+.dashboard-app[data-theme="dark"] .dashboard-view-tabs button.active span,
+html.dark .dashboard-view-tabs button.active span {
+  background: #34d399 !important;
+  color: #032213 !important;
+}
 .dashboard-active-view{min-height:400px}
 .phase-view{max-width:1600px;margin:0 auto;padding:20px 0 8px;color:var(--dash-ink)}
 .phase-view-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:20px 0 24px;border-bottom:1px solid var(--dash-rule)}
