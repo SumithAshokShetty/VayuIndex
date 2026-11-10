@@ -59,7 +59,7 @@ export function AreaAirScore({ currentLocation, onSwitchLocation }: AreaAirScore
             </h3>
           </div>
           <span className="text-xs font-mono text-[var(--dash-muted)] self-start sm:self-auto">
-            Ranked Cleanest to Most Stressed
+            Ranked by Nearest Physical Proximity
           </span>
         </div>
 
