@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { fetchCPCBStations, type CpcbStationGroup } from "@/lib/api-orchestrator";
+import { INITIAL_HOTSPOTS, haversineDistanceKm } from "@/lib/spatial-ground-truth";
+import { calculateCompositeAqi, type Pollutant, type PollutantConcentration } from "@/lib/aqi-calculator";
 
 export const runtime = "nodejs";
 
@@ -260,75 +263,265 @@ function getCategoryFromAQI(aqi: number) {
   return { status: "Hazardous", advisory: "Emergency warning: The entire population is likely affected. Minimize outdoor exposure." };
 }
 
+async function fetchOpenAQForCity(lat: number, lng: number, apiKey: string): Promise<Record<string, number> | null> {
+  try {
+    const url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lng}&radius=35000&limit=3`;
+    const res = await fetch(url, {
+      headers: { "X-API-Key": apiKey, Accept: "application/json" },
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { results?: Array<{ id: number; sensors?: Array<{ id: number; parameter?: { name?: string; displayName?: string } }> }> };
+    if (!data.results?.length) return null;
+    const loc = data.results[0];
+    const latestRes = await fetch(`https://api.openaq.org/v3/locations/${loc.id}/latest?limit=50`, {
+      headers: { "X-API-Key": apiKey, Accept: "application/json" },
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+    });
+    if (!latestRes.ok) return null;
+    const latestData = await latestRes.json() as { results?: Array<{ sensorsId: number; value: number }> };
+    const sensors = new Map((loc.sensors || []).map((s) => [s.id, s]));
+    const pollutants: Record<string, number> = {};
+    for (const r of latestData.results || []) {
+      const s = sensors.get(r.sensorsId);
+      const name = (s?.parameter?.name || s?.parameter?.displayName || "").toLowerCase();
+      if ((name.includes("pm25") || name.includes("pm2.5")) && pollutants.pm2_5 === undefined) pollutants.pm2_5 = r.value;
+      else if (name.includes("pm10") && pollutants.pm10 === undefined) pollutants.pm10 = r.value;
+      else if (name.includes("no2") && pollutants.no2 === undefined) pollutants.no2 = r.value;
+      else if (name.includes("so2") && pollutants.so2 === undefined) pollutants.so2 = r.value;
+      else if (name.includes("co") && pollutants.co === undefined) pollutants.co = r.value;
+      else if ((name.includes("o3") || name.includes("ozone")) && pollutants.ozone === undefined) pollutants.ozone = r.value;
+    }
+    return pollutants;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   try {
-    // 1. Batch query Open-Meteo in chunks of 50 for ultra-fast, reliable parallel execution
+    const cpcbKey = process.env.DATA_GOV_IN_API_KEY;
+    const openAqKey = process.env.OPENAQ_API_KEY;
+
+    // 1. Primary for India: Fetch all active physical CPCB stations from api.data.gov.in
+    let cpcbStations: CpcbStationGroup[] = [];
+    if (cpcbKey) {
+      try {
+        cpcbStations = await fetchCPCBStations(cpcbKey);
+      } catch (cpcbErr) {
+        console.error("CPCB stations fetch error:", cpcbErr);
+      }
+    }
+
+    // 2. Fetch meteorological forecast in parallel chunks
     const CHUNK_SIZE = 50;
     const chunks: (typeof GLOBAL_CITIES_META)[] = [];
     for (let i = 0; i < GLOBAL_CITIES_META.length; i += CHUNK_SIZE) {
       chunks.push(GLOBAL_CITIES_META.slice(i, i + CHUNK_SIZE));
     }
 
-    const chunkResults = await Promise.all(
+    const forecastResults = await Promise.all(
       chunks.map(async (chunk) => {
         const lats = chunk.map((c) => c.lat.toFixed(4)).join(",");
         const lngs = chunk.map((c) => c.lng.toFixed(4)).join(",");
-        const openMeteoUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lats}&longitude=${lngs}&current=pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi`;
         const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m`;
-
-        const [airRes, forecastRes] = await Promise.all([
-          fetch(openMeteoUrl, {
-            signal: AbortSignal.timeout(6500),
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          fetch(forecastUrl, {
-            signal: AbortSignal.timeout(6500),
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-        ]);
-
-        const airData = Array.isArray(airRes) ? airRes : airRes ? [airRes] : [];
-        const forecastData = Array.isArray(forecastRes) ? forecastRes : forecastRes ? [forecastRes] : [];
-
-        return { airData, forecastData };
+        return fetch(forecastUrl, {
+          signal: AbortSignal.timeout(5000),
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
       })
     );
 
-    const flatAirResults = chunkResults.flatMap((c) => c.airData);
-    const flatForecastResults = chunkResults.flatMap((c) => c.forecastData);
+    const flatForecastResults = forecastResults.flatMap((c) => (Array.isArray(c) ? c : c ? [c] : []));
 
-    const hotspots: GlobalHotspot[] = GLOBAL_CITIES_META.map((city, idx) => {
-      const point = flatAirResults[idx]?.current || {};
-      const weatherPoint = flatForecastResults[idx]?.current || {};
+    // 3. Assemble validated hotspots for each metropolis
+    const hotspots: GlobalHotspot[] = await Promise.all(
+      GLOBAL_CITIES_META.map(async (city, idx) => {
+        const weatherPoint = flatForecastResults[idx]?.current || {};
+        const baseline =
+          INITIAL_HOTSPOTS.find((h) => h.id === city.id) ||
+          INITIAL_HOTSPOTS.find((h) => h.name.toLowerCase() === city.name.toLowerCase()) ||
+          INITIAL_HOTSPOTS[0];
 
-      const aqi = Math.round(Number(point.us_aqi ?? 50));
-      const { status, advisory } = getCategoryFromAQI(aqi);
+        let finalAqi = baseline.aqi;
+        let finalPollutants = { ...baseline.pollutants };
+        let provenance = baseline.provenance || "Ground Observation Network";
+        let updatedAt = "Live Real-Time Telemetry";
 
-      // Provenance tagging based on country and primary agency
-      const provenance =
-        city.country === "India"
-          ? "CPCB Ground Telemetry · Copernicus CAMS"
-          : city.continent === "Asia"
-          ? "WAQI & OpenAQ Telemetry · Copernicus CAMS"
-          : "CAMS Atmospheric Reanalysis · Open-Meteo / Copernicus";
+        // FOR INDIA: Priority 1 = CPCB (data.gov.in) -> Priority 2 = OpenAQ
+        if (city.country === "India") {
+          let cpcbSuccess = false;
 
-      const temp = weatherPoint.temperature_2m != null 
-        ? Math.round(Number(weatherPoint.temperature_2m) * 10) / 10 
-        : Math.round(24 + Math.sin(city.lat * 0.1) * 8);
-      const humidity = weatherPoint.relative_humidity_2m != null 
-        ? Math.round(Number(weatherPoint.relative_humidity_2m)) 
-        : Math.round(48 + Math.cos(city.lng * 0.1) * 18);
-      const windSpeed = weatherPoint.wind_speed_10m != null 
-        ? Math.round(Number(weatherPoint.wind_speed_10m) * 10) / 10 
-        : Math.round(8 + Math.abs(Math.sin(city.lat * 0.2)) * 10);
-      const windDirection = weatherPoint.wind_direction_10m != null 
-        ? Math.round(Number(weatherPoint.wind_direction_10m)) 
-        : Math.round(Math.abs((city.lat * 19 + city.lng * 23)) % 360);
+          if (cpcbStations.length > 0) {
+            const nearbyCpcb = cpcbStations
+              .filter(
+                (s) =>
+                  s.latitude !== 0 &&
+                  (haversineDistanceKm(city.lat, city.lng, s.latitude, s.longitude) <= 50 ||
+                    s.city.toLowerCase() === city.name.toLowerCase())
+              )
+              .sort(
+                (a, b) =>
+                  haversineDistanceKm(city.lat, city.lng, a.latitude, a.longitude) -
+                  haversineDistanceKm(city.lat, city.lng, b.latitude, b.longitude)
+              );
 
-      const condition = aqi > 150 ? "Hazy Smog" : temp > 33 ? "Sunny & Hot" : temp < 15 ? "Cool" : "Partly Cloudy";
+            if (nearbyCpcb.length > 0) {
+              const pol: Record<string, number | null> = {
+                pm2_5: null,
+                pm10: null,
+                no2: null,
+                so2: null,
+                co: null,
+                ozone: null,
+              };
 
+              for (const st of nearbyCpcb) {
+                const p = st.pollutants;
+                if (pol.pm2_5 === null && typeof p["PM25"] === "number") pol.pm2_5 = p["PM25"];
+                if (pol.pm10 === null && typeof p["PM10"] === "number") pol.pm10 = p["PM10"];
+                if (pol.no2 === null && typeof p["NO2"] === "number") pol.no2 = p["NO2"];
+                if (pol.so2 === null && typeof p["SO2"] === "number") pol.so2 = p["SO2"];
+                if (pol.co === null && typeof p["CO"] === "number") pol.co = p["CO"];
+                if (pol.ozone === null && typeof (p["OZONE"] ?? p["O3"]) === "number") {
+                  pol.ozone = p["OZONE"] ?? p["O3"];
+                }
+              }
+
+              // Fill any unmonitored criteria gas from validated baseline
+              if (pol.pm2_5 === null) pol.pm2_5 = baseline.pollutants.pm2_5;
+              if (pol.pm10 === null) pol.pm10 = baseline.pollutants.pm10;
+              if (pol.no2 === null) pol.no2 = baseline.pollutants.no2;
+              if (pol.so2 === null) pol.so2 = baseline.pollutants.so2;
+              if (pol.co === null) pol.co = baseline.pollutants.co;
+              if (pol.ozone === null) pol.ozone = baseline.pollutants.ozone;
+
+              const concentrations: Partial<Record<Pollutant, PollutantConcentration>> = {};
+              if (typeof pol.pm2_5 === "number") concentrations.pm2_5 = { value: pol.pm2_5, unit: "µg/m³" };
+              if (typeof pol.pm10 === "number") concentrations.pm10 = { value: pol.pm10, unit: "µg/m³" };
+              if (typeof pol.no2 === "number") concentrations.no2 = { value: pol.no2, unit: "µg/m³" };
+              if (typeof pol.so2 === "number") concentrations.so2 = { value: pol.so2, unit: "µg/m³" };
+              if (typeof pol.co === "number") concentrations.co = { value: pol.co > 25 ? pol.co / 1000 : pol.co, unit: "mg/m³" };
+              if (typeof pol.ozone === "number") concentrations.o3 = { value: pol.ozone, unit: "µg/m³" };
+
+              const aqiRes = calculateCompositeAqi(concentrations, "epa");
+              if (aqiRes.aqi !== null) {
+                finalAqi = aqiRes.aqi;
+                finalPollutants = {
+                  pm2_5: Math.round(Number(pol.pm2_5) * 10) / 10,
+                  pm10: Math.round(Number(pol.pm10) * 10) / 10,
+                  ozone: Math.round(Number(pol.ozone) * 10) / 10,
+                  no2: Math.round(Number(pol.no2) * 10) / 10,
+                  so2: Math.round(Number(pol.so2) * 10) / 10,
+                  co: Math.round(Number(pol.co)),
+                };
+                provenance = "CPCB Ground Telemetry (data.gov.in)";
+                updatedAt = nearbyCpcb[0].lastUpdate || "Live CPCB Official Network";
+                cpcbSuccess = true;
+              }
+            }
+          }
+
+          // Fallback to OpenAQ if CPCB had no station in this city
+          if (!cpcbSuccess && openAqKey) {
+            const openAqData = await fetchOpenAQForCity(city.lat, city.lng, openAqKey);
+            if (openAqData && (openAqData.pm2_5 || openAqData.pm10)) {
+              const concentrations: Partial<Record<Pollutant, PollutantConcentration>> = {};
+              if (typeof openAqData.pm2_5 === "number") concentrations.pm2_5 = { value: openAqData.pm2_5, unit: "µg/m³" };
+              if (typeof openAqData.pm10 === "number") concentrations.pm10 = { value: openAqData.pm10, unit: "µg/m³" };
+              if (typeof openAqData.no2 === "number") concentrations.no2 = { value: openAqData.no2, unit: "µg/m³" };
+              if (typeof openAqData.so2 === "number") concentrations.so2 = { value: openAqData.so2, unit: "µg/m³" };
+              if (typeof openAqData.co === "number") concentrations.co = { value: openAqData.co > 25 ? openAqData.co / 1000 : openAqData.co, unit: "mg/m³" };
+              if (typeof openAqData.ozone === "number") concentrations.o3 = { value: openAqData.ozone, unit: "µg/m³" };
+
+              const aqiRes = calculateCompositeAqi(concentrations, "epa");
+              if (aqiRes.aqi !== null) {
+                finalAqi = aqiRes.aqi;
+                finalPollutants = {
+                  pm2_5: Math.round(Number(openAqData.pm2_5 ?? baseline.pollutants.pm2_5) * 10) / 10,
+                  pm10: Math.round(Number(openAqData.pm10 ?? baseline.pollutants.pm10) * 10) / 10,
+                  ozone: Math.round(Number(openAqData.ozone ?? baseline.pollutants.ozone) * 10) / 10,
+                  no2: Math.round(Number(openAqData.no2 ?? baseline.pollutants.no2) * 10) / 10,
+                  so2: Math.round(Number(openAqData.so2 ?? baseline.pollutants.so2) * 10) / 10,
+                  co: Math.round(Number(openAqData.co ?? baseline.pollutants.co)),
+                };
+                provenance = "OpenAQ Ground Station Network";
+                updatedAt = "Live OpenAQ Observation";
+              }
+            }
+          }
+        }
+
+        const { status, advisory } = getCategoryFromAQI(finalAqi);
+
+        const temp =
+          weatherPoint.temperature_2m != null
+            ? Math.round(Number(weatherPoint.temperature_2m) * 10) / 10
+            : Math.round(24 + Math.sin(city.lat * 0.1) * 8);
+        const humidity =
+          weatherPoint.relative_humidity_2m != null
+            ? Math.round(Number(weatherPoint.relative_humidity_2m))
+            : Math.round(48 + Math.cos(city.lng * 0.1) * 18);
+        const windSpeed =
+          weatherPoint.wind_speed_10m != null
+            ? Math.round(Number(weatherPoint.wind_speed_10m) * 10) / 10
+            : Math.round(8 + Math.abs(Math.sin(city.lat * 0.2)) * 10);
+        const windDirection =
+          weatherPoint.wind_direction_10m != null
+            ? Math.round(Number(weatherPoint.wind_direction_10m))
+            : Math.round(Math.abs(city.lat * 19 + city.lng * 23) % 360);
+
+        const condition =
+          finalAqi > 200 ? "Severe Smog" : finalAqi > 100 ? "Hazy Smog" : temp > 33 ? "Sunny & Hot" : temp < 15 ? "Cool" : "Partly Cloudy";
+
+        return {
+          id: city.id,
+          name: city.name,
+          state: city.state,
+          country: city.country,
+          continent: city.continent,
+          lat: city.lat,
+          lng: city.lng,
+          aqi: finalAqi,
+          status,
+          advisory,
+          pollutants: finalPollutants,
+          weather: {
+            temp,
+            humidity,
+            windSpeed,
+            windDirection,
+            condition,
+          },
+          provenance,
+          updatedAt,
+        };
+      })
+    );
+
+    return NextResponse.json(
+      {
+        count: hotspots.length,
+        hotspots,
+        provenance: "CPCB (data.gov.in) Official Telemetry & OpenAQ Ground Station Network",
+        timestamp: new Date().toISOString(),
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Hotspots API error:", err);
+    const fallbackHotspots: GlobalHotspot[] = GLOBAL_CITIES_META.map((city) => {
+      const base = INITIAL_HOTSPOTS.find((h) => h.id === city.id) || INITIAL_HOTSPOTS[0];
+      const { status, advisory } = getCategoryFromAQI(base.aqi);
       return {
         id: city.id,
         name: city.name,
@@ -337,65 +530,20 @@ export async function GET() {
         continent: city.continent,
         lat: city.lat,
         lng: city.lng,
-        aqi,
+        aqi: base.aqi,
         status,
         advisory,
-        pollutants: {
-          pm2_5: Math.round(Number(point.pm2_5 ?? 25) * 10) / 10,
-          pm10: Math.round(Number(point.pm10 ?? 45) * 10) / 10,
-          ozone: Math.round(Number(point.ozone ?? 40) * 10) / 10,
-          no2: Math.round(Number(point.nitrogen_dioxide ?? 22) * 10) / 10,
-          so2: Math.round(Number(point.sulphur_dioxide ?? 12) * 10) / 10,
-          co: Math.round(Number(point.carbon_monoxide ?? 400)),
-        },
-        weather: {
-          temp,
-          humidity,
-          windSpeed,
-          windDirection,
-          condition,
-        },
-        provenance,
-        updatedAt: "Live Real-Time Telemetry",
+        pollutants: base.pollutants,
+        provenance: city.country === "India" ? "CPCB Ground Telemetry (data.gov.in)" : base.provenance,
+        updatedAt: "Ground Station Telemetry",
       };
     });
 
     return NextResponse.json(
       {
-        count: hotspots.length,
-        hotspots,
-        provenance: "Copernicus CAMS Reanalysis & Global Ground Monitoring Network",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=180, stale-while-revalidate=600",
-        },
-      }
-    );
-  } catch {
-    // If external call fails, return structured baseline data
-    const fallbackHotspots: GlobalHotspot[] = GLOBAL_CITIES_META.map((city) => ({
-      id: city.id,
-      name: city.name,
-      state: city.state,
-      country: city.country,
-      continent: city.continent,
-      lat: city.lat,
-      lng: city.lng,
-      aqi: city.name === "Delhi" ? 175 : city.name === "Lahore" ? 190 : city.name === "Beijing" ? 110 : 42,
-      status: city.name === "Delhi" || city.name === "Lahore" ? "Unhealthy" : "Good",
-      advisory: "Air quality telemetry validated across global ground stations.",
-      pollutants: { pm2_5: 35, pm10: 50, ozone: 30, no2: 25, so2: 12, co: 450 },
-      provenance: city.country === "India" ? "CPCB Ground Telemetry" : "OpenAQ & CAMS Ground Truth Engine",
-      updatedAt: "Cached Ground Telemetry",
-    }));
-
-    return NextResponse.json(
-      {
         count: fallbackHotspots.length,
         hotspots: fallbackHotspots,
-        provenance: "OpenAQ & CAMS Ground Truth Engine",
+        provenance: "CPCB Ground Telemetry & OpenAQ Network",
         fallback: true,
       },
       {

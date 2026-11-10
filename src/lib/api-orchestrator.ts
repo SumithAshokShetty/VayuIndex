@@ -396,7 +396,7 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
     return null;
   }
 
-  const { station, distanceKm, hasPM } = candidates[0];
+  const { station, distanceKm } = candidates[0];
   const pol = station.pollutants;
 
   const current: Record<(typeof POLLUTANTS)[number], number | null> = {
@@ -408,28 +408,29 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
     ozone: pol["OZONE"] ?? pol["O3"] ?? null,
   };
 
-  // Harmonize with verified regional airshed baseline:
-  // If the physical station has missing criteria gases, or records an isolated micro-industrial spike (e.g. chemical factory chimney),
-  // harmonize with the calibrated municipal airshed so Overview and Globe View display consistent city-wide ambient air.
+  // If the closest station only monitors a subset of pollutants (e.g. only PM10 or only PM2.5),
+  // pull missing criteria pollutants from other physical CPCB stations in the same urban airshed (< 45km):
+  for (const c of candidates) {
+    if (c.distanceKm > 45) break;
+    const p = c.station.pollutants;
+    if (current.pm2_5 === null && typeof p["PM25"] === "number") current.pm2_5 = p["PM25"];
+    if (current.pm10 === null && typeof p["PM10"] === "number") current.pm10 = p["PM10"];
+    if (current.nitrogen_dioxide === null && typeof p["NO2"] === "number") current.nitrogen_dioxide = p["NO2"];
+    if (current.sulphur_dioxide === null && typeof p["SO2"] === "number") current.sulphur_dioxide = p["SO2"];
+    if (current.carbon_monoxide === null && typeof p["CO"] === "number") current.carbon_monoxide = p["CO"];
+    if (current.ozone === null && typeof (p["OZONE"] ?? p["O3"]) === "number") {
+      current.ozone = p["OZONE"] ?? p["O3"];
+    }
+  }
+
+  // Harmonize with verified regional airshed baseline for any remaining missing pollutants
   if (nearestBaseline) {
-    if (current.pm2_5 === null || Math.abs(current.pm2_5 - nearestBaseline.pollutants.pm2_5) > 35) {
-      current.pm2_5 = nearestBaseline.pollutants.pm2_5;
-    }
-    if (current.pm10 === null) {
-      current.pm10 = nearestBaseline.pollutants.pm10;
-    }
-    if (current.nitrogen_dioxide === null) {
-      current.nitrogen_dioxide = nearestBaseline.pollutants.no2;
-    }
-    if (current.sulphur_dioxide === null) {
-      current.sulphur_dioxide = nearestBaseline.pollutants.so2;
-    }
-    if (current.carbon_monoxide === null) {
-      current.carbon_monoxide = nearestBaseline.pollutants.co;
-    }
-    if (current.ozone === null) {
-      current.ozone = nearestBaseline.pollutants.ozone;
-    }
+    if (current.pm2_5 === null) current.pm2_5 = nearestBaseline.pollutants.pm2_5;
+    if (current.pm10 === null) current.pm10 = nearestBaseline.pollutants.pm10;
+    if (current.nitrogen_dioxide === null) current.nitrogen_dioxide = nearestBaseline.pollutants.no2;
+    if (current.sulphur_dioxide === null) current.sulphur_dioxide = nearestBaseline.pollutants.so2;
+    if (current.carbon_monoxide === null) current.carbon_monoxide = nearestBaseline.pollutants.co;
+    if (current.ozone === null) current.ozone = nearestBaseline.pollutants.ozone;
   }
 
   // Atmospheric Model Fill: If any criteria pollutant is still missing, fill from Copernicus CAMS reanalysis
@@ -491,7 +492,7 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
   // Calculate composite AQI strictly using the US EPA standard matching the UI label
   const aqiResult = calculateCompositeAqi(concentrations, "epa");
 
-  const finalAqi = nearestBaseline?.aqi ?? aqiResult.aqi;
+  const finalAqi = aqiResult.aqi ?? nearestBaseline?.aqi ?? 50;
 
   const currentData: AirCurrent = {
     ...current,
@@ -560,61 +561,49 @@ async function loadAirQuality(coordinates: Coordinates): Promise<AirQualityRespo
     }
   }
 
-  // If a known regional airshed exists near these coordinates, use it as baseline
-  const nearestHotspot = findNearestSpatialHotspot(coordinates.latitude, coordinates.longitude, 35);
-  if (nearestHotspot) {
-    return createAirQualityResponseFromHotspot(nearestHotspot, coordinates);
-  }
-
-  // Hierarchy Step 2 (Fallback 1): OpenAQ v3 API
+  // Hierarchy Step 2: OpenAQ v3 API (Mandated fallback for India if CPCB fails, and primary for non-India stations)
   if (openAQKey) {
     try {
       const station = await fetchOpenAQ(coordinates, openAQKey);
-      if (station && station.current.aqi !== null) return station;
-      if (station && !waqiKey) return station;
-      if (station && waqiKey) {
-        try {
-          const waqiStation = await fetchWAQI(coordinates, waqiKey);
-          if (waqiStation && waqiStation.current.aqi !== null) {
-            return {
-              ...station,
-              current: {
-                ...station.current,
-                aqi: waqiStation.current.aqi,
-              },
-              fallbackNote: `Station observations from ${station.stationName}. AQI supplied by ${waqiStation.stationName} (WAQI).`,
-              attribution: [
-                ...station.attribution,
-                ...waqiStation.attribution,
-              ],
-            };
-          }
-        } catch {}
-        return station;
+      if (station && station.current.aqi !== null) {
+        return {
+          ...station,
+          fallbackNote: inIndia && cpcbKey
+            ? "CPCB ground telemetry was unavailable; showing OpenAQ ground station observation."
+            : station.fallbackNote,
+        };
       }
     } catch {
       openAQFailed = true;
     }
   }
 
-  // Hierarchy Step 3 (Fallback 2): WAQI API
+  // Hierarchy Step 3: WAQI station network
   if (waqiKey) {
     try {
       const station = await fetchWAQI(coordinates, waqiKey);
-      if (station) return {
-        ...station,
-        fallbackNote: inIndia && cpcbKey
-          ? "No fresh nearby CPCB reading was available; showing the WAQI station index."
-          : openAQKey
-            ? "No fresh nearby OpenAQ reading was available; showing the WAQI station index."
-            : station.fallbackNote,
-      };
+      if (station && station.current.aqi !== null) {
+        return {
+          ...station,
+          fallbackNote: inIndia && cpcbKey
+            ? "No fresh nearby CPCB reading was available; showing the WAQI station index."
+            : openAQKey
+              ? "No fresh nearby OpenAQ reading was available; showing the WAQI station index."
+              : station.fallbackNote,
+        };
+      }
     } catch {
       waqiFailed = true;
     }
   }
 
-  // Hierarchy Step 4 (Fallback 3): Open-Meteo CAMS grid model
+  // Hierarchy Step 4: Calibrated regional airshed ground truth baseline
+  const nearestHotspot = findNearestSpatialHotspot(coordinates.latitude, coordinates.longitude, 50);
+  if (nearestHotspot) {
+    return createAirQualityResponseFromHotspot(nearestHotspot, coordinates);
+  }
+
+  // Hierarchy Step 5: Atmospheric reanalysis model (Open-Meteo CAMS)
   const model = await fetchOpenMeteo(coordinates);
   const configuredKeys = [
     inIndia && cpcbKey && "CPCB (data.gov.in)",
