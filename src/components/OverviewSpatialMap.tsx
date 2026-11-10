@@ -71,6 +71,111 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     updatedAt: "Live Real-Time Telemetry",
   },
   {
+    id: "bengaluru",
+    name: "Bengaluru",
+    state: "Karnataka",
+    country: "India",
+    continent: "Asia",
+    lat: 12.9716,
+    lng: 77.5946,
+    aqi: 68,
+    status: "Satisfactory",
+    advisory: "High elevation Deccan plateau ventilation sustaining moderate to good dispersion.",
+    pollutants: { pm2_5: 22.0, pm10: 48.0, ozone: 32.0, no2: 24.0, so2: 11.0, co: 420.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "kolkata",
+    name: "Kolkata",
+    state: "West Bengal",
+    country: "India",
+    continent: "Asia",
+    lat: 22.5726,
+    lng: 88.3639,
+    aqi: 162,
+    status: "Unhealthy",
+    advisory: "Gangetic delta thermal stagnation concentrating fine particulate emissions.",
+    pollutants: { pm2_5: 78.0, pm10: 132.0, ozone: 41.0, no2: 62.0, so2: 22.0, co: 1120.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "hyderabad",
+    name: "Hyderabad",
+    state: "Telangana",
+    country: "India",
+    continent: "Asia",
+    lat: 17.3850,
+    lng: 78.4867,
+    aqi: 110,
+    status: "Moderate",
+    advisory: "Moderate vehicular traffic and localized dust dispersed by inland breezes.",
+    pollutants: { pm2_5: 38.0, pm10: 78.0, ozone: 36.0, no2: 38.0, so2: 14.0, co: 650.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "chennai",
+    name: "Chennai",
+    state: "Tamil Nadu",
+    country: "India",
+    continent: "Asia",
+    lat: 13.0827,
+    lng: 80.2707,
+    aqi: 72,
+    status: "Satisfactory",
+    advisory: "Coromandel coast marine airflow maintaining clean to satisfactory air quality.",
+    pollutants: { pm2_5: 24.0, pm10: 52.0, ozone: 28.0, no2: 26.0, so2: 12.0, co: 450.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "ahmedabad",
+    name: "Ahmedabad",
+    state: "Gujarat",
+    country: "India",
+    continent: "Asia",
+    lat: 23.0225,
+    lng: 72.5714,
+    aqi: 145,
+    status: "Moderate",
+    advisory: "Industrial corridor activity and dry regional winds contributing to particulate load.",
+    pollutants: { pm2_5: 56.0, pm10: 118.0, ozone: 45.0, no2: 58.0, so2: 28.0, co: 890.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "lucknow",
+    name: "Lucknow",
+    state: "Uttar Pradesh",
+    country: "India",
+    continent: "Asia",
+    lat: 26.8467,
+    lng: 80.9462,
+    aqi: 182,
+    status: "Unhealthy",
+    advisory: "Central Indo-Gangetic plain smog accumulation with calm wind speeds.",
+    pollutants: { pm2_5: 88.0, pm10: 165.0, ozone: 48.0, no2: 72.0, so2: 32.0, co: 1350.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "kalyan",
+    name: "Kalyan-Dombivli",
+    state: "Maharashtra",
+    country: "India",
+    continent: "Asia",
+    lat: 19.2403,
+    lng: 73.1305,
+    aqi: 136,
+    status: "Moderate",
+    advisory: "Suburban industrial and highway emissions buffered by Ulhas basin topography.",
+    pollutants: { pm2_5: 51.0, pm10: 108.0, ozone: 35.0, no2: 52.0, so2: 24.0, co: 760.0 },
+    provenance: "CPCB OFFICIAL TELEMETRY",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
     id: "beijing",
     name: "Beijing",
     state: "Beijing Municipality",
@@ -419,6 +524,233 @@ function getAqiCategory(aqi: number) {
   return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.15)" };
 }
 
+export interface MetricIntensity {
+  value: number;
+  formattedValue: string;
+  unit: string;
+  metricLabel: string;
+  category: string;
+  color: string;
+  bg: string;
+  intensityRatio: number;
+}
+
+export function getLayerMetric(spot: SpatialHotspot, layer: MapLayerKey): MetricIntensity {
+  switch (layer) {
+    case "pm2_5": {
+      const val = spot.pollutants.pm2_5;
+      let cat = "Good";
+      let color = "#10b981";
+      if (val > 250) { cat = "Severe"; color = "#881337"; }
+      else if (val > 120) { cat = "Very Poor"; color = "#ef4444"; }
+      else if (val > 90) { cat = "Poor"; color = "#f97316"; }
+      else if (val > 60) { cat = "Moderate"; color = "#f59e0b"; }
+      else if (val > 30) { cat = "Satisfactory"; color = "#84cc16"; }
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "µg/m³",
+        metricLabel: "PM2.5",
+        category: cat,
+        color,
+        bg: `${color}26`,
+        intensityRatio: Math.min(1, Math.max(0.2, val / 150)),
+      };
+    }
+    case "pm10": {
+      const val = spot.pollutants.pm10;
+      let cat = "Good";
+      let color = "#10b981";
+      if (val > 430) { cat = "Severe"; color = "#881337"; }
+      else if (val > 350) { cat = "Very Poor"; color = "#ef4444"; }
+      else if (val > 250) { cat = "Poor"; color = "#f97316"; }
+      else if (val > 100) { cat = "Moderate"; color = "#f59e0b"; }
+      else if (val > 50) { cat = "Satisfactory"; color = "#84cc16"; }
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "µg/m³",
+        metricLabel: "PM10",
+        category: cat,
+        color,
+        bg: `${color}26`,
+        intensityRatio: Math.min(1, Math.max(0.2, val / 250)),
+      };
+    }
+    case "ozone": {
+      const val = spot.pollutants.ozone;
+      let cat = "Good";
+      let color = "#10b981";
+      if (val > 748) { cat = "Severe"; color = "#881337"; }
+      else if (val > 208) { cat = "Very Poor"; color = "#ef4444"; }
+      else if (val > 168) { cat = "Poor"; color = "#f97316"; }
+      else if (val > 100) { cat = "Moderate"; color = "#f59e0b"; }
+      else if (val > 50) { cat = "Satisfactory"; color = "#84cc16"; }
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "µg/m³",
+        metricLabel: "Ozone (O₃)",
+        category: cat,
+        color,
+        bg: `${color}26`,
+        intensityRatio: Math.min(1, Math.max(0.2, val / 180)),
+      };
+    }
+    case "no2": {
+      const val = spot.pollutants.no2;
+      let cat = "Good";
+      let color = "#10b981";
+      if (val > 400) { cat = "Severe"; color = "#881337"; }
+      else if (val > 280) { cat = "Very Poor"; color = "#ef4444"; }
+      else if (val > 180) { cat = "Poor"; color = "#f97316"; }
+      else if (val > 80) { cat = "Moderate"; color = "#f59e0b"; }
+      else if (val > 40) { cat = "Satisfactory"; color = "#84cc16"; }
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "µg/m³",
+        metricLabel: "NO₂",
+        category: cat,
+        color,
+        bg: `${color}26`,
+        intensityRatio: Math.min(1, Math.max(0.2, val / 150)),
+      };
+    }
+    case "so2": {
+      const val = spot.pollutants.so2;
+      let cat = "Good";
+      let color = "#10b981";
+      if (val > 800) { cat = "Severe"; color = "#881337"; }
+      else if (val > 380) { cat = "Very Poor"; color = "#ef4444"; }
+      else if (val > 80) { cat = "Poor"; color = "#f97316"; }
+      else if (val > 40) { cat = "Moderate"; color = "#f59e0b"; }
+      else if (val > 20) { cat = "Satisfactory"; color = "#84cc16"; }
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "µg/m³",
+        metricLabel: "SO₂",
+        category: cat,
+        color,
+        bg: `${color}26`,
+        intensityRatio: Math.min(1, Math.max(0.2, val / 100)),
+      };
+    }
+    case "co": {
+      const val = spot.pollutants.co;
+      let cat = "Good";
+      let color = "#10b981";
+      if (val > 17000) { cat = "Severe"; color = "#881337"; }
+      else if (val > 10000) { cat = "Very Poor"; color = "#ef4444"; }
+      else if (val > 2000) { cat = "Poor"; color = "#f97316"; }
+      else if (val > 1000) { cat = "Moderate"; color = "#f59e0b"; }
+      else if (val > 500) { cat = "Satisfactory"; color = "#84cc16"; }
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "µg/m³",
+        metricLabel: "CO",
+        category: cat,
+        color,
+        bg: `${color}26`,
+        intensityRatio: Math.min(1, Math.max(0.2, val / 2500)),
+      };
+    }
+    case "aqi":
+    default: {
+      const val = spot.aqi;
+      const catObj = getAqiCategory(val);
+      return {
+        value: val,
+        formattedValue: `${val}`,
+        unit: "AQI",
+        metricLabel: "Air Quality (AQI)",
+        category: catObj.category,
+        color: catObj.color,
+        bg: catObj.bg,
+        intensityRatio: Math.min(1, Math.max(0.25, val / 200)),
+      };
+    }
+  }
+}
+
+export interface ScaleTier {
+  range: string;
+  label: string;
+  color: string;
+  active: boolean;
+}
+
+export function getScaleTiers(layer: MapLayerKey, activeVal: number): ScaleTier[] {
+  switch (layer) {
+    case "pm2_5":
+      return [
+        { range: "0–30", label: "Good", color: "#10b981", active: activeVal <= 30 },
+        { range: "31–60", label: "Satisfactory", color: "#84cc16", active: activeVal > 30 && activeVal <= 60 },
+        { range: "61–90", label: "Moderate", color: "#f59e0b", active: activeVal > 60 && activeVal <= 90 },
+        { range: "91–120", label: "Poor", color: "#f97316", active: activeVal > 90 && activeVal <= 120 },
+        { range: "121–250", label: "Very Poor", color: "#ef4444", active: activeVal > 120 && activeVal <= 250 },
+        { range: "250+", label: "Severe", color: "#881337", active: activeVal > 250 },
+      ];
+    case "pm10":
+      return [
+        { range: "0–50", label: "Good", color: "#10b981", active: activeVal <= 50 },
+        { range: "51–100", label: "Satisfactory", color: "#84cc16", active: activeVal > 50 && activeVal <= 100 },
+        { range: "101–250", label: "Moderate", color: "#f59e0b", active: activeVal > 100 && activeVal <= 250 },
+        { range: "251–350", label: "Poor", color: "#f97316", active: activeVal > 250 && activeVal <= 350 },
+        { range: "351–430", label: "Very Poor", color: "#ef4444", active: activeVal > 350 && activeVal <= 430 },
+        { range: "430+", label: "Severe", color: "#881337", active: activeVal > 430 },
+      ];
+    case "ozone":
+      return [
+        { range: "0–50", label: "Good", color: "#10b981", active: activeVal <= 50 },
+        { range: "51–100", label: "Satisfactory", color: "#84cc16", active: activeVal > 50 && activeVal <= 100 },
+        { range: "101–168", label: "Moderate", color: "#f59e0b", active: activeVal > 100 && activeVal <= 168 },
+        { range: "169–208", label: "Poor", color: "#f97316", active: activeVal > 168 && activeVal <= 208 },
+        { range: "209–748", label: "Very Poor", color: "#ef4444", active: activeVal > 208 && activeVal <= 748 },
+        { range: "748+", label: "Severe", color: "#881337", active: activeVal > 748 },
+      ];
+    case "no2":
+      return [
+        { range: "0–40", label: "Good", color: "#10b981", active: activeVal <= 40 },
+        { range: "41–80", label: "Satisfactory", color: "#84cc16", active: activeVal > 40 && activeVal <= 80 },
+        { range: "81–180", label: "Moderate", color: "#f59e0b", active: activeVal > 80 && activeVal <= 180 },
+        { range: "181–280", label: "Poor", color: "#f97316", active: activeVal > 180 && activeVal <= 280 },
+        { range: "281–400", label: "Very Poor", color: "#ef4444", active: activeVal > 280 && activeVal <= 400 },
+        { range: "400+", label: "Severe", color: "#881337", active: activeVal > 400 },
+      ];
+    case "so2":
+      return [
+        { range: "0–20", label: "Good", color: "#10b981", active: activeVal <= 20 },
+        { range: "21–40", label: "Satisfactory", color: "#84cc16", active: activeVal > 20 && activeVal <= 40 },
+        { range: "41–80", label: "Moderate", color: "#f59e0b", active: activeVal > 40 && activeVal <= 80 },
+        { range: "81–380", label: "Poor", color: "#f97316", active: activeVal > 80 && activeVal <= 380 },
+        { range: "381–800", label: "Very Poor", color: "#ef4444", active: activeVal > 380 && activeVal <= 800 },
+        { range: "800+", label: "Severe", color: "#881337", active: activeVal > 800 },
+      ];
+    case "co":
+      return [
+        { range: "0–500", label: "Good", color: "#10b981", active: activeVal <= 500 },
+        { range: "501–1k", label: "Satisfactory", color: "#84cc16", active: activeVal > 500 && activeVal <= 1000 },
+        { range: "1k–2k", label: "Moderate", color: "#f59e0b", active: activeVal > 1000 && activeVal <= 2000 },
+        { range: "2k–10k", label: "Poor", color: "#f97316", active: activeVal > 2000 && activeVal <= 10000 },
+        { range: "10k–17k", label: "Very Poor", color: "#ef4444", active: activeVal > 10000 && activeVal <= 17000 },
+        { range: "17k+", label: "Severe", color: "#881337", active: activeVal > 17000 },
+      ];
+    case "aqi":
+    default:
+      return [
+        { range: "0–50", label: "Good", color: "#10b981", active: activeVal <= 50 },
+        { range: "51–100", label: "Moderate", color: "#f59e0b", active: activeVal > 50 && activeVal <= 100 },
+        { range: "101–150", label: "Unhealthy for Sensitive", color: "#f97316", active: activeVal > 100 && activeVal <= 150 },
+        { range: "151–200", label: "Unhealthy", color: "#ef4444", active: activeVal > 150 && activeVal <= 200 },
+        { range: "201–300", label: "Very Unhealthy", color: "#8b5cf6", active: activeVal > 200 && activeVal <= 300 },
+        { range: "301+", label: "Hazardous", color: "#881337", active: activeVal > 300 },
+      ];
+  }
+}
+
 interface OverviewSpatialMapProps {
   onSelectCity?: (hotspot: SpatialHotspot) => void;
   selectedCity?: SpatialHotspot;
@@ -504,97 +836,106 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   }, [theme]);
 
   // Render glowing markers on map
-  const renderMarkers = useCallback((L: typeof import("leaflet"), map: LeafletMap, list: SpatialHotspot[]) => {
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
+  const renderMarkers = useCallback(
+    (L: typeof import("leaflet"), map: LeafletMap, list: SpatialHotspot[], layer: MapLayerKey) => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
 
-    list.forEach((spot) => {
-      const cat = getAqiCategory(spot.aqi);
+      list.forEach((spot) => {
+        const metric = getLayerMetric(spot, layer);
 
-      // Outer heat halo
-      const halo = L.circle([spot.lat, spot.lng], {
-        radius: spot.aqi > 150 ? 90000 : 45000,
-        color: cat.color,
-        fillColor: cat.color,
-        fillOpacity: 0.28,
-        weight: 0,
-      }).addTo(map);
+        // Outer heat halo dynamically colored & sized by metric intensity
+        const haloRadius = Math.round(35000 + metric.intensityRatio * 65000);
+        const halo = L.circle([spot.lat, spot.lng], {
+          radius: haloRadius,
+          color: metric.color,
+          fillColor: metric.color,
+          fillOpacity: 0.28 + metric.intensityRatio * 0.12,
+          weight: 0,
+        }).addTo(map);
 
-      // Interactive pulsating hotspot icon
-      const customIcon = L.divIcon({
-        className: "custom-aqi-hotspot-pin",
-        html: `
-          <div style="
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-          " title="${spot.name}, ${spot.country}: AQI ${spot.aqi} (${spot.status})">
-            <span style="
-              position: absolute;
-              width: 26px;
-              height: 26px;
-              border-radius: 50%;
-              background: ${cat.color};
-              opacity: 0.55;
-              animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-            "></span>
-            <span style="
+        // Interactive pulsating hotspot icon with metric value & color
+        const customIcon = L.divIcon({
+          className: "custom-aqi-hotspot-pin",
+          html: `
+            <div style="
               position: relative;
-              width: 16px;
-              height: 16px;
-              border-radius: 50%;
-              background: ${cat.color};
-              border: 2px solid #ffffff;
-              box-shadow: 0 0 12px ${cat.color};
               display: flex;
               align-items: center;
               justify-content: center;
-              font-size: 8px;
-              font-weight: bold;
-              color: white;
-            "></span>
-          </div>
-        `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+              width: 36px;
+              height: 36px;
+              cursor: pointer;
+            " title="${spot.name}, ${spot.country}: ${metric.metricLabel} ${metric.formattedValue} ${metric.unit} (${metric.category})">
+              <span style="
+                position: absolute;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                background: ${metric.color};
+                opacity: 0.45;
+                animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+              "></span>
+              <span style="
+                position: relative;
+                padding: 2px 6px;
+                min-width: 28px;
+                height: 20px;
+                border-radius: 10px;
+                background: ${metric.color};
+                border: 2px solid #ffffff;
+                box-shadow: 0 0 12px ${metric.color};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                font-family: monospace;
+                font-weight: 800;
+                color: white;
+                white-space: nowrap;
+              ">
+                ${Math.round(metric.value)}
+              </span>
+            </div>
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+        });
+
+        const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
+
+        // Leaflet Tooltip with layer metric and overall AQI
+        marker.bindTooltip(
+          `<strong>${spot.name}</strong> (${spot.country})<br/>${metric.metricLabel}: <span style="color:${metric.color};font-weight:bold">${metric.formattedValue} ${metric.unit}</span> · ${metric.category}<br/><span style="font-size:10px;opacity:0.75">Overall AQI: ${spot.aqi}</span>`,
+          {
+            direction: "top",
+            offset: [0, -12],
+            className: "theme-adaptive-tooltip font-mono text-xs",
+          }
+        );
+
+        marker.on("click", () => {
+          setActiveHotspot(spot);
+          if (onSelectCity) onSelectCity(spot);
+          map.flyTo([spot.lat, spot.lng], 6, { duration: 0.8 });
+        });
+
+        markersRef.current.push(halo, marker);
       });
+    },
+    [onSelectCity]
+  );
 
-      const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
-
-      // Leaflet Tooltip with provenance
-      marker.bindTooltip(
-        `<strong>${spot.name}</strong> (${spot.country})<br/>AQI: <span style="color:${cat.color};font-weight:bold">${spot.aqi}</span> · ${spot.status}`,
-        {
-          direction: "top",
-          offset: [0, -10],
-          className: "theme-adaptive-tooltip font-mono text-xs",
-        }
-      );
-
-      marker.on("click", () => {
-        setActiveHotspot(spot);
-        if (onSelectCity) onSelectCity(spot);
-        map.flyTo([spot.lat, spot.lng], 6, { duration: 0.8 });
-      });
-
-      markersRef.current.push(halo, marker);
-    });
-  }, [onSelectCity]);
-
-  // Update markers when hotspots change
+  // Update markers when hotspots or active layer changes
   useEffect(() => {
     if (mapInstanceRef.current) {
       import("leaflet").then((L) => {
         if (mapInstanceRef.current) {
-          renderMarkers(L, mapInstanceRef.current, hotspots);
+          renderMarkers(L, mapInstanceRef.current, hotspots, activeLayer);
         }
       });
     }
-  }, [hotspots, renderMarkers]);
+  }, [hotspots, activeLayer, renderMarkers]);
 
   // Initialize Leaflet Map safely in React 18/19 StrictMode
   useEffect(() => {
@@ -628,10 +969,10 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         targetContainer.innerHTML = "";
       }
 
-      // Initial center centered on world view
+      // Initial center centered directly on India
       const map = L.map(targetContainer, {
-        center: [24, 20],
-        zoom: 3,
+        center: [22.0, 79.0],
+        zoom: 4.5,
         minZoom: 2,
         maxZoom: 16,
         zoomControl: false,
@@ -666,7 +1007,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
       mapInstanceRef.current = map;
 
-      renderMarkers(L, map, hotspots);
+      renderMarkers(L, map, hotspots, activeLayer);
     }
 
     initMap();
@@ -708,9 +1049,9 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
     if (!mapInstanceRef.current) return;
 
     if (region === "Global") {
-      mapInstanceRef.current.flyTo([24, 20], 3, { duration: 1.2 });
+      mapInstanceRef.current.flyTo([22.0, 79.0], 3.8, { duration: 1.2 });
     } else if (region === "Asia") {
-      mapInstanceRef.current.flyTo([28.0, 85.0], 4, { duration: 1.2 });
+      mapInstanceRef.current.flyTo([22.0, 79.0], 4.5, { duration: 1.2 });
     } else if (region === "Europe") {
       mapInstanceRef.current.flyTo([50.0, 15.0], 4, { duration: 1.2 });
     } else if (region === "Americas") {
@@ -744,6 +1085,8 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   };
 
   const aqiInfo = getAqiCategory(activeHotspot.aqi);
+  const activeMetric = getLayerMetric(activeHotspot, activeLayer);
+  const scaleTiers = getScaleTiers(activeLayer, activeMetric.value);
 
   return (
     <div className="space-y-4 w-full">
@@ -1021,33 +1364,24 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* AQI Scale Bar: Cleanly Placed Directly Underneath Map Canvas */}
+      {/* Multi-Metric Scale Bar: Cleanly Placed Directly Underneath Map Canvas */}
       {/* ------------------------------------------------------------------ */}
       <div className="w-full p-4 sm:p-5 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] backdrop-blur-md shadow-sm text-[var(--dash-ink)]">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[var(--dash-ink)]">
-            <span>AQI SCALE (US)</span>
+            <span className="uppercase">{activeMetric.metricLabel} INTENSITY SCALE ({activeMetric.unit})</span>
             <Info size={13} className="text-[var(--dash-muted)]" />
           </div>
           <span className="text-[11px] font-mono text-[var(--dash-muted)]">
-            Selected City: <strong className="text-[var(--dash-ink)]">{activeHotspot.name}</strong> ({activeHotspot.country}) · <span style={{ color: aqiInfo.color }}>{activeHotspot.status}</span>
+            Selected City: <strong className="text-[var(--dash-ink)]">{activeHotspot.name}</strong> ({activeHotspot.country}) ·{" "}
+            <span style={{ color: activeMetric.color }} className="font-semibold">
+              {activeMetric.metricLabel}: {activeMetric.formattedValue} {activeMetric.unit} ({activeMetric.category})
+            </span>
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
-          {[
-            { range: "0–50", label: "Good", color: "#10b981", active: activeHotspot.aqi <= 50 },
-            { range: "51–100", label: "Moderate", color: "#f59e0b", active: activeHotspot.aqi > 50 && activeHotspot.aqi <= 100 },
-            {
-              range: "101–150",
-              label: "Unhealthy for Sensitive",
-              color: "#f97316",
-              active: activeHotspot.aqi > 100 && activeHotspot.aqi <= 150,
-            },
-            { range: "151–200", label: "Unhealthy", color: "#ef4444", active: activeHotspot.aqi > 150 && activeHotspot.aqi <= 200 },
-            { range: "201–300", label: "Very Unhealthy", color: "#8b5cf6", active: activeHotspot.aqi > 200 && activeHotspot.aqi <= 300 },
-            { range: "301+", label: "Hazardous", color: "#881337", active: activeHotspot.aqi > 300 },
-          ].map((tier) => (
+          {scaleTiers.map((tier) => (
             <div
               key={tier.range}
               className={`p-3 rounded-xl border text-center transition-all ${

@@ -58,7 +58,7 @@ export function AreaAirScore({ currentLocation, onSwitchLocation }: AreaAirScore
               Station Breakdown for {currentLocation.name}
             </h3>
           </div>
-          <span className="text-xs font-mono text-[var(--dash-muted)] self-start sm:self-auto">
+          <span className="text-xs font-mono text-[var(--dash-muted)] self-start sm:self-auto" suppressHydrationWarning>
             Ranked by Nearest Physical Proximity
           </span>
         </div>
