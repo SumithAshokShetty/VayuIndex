@@ -29,7 +29,9 @@ export default function OverviewPage() {
 
   return (
     <div
-      className="app-shell dashboard-app min-h-screen bg-[var(--dash-canvas)] text-[var(--dash-ink)] transition-colors"
+      className={`app-shell dashboard-app min-h-screen bg-[var(--dash-canvas)] text-[var(--dash-ink)] transition-colors ${
+        theme === "dark" ? "dark" : ""
+      }`}
       data-theme={theme}
     >
       <div className="dashboard-frame">

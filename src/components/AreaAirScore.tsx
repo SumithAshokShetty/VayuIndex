@@ -158,7 +158,7 @@ export function AreaAirScore({ currentLocation }: AreaAirScoreProps) {
               Cleaner Atmospheric Refuges within 50km
             </h3>
           </div>
-          <span className="text-xs font-mono text-[var(--dash-muted)]">
+          <span className="text-xs font-mono text-[var(--dash-muted)] haven-variance-tag">
             Relative Micro-Climate Variance
           </span>
         </div>
@@ -172,15 +172,15 @@ export function AreaAirScore({ currentLocation }: AreaAirScoreProps) {
             {havens.map((haven) => (
               <div
                 key={haven.name}
-                className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 flex flex-col justify-between space-y-3 shadow-xs"
+                className="haven-card shadow-xs"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40">
+                    <span className="haven-cleaner-badge">
                       <TrendingDown size={13} />
                       {haven.cleanerPercentage}% CLEANER
                     </span>
-                    <span className="text-[11px] font-mono text-[var(--dash-muted)]">
+                    <span className="text-xs font-mono font-semibold haven-distance">
                       {haven.distanceKm} km away
                     </span>
                   </div>
@@ -188,14 +188,14 @@ export function AreaAirScore({ currentLocation }: AreaAirScoreProps) {
                   <h4 className="text-base font-bold text-[var(--dash-ink)] mt-2.5">
                     {haven.name}
                   </h4>
-                  <span className="text-xs text-[var(--dash-muted)]">
+                  <span className="text-xs haven-subtitle font-medium">
                     {haven.city} · {haven.status} Air Quality
                   </span>
                 </div>
 
                 <div className="flex items-baseline justify-between pt-2 border-t border-[var(--dash-rule)]">
                   <div>
-                    <span className="text-2xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                    <span className="text-2xl font-extrabold font-mono text-emerald-500 dark:text-emerald-400">
                       {haven.aqi}
                     </span>
                     <span className="text-xs font-mono text-[var(--dash-muted)] ml-1">AQI</span>
@@ -205,7 +205,7 @@ export function AreaAirScore({ currentLocation }: AreaAirScoreProps) {
                   <div className="flex items-center">
                     <a
                       href={`/compare?city=${encodeURIComponent(haven.city)}`}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--dash-accent)] hover:opacity-90 text-white shadow-xs transition-opacity inline-flex items-center gap-1.5 no-underline"
+                      className="haven-compare-btn"
                       title="Compare Micro-Climate in Analytics"
                     >
                       Compare Haven <ArrowRight size={12} />
@@ -217,13 +217,13 @@ export function AreaAirScore({ currentLocation }: AreaAirScoreProps) {
           </div>
         )}
 
-        <div className="mt-4 p-3.5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-xs text-[var(--dash-muted)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="mt-4 p-3.5 rounded-xl haven-rule-banner border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <span>
             <strong className="text-[var(--dash-ink)]">Atmospheric Haven Rule:</strong> Micro-climates featuring expansive urban forestry, water bodies, or elevated topography disperse particulate matter up to 40% faster than dense concrete corridors.
           </span>
           <a
             href="/compare"
-            className="flex-none inline-flex items-center gap-1 font-semibold text-[var(--dash-accent)] hover:underline"
+            className="flex-none inline-flex items-center gap-1 font-semibold hover:underline"
           >
             Side-by-Side Comparison <ArrowRight size={13} />
           </a>

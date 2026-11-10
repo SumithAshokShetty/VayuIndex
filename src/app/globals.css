@@ -934,4 +934,152 @@ html[data-theme="light"] body {
   display: none !important;
 }
 
+/* ==========================================================================
+   Safer Nearby Havens Theme & Contrast Polish (Dark & Light Mode)
+   ========================================================================== */
+
+/* Haven Badge: Percent Cleaner */
+.haven-cleaner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .haven-cleaner-badge,
+html:not(.dark) .haven-cleaner-badge {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #065f46 !important; /* deep rich emerald */
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme="dark"] .haven-cleaner-badge,
+html.dark .haven-cleaner-badge {
+  background: rgba(16, 185, 129, 0.24) !important;
+  color: #6ee7b7 !important; /* bright high-contrast mint green */
+  border: 1px solid rgba(110, 231, 183, 0.45) !important;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Haven Card */
+.haven-card {
+  padding: 20px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .haven-card,
+html:not(.dark) .haven-card {
+  background: #f8faf8;
+  border: 1px solid #d1ded5;
+}
+[data-theme="light"] .haven-card:hover,
+html:not(.dark) .haven-card:hover {
+  border-color: #10b981;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.08);
+}
+
+[data-theme="dark"] .haven-card,
+html.dark .haven-card {
+  background: rgba(18, 30, 25, 0.85) !important;
+  border: 1px solid rgba(110, 231, 183, 0.2) !important;
+}
+[data-theme="dark"] .haven-card:hover,
+html.dark .haven-card:hover {
+  border-color: rgba(110, 231, 183, 0.5) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Compare Haven Button */
+.haven-compare-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .haven-compare-btn,
+html:not(.dark) .haven-compare-btn {
+  background: #059669 !important;
+  color: #ffffff !important;
+}
+[data-theme="light"] .haven-compare-btn:hover,
+html:not(.dark) .haven-compare-btn:hover {
+  background: #047857 !important;
+}
+
+[data-theme="dark"] .haven-compare-btn,
+html.dark .haven-compare-btn {
+  background: #34d399 !important; /* bright radiant mint */
+  color: #032213 !important; /* deep obsidian forest green for maximum contrast */
+  font-weight: 800 !important;
+}
+[data-theme="dark"] .haven-compare-btn:hover,
+html.dark .haven-compare-btn:hover {
+  background: #6ee7b7 !important;
+  color: #021a0e !important;
+}
+
+/* Metadata Text High Contrast in Dark Mode */
+[data-theme="dark"] .haven-distance,
+html.dark .haven-distance {
+  color: #cbd5e1 !important; /* Slate-300 */
+}
+
+[data-theme="dark"] .haven-subtitle,
+html.dark .haven-subtitle {
+  color: #94a3b8 !important; /* Slate-400 */
+}
+
+[data-theme="dark"] .haven-variance-tag,
+html.dark .haven-variance-tag {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .haven-rule-banner,
+html.dark .haven-rule-banner {
+  background: rgba(16, 26, 22, 0.9) !important;
+  border-color: rgba(110, 231, 183, 0.22) !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .haven-rule-banner strong,
+html.dark .haven-rule-banner strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .haven-rule-banner a,
+html.dark .haven-rule-banner a {
+  color: #6ee7b7 !important;
+}
+
+/* Station Breakdown Dark Mode Contrast */
+[data-theme="dark"] .area-air-score-container,
+html.dark .area-air-score-container {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .area-air-score-container .text-\[var\(--dash-muted\)\],
+html.dark .area-air-score-container .text-\[var\(--dash-muted\)\] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .area-air-score-container .text-\[var\(--dash-faint\)\],
+html.dark .area-air-score-container .text-\[var\(--dash-faint\)\] {
+  color: #94a3b8 !important;
+}
+
+
 

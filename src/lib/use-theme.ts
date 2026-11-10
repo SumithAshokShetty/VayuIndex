@@ -38,6 +38,11 @@ export function updateTheme(next: Theme) {
       localStorage.setItem("vayu-theme", next);
     } catch {}
     document.documentElement.setAttribute("data-theme", next);
+    if (next === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
     window.dispatchEvent(new CustomEvent("vayu-theme-change", { detail: next }));
   }
 }
@@ -65,6 +70,11 @@ export function useTheme() {
     }
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-theme", resolved);
+      if (resolved === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
 
     // 2. Cross-tab storage synchronization
@@ -74,6 +84,11 @@ export function useTheme() {
           currentTheme = e.newValue;
           if (typeof document !== "undefined") {
             document.documentElement.setAttribute("data-theme", e.newValue);
+            if (e.newValue === "dark") {
+              document.documentElement.classList.add("dark");
+            } else {
+              document.documentElement.classList.remove("dark");
+            }
           }
           emitChange();
         }
