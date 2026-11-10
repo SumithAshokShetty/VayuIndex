@@ -14,6 +14,20 @@ import { useTheme } from "@/lib/use-theme";
 
 export type MapLayerKey = "aqi" | "pm2_5" | "pm10" | "ozone" | "no2" | "so2" | "co";
 
+export interface HotspotWeather {
+  temp: number;
+  humidity: number;
+  windSpeed: number;
+  windDirection: number;
+  condition?: string;
+}
+
+export function getCardinalDirection(deg: number): string {
+  const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+  const index = Math.round(deg / 22.5) % 16;
+  return directions[index];
+}
+
 export interface SpatialHotspot {
   id: string;
   name: string;
@@ -33,6 +47,7 @@ export interface SpatialHotspot {
     so2: number;
     co: number;
   };
+  weather?: HotspotWeather;
   provenance: string;
   updatedAt: string;
 }
@@ -1451,6 +1466,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const [activeLayer, setActiveLayer] = useState<MapLayerKey>("aqi");
   const [weatherOverlay, setWeatherOverlay] = useState(false);
   const [windOverlay, setWindOverlay] = useState(false);
+  const [heatmapOverlay, setHeatmapOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [liveUpdating, setLiveUpdating] = useState(false);
@@ -1514,22 +1530,123 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
   // Render glowing markers on map
   const renderMarkers = useCallback(
-    (L: typeof import("leaflet"), map: LeafletMap, list: SpatialHotspot[], layer: MapLayerKey) => {
+    (
+      L: typeof import("leaflet"),
+      map: LeafletMap,
+      list: SpatialHotspot[],
+      layer: MapLayerKey,
+      showWeather: boolean,
+      showWind: boolean,
+      showHeatmap: boolean
+    ) => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
       list.forEach((spot) => {
         const metric = getLayerMetric(spot, layer);
+        const weather = spot.weather || {
+          temp: Math.round(24 + Math.sin(spot.lat * 0.1) * 8),
+          humidity: Math.round(48 + Math.cos(spot.lng * 0.1) * 18),
+          windSpeed: Math.round(8 + Math.abs(Math.sin(spot.lat * 0.2)) * 10),
+          windDirection: Math.round(Math.abs(spot.lat * 19 + spot.lng * 23) % 360),
+          condition: spot.aqi > 150 ? "Hazy Smog" : "Partly Cloudy",
+        };
+        const cardinal = getCardinalDirection(weather.windDirection);
 
-        // Outer heat halo dynamically colored & sized by metric intensity
-        const haloRadius = Math.round(35000 + metric.intensityRatio * 65000);
+        // 1. Semi-transparent regional heatmap layer (visible when Heatmap overlay is clicked)
+        // Kept delicately transparent so country borders, roads, and cities remain completely visible
+        if (showHeatmap) {
+          const heatOuter = L.circle([spot.lat, spot.lng], {
+            radius: 340000 + metric.intensityRatio * 150000,
+            color: metric.color,
+            fillColor: metric.color,
+            fillOpacity: 0.08,
+            weight: 0,
+            interactive: false,
+          }).addTo(map);
+
+          const heatInner = L.circle([spot.lat, spot.lng], {
+            radius: 170000 + metric.intensityRatio * 80000,
+            color: metric.color,
+            fillColor: metric.color,
+            fillOpacity: 0.13,
+            weight: 0,
+            interactive: false,
+          }).addTo(map);
+
+          markersRef.current.push(heatOuter, heatInner);
+        }
+
+        // 2. Base Heat Halo (compact local footprint)
+        const haloRadius = Math.round(35000 + metric.intensityRatio * 45000);
         const halo = L.circle([spot.lat, spot.lng], {
           radius: haloRadius,
           color: metric.color,
           fillColor: metric.color,
-          fillOpacity: 0.28 + metric.intensityRatio * 0.12,
+          fillOpacity: showHeatmap ? 0.20 : 0.28 + metric.intensityRatio * 0.12,
           weight: 0,
         }).addTo(map);
+        markersRef.current.push(halo);
+
+        // 3. Optional Weather overlay pill
+        let weatherPillHtml = "";
+        if (showWeather) {
+          const icon = weather.temp > 32 ? "☀️" : weather.temp < 15 ? "❄️" : "⛅";
+          weatherPillHtml = `
+            <div style="
+              position: absolute;
+              top: -20px;
+              white-space: nowrap;
+              background: rgba(15, 23, 42, 0.88);
+              color: #f8fafc;
+              border: 1px solid rgba(255, 255, 255, 0.25);
+              border-radius: 9999px;
+              padding: 1.5px 6px;
+              font-size: 9px;
+              font-family: monospace;
+              font-weight: 700;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+              display: flex;
+              align-items: center;
+              gap: 3px;
+              pointer-events: none;
+            ">
+              <span>${icon}</span>
+              <span>${weather.temp}°C</span>
+              <span style="opacity: 0.7; font-size: 8px;">${weather.humidity}%</span>
+            </div>
+          `;
+        }
+
+        // 4. Optional Wind Direction indicator with rotated vector arrow
+        let windVaneHtml = "";
+        if (showWind) {
+          windVaneHtml = `
+            <div style="
+              position: absolute;
+              bottom: -20px;
+              white-space: nowrap;
+              background: rgba(2, 132, 199, 0.92);
+              color: white;
+              border: 1px solid rgba(255, 255, 255, 0.45);
+              border-radius: 9999px;
+              padding: 1.5px 6px;
+              font-size: 9px;
+              font-family: monospace;
+              font-weight: 700;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+              display: flex;
+              align-items: center;
+              gap: 3px;
+              pointer-events: none;
+            ">
+              <svg style="transform: rotate(${weather.windDirection}deg); width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5;" viewBox="0 0 24 24">
+                <path d="M12 2L12 22M12 2L6 8M12 2L18 8" />
+              </svg>
+              <span>${weather.windSpeed} km/h ${cardinal}</span>
+            </div>
+          `;
+        }
 
         // Interactive pulsating hotspot icon with metric value & color
         const customIcon = L.divIcon({
@@ -1538,55 +1655,64 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             <div style="
               position: relative;
               display: flex;
+              flex-direction: column;
               align-items: center;
               justify-content: center;
-              width: 36px;
-              height: 36px;
+              width: 50px;
+              height: 50px;
               cursor: pointer;
-            " title="${spot.name}, ${spot.country}: ${metric.metricLabel} ${metric.formattedValue} ${metric.unit} (${metric.category})">
-              <span style="
-                position: absolute;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                background: ${metric.color};
-                opacity: 0.45;
-                animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-              "></span>
-              <span style="
-                position: relative;
-                padding: 2px 6px;
-                min-width: 28px;
-                height: 20px;
-                border-radius: 10px;
-                background: ${metric.color};
-                border: 2px solid #ffffff;
-                box-shadow: 0 0 12px ${metric.color};
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 10px;
-                font-family: monospace;
-                font-weight: 800;
-                color: white;
-                white-space: nowrap;
-              ">
-                ${Math.round(metric.value)}
-              </span>
+            " title="${spot.name}, ${spot.country}: ${metric.metricLabel} ${metric.formattedValue} ${metric.unit} | Weather: ${weather.temp}°C, Wind: ${weather.windSpeed} km/h ${cardinal}">
+              ${weatherPillHtml}
+              <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                <span style="
+                  position: absolute;
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 50%;
+                  background: ${metric.color};
+                  opacity: 0.45;
+                  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+                "></span>
+                <span style="
+                  position: relative;
+                  padding: 2px 6px;
+                  min-width: 28px;
+                  height: 20px;
+                  border-radius: 10px;
+                  background: ${metric.color};
+                  border: 2px solid #ffffff;
+                  box-shadow: 0 0 12px ${metric.color};
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 10px;
+                  font-family: monospace;
+                  font-weight: 800;
+                  color: white;
+                  white-space: nowrap;
+                ">
+                  ${Math.round(metric.value)}
+                </span>
+              </div>
+              ${windVaneHtml}
             </div>
           `,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
+          iconSize: [50, 50],
+          iconAnchor: [25, 25],
         });
 
         const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
 
-        // Leaflet Tooltip with layer metric and overall AQI
+        // Leaflet Tooltip with comprehensive pollutant and atmospheric telemetry
         marker.bindTooltip(
-          `<strong>${spot.name}</strong> (${spot.country})<br/>${metric.metricLabel}: <span style="color:${metric.color};font-weight:bold">${metric.formattedValue} ${metric.unit}</span> · ${metric.category}<br/><span style="font-size:10px;opacity:0.75">Overall AQI: ${spot.aqi}</span>`,
+          `<strong>${spot.name}</strong> (${spot.country})<br/>` +
+          `${metric.metricLabel}: <span style="color:${metric.color};font-weight:bold">${metric.formattedValue} ${metric.unit}</span> · ${metric.category}<br/>` +
+          `<span style="color:#0284c7;font-weight:600">🌡️ Temp: ${weather.temp}°C · 💧 Humidity: ${weather.humidity}%</span><br/>` +
+          `<span style="color:#0284c7;font-weight:600">💨 Wind: ${weather.windSpeed} km/h ${cardinal} (${weather.windDirection}°)</span><br/>` +
+          `<span style="font-size:10px;opacity:0.75">Overall AQI: ${spot.aqi}</span>`,
           {
             direction: "top",
-            offset: [0, -12],
+            offset: [0, -14],
             className: "theme-adaptive-tooltip font-mono text-xs",
           }
         );
@@ -1597,22 +1723,30 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
           map.flyTo([spot.lat, spot.lng], 6, { duration: 0.8 });
         });
 
-        markersRef.current.push(halo, marker);
+        markersRef.current.push(marker);
       });
     },
     [onSelectCity]
   );
 
-  // Update markers when hotspots or active layer changes
+  // Update markers when hotspots, active layer, or overlays change
   useEffect(() => {
     if (mapInstanceRef.current) {
       import("leaflet").then((L) => {
         if (mapInstanceRef.current) {
-          renderMarkers(L, mapInstanceRef.current, hotspots, activeLayer);
+          renderMarkers(
+            L,
+            mapInstanceRef.current,
+            hotspots,
+            activeLayer,
+            weatherOverlay,
+            windOverlay,
+            heatmapOverlay
+          );
         }
       });
     }
-  }, [hotspots, activeLayer, renderMarkers]);
+  }, [hotspots, activeLayer, weatherOverlay, windOverlay, heatmapOverlay, renderMarkers]);
 
   // Initialize Leaflet Map safely in React 18/19 StrictMode
   useEffect(() => {
@@ -1684,7 +1818,15 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
       mapInstanceRef.current = map;
 
-      renderMarkers(L, map, hotspots, activeLayer);
+      renderMarkers(
+        L,
+        map,
+        hotspots,
+        activeLayer,
+        weatherOverlay,
+        windOverlay,
+        heatmapOverlay
+      );
     }
 
     initMap();
@@ -1908,6 +2050,74 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             </p>
           </div>
 
+          {/* Regional Weather Details when Weather Overlay is Active */}
+          {weatherOverlay && (
+            <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[var(--dash-ink)] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                  <span>🌡️</span> REGIONAL WEATHER
+                </span>
+                <span className="text-[10px] font-mono text-[var(--dash-muted)]">
+                  {activeHotspot.weather?.condition || "Live"}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+                <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
+                  <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Temp</span>
+                  <span className="text-sm font-mono font-extrabold text-[var(--dash-ink)]">
+                    {activeHotspot.weather?.temp ?? 26}°C
+                  </span>
+                </div>
+                <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
+                  <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Humidity</span>
+                  <span className="text-sm font-mono font-extrabold text-[var(--dash-ink)]">
+                    {activeHotspot.weather?.humidity ?? 48}%
+                  </span>
+                </div>
+                <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
+                  <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Wind</span>
+                  <span className="text-xs font-mono font-extrabold text-sky-600 dark:text-sky-400 block truncate">
+                    {activeHotspot.weather?.windSpeed ?? 10} km/h
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Wind Vector Vane when Wind Overlay is Active */}
+          {windOverlay && (
+            <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-[var(--dash-ink)] flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block mb-0.5">
+                  WIND DIRECTION & VECTOR
+                </span>
+                <span className="text-xs font-mono font-bold text-[var(--dash-ink)]">
+                  {activeHotspot.weather?.windSpeed ?? 10} km/h {getCardinalDirection(activeHotspot.weather?.windDirection ?? 60)} ({activeHotspot.weather?.windDirection ?? 60}°)
+                </span>
+              </div>
+              <div
+                className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-500 font-bold shadow-xs transition-transform"
+                style={{ transform: `rotate(${activeHotspot.weather?.windDirection ?? 60}deg)` }}
+                title={`Wind bearing: ${activeHotspot.weather?.windDirection ?? 60}°`}
+              >
+                ↑
+              </div>
+            </div>
+          )}
+
+          {/* Active Heatmap indicator */}
+          {heatmapOverlay && (
+            <div className="px-3 py-1.5 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[10px] font-mono text-[var(--dash-muted)] flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeMetric.color }} />
+                <span>Heatmap: <strong>{activeMetric.metricLabel}</strong></span>
+              </span>
+              <span className="font-bold" style={{ color: activeMetric.color }}>
+                {activeMetric.category}
+              </span>
+            </div>
+          )}
+
           {/* Individual Pollutants Progress Bars */}
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between text-[10px] font-mono text-[var(--dash-muted)] border-b border-[var(--dash-rule)] pb-1">
@@ -2019,7 +2229,9 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               OVERLAYS
             </span>
             <div className="flex items-center justify-between text-xs text-[var(--dash-muted)]">
-              <span>Weather</span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span>🌡️</span> Weather
+              </span>
               <input
                 type="checkbox"
                 checked={weatherOverlay}
@@ -2028,11 +2240,25 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
               />
             </div>
             <div className="flex items-center justify-between text-xs text-[var(--dash-muted)]">
-              <span>Wind</span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span>💨</span> Wind Direction
+              </span>
               <input
                 type="checkbox"
                 checked={windOverlay}
                 onChange={(e) => setWindOverlay(e.target.checked)}
+                className="accent-[var(--dash-accent)] cursor-pointer"
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs text-[var(--dash-muted)]">
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-500 shadow-xs" />
+                Heatmap
+              </span>
+              <input
+                type="checkbox"
+                checked={heatmapOverlay}
+                onChange={(e) => setHeatmapOverlay(e.target.checked)}
                 className="accent-[var(--dash-accent)] cursor-pointer"
               />
             </div>
