@@ -6,8 +6,6 @@ import {
   Info,
   Navigation,
   Search,
-  Share2,
-  Star,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap, Layer, TileLayer } from "leaflet";
@@ -1482,7 +1480,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
   const [windOverlay, setWindOverlay] = useState(false);
   const [heatmapOverlay, setHeatmapOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);
   const [liveUpdating, setLiveUpdating] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [userLocationDetected, setUserLocationDetected] = useState(false);
@@ -2326,18 +2323,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             />
             {liveUpdating ? "Ingesting Feeds..." : "CPCB · OpenAQ · WAQI Live"}
           </span>
-          <button
-            type="button"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: "Vayu Index", url: window.location.href });
-              }
-            }}
-            className="p-2 rounded-xl bg-[var(--dash-surface)] border border-[var(--dash-rule)] text-[var(--dash-muted)] hover:text-[var(--dash-accent)] transition-colors shadow-sm"
-            title="Share"
-          >
-            <Share2 size={16} />
-          </button>
         </div>
       </div>
 
@@ -2362,14 +2347,6 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                 {activeHotspot.state ? `${activeHotspot.state}, ` : ""}{activeHotspot.country}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsFavorite(!isFavorite)}
-              aria-label="Bookmark location"
-              className="p-1.5 rounded-lg text-[var(--dash-muted)] hover:text-amber-500 transition-colors"
-            >
-              <Star size={18} className={isFavorite ? "fill-amber-400 text-amber-500" : ""} />
-            </button>
           </div>
 
           {/* Big AQI Banner with City Landmark Art & Provenance Badge (Image 2) */}
