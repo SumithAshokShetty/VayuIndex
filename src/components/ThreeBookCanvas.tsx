@@ -8,6 +8,8 @@ interface ThreeBookCanvasProps {
   currentChapter: number;
   onChapterChange: (chapter: number, direction: "next" | "prev") => void;
   isDark: boolean;
+  scrollProgress?: number;
+  isScrollControlled?: boolean;
   children?: React.ReactNode;
 }
 
@@ -15,13 +17,19 @@ export function ThreeBookCanvas({
   currentChapter,
   onChapterChange,
   isDark,
+  scrollProgress,
+  isScrollControlled = false,
   children,
 }: ThreeBookCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollProgressRef = useRef<number | undefined>(scrollProgress);
+  useEffect(() => {
+    scrollProgressRef.current = scrollProgress;
+  }, [scrollProgress]);
 
   // Book interaction state
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(!isScrollControlled);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isFlipping, setIsFlipping] = useState<boolean>(false);
   const [flipDirection, setFlipDirection] = useState<"next" | "prev">("next");
@@ -45,8 +53,8 @@ export function ThreeBookCanvas({
 
   // Animation values (lerped in render loop)
   const animStateRef = useRef({
-    coverAngle: -Math.PI, // -Math.PI = fully open, 0 = fully closed
-    targetCoverAngle: -Math.PI,
+    coverAngle: isScrollControlled ? 0 : -Math.PI, // 0 = fully closed, -Math.PI = fully open
+    targetCoverAngle: isScrollControlled ? 0 : -Math.PI,
     turnProgress: 0, // 0 = resting on right, 1 = resting on left
     targetTurnProgress: 0,
     isTurning: false,
@@ -55,6 +63,9 @@ export function ThreeBookCanvas({
     mouseTargetRotY: 0,
     mouseCurrentRotX: 0,
     mouseCurrentRotY: 0,
+    baseRotX: isScrollControlled ? 0.08 : 0,
+    baseRotY: isScrollControlled ? 0.35 : 0,
+    cameraTargetZ: isScrollControlled ? 11.5 : 10.0,
     scrollOffsetRotX: 0,
     scrollYProgress: 0,
     ribbonWaveTime: 0,
@@ -444,7 +455,7 @@ export function ThreeBookCanvas({
     coverPivot.add(coverMesh);
 
     // Set initial cover state (-Math.PI = open, 0 = closed)
-    coverPivot.rotation.y = -Math.PI;
+    coverPivot.rotation.y = isScrollControlled ? 0 : -Math.PI;
 
     // -----------------------------------------------------------------------
     // D. 3D TURNING PAGE MESH (PHYSICS CURVED BENDING DEFORMATION)
@@ -530,27 +541,99 @@ export function ThreeBookCanvas({
       animationFrameId = requestAnimationFrame(animate);
       const st = animStateRef.current;
 
-      // 1. Mouse Parallax Lerp
+      // 0. Scroll Progress Mapping (matching maray.ai portfolio book physics)
+      const sp = scrollProgressRef.current;
+      if (typeof sp === "number") {
+        if (sp < 0.14) {
+          // Hero closed-to-opening transition (0.0 to 0.14)
+          const norm = Math.max(0, Math.min(1, sp / 0.14));
+          st.targetCoverAngle = -Math.PI * norm;
+          st.baseRotY = 0.35 * (1 - norm);
+          st.baseRotX = 0.08 * (1 - norm);
+          st.cameraTargetZ = 11.5 - norm * 1.5;
+          st.isTurning = false;
+          st.turnProgress = 0;
+        } else {
+          // Open 2-page reading spread & scroll-driven page curling
+          st.targetCoverAngle = -Math.PI;
+          st.baseRotY = 0;
+          st.baseRotX = 0;
+          st.cameraTargetZ = 10.0;
+
+          if (sp < 0.35) {
+            // Chapter 1
+            st.isTurning = false;
+            st.turnProgress = 0;
+            if (currentChapter !== 1) onChapterChange(1, "prev");
+          } else if (sp < 0.43) {
+            // Page 1 turn: Chapter 1 -> 2
+            const p = (sp - 0.35) / 0.08;
+            st.isTurning = true;
+            st.turnProgress = p;
+            const target = p > 0.5 ? 2 : 1;
+            if (target !== currentChapter) onChapterChange(target, p > 0.5 ? "next" : "prev");
+          } else if (sp < 0.63) {
+            // Chapter 2
+            st.isTurning = false;
+            st.turnProgress = 0;
+            if (currentChapter !== 2) onChapterChange(2, "prev");
+          } else if (sp < 0.71) {
+            // Page 2 turn: Chapter 2 -> 3
+            const p = (sp - 0.63) / 0.08;
+            st.isTurning = true;
+            st.turnProgress = p;
+            const target = p > 0.5 ? 3 : 2;
+            if (target !== currentChapter) onChapterChange(target, p > 0.5 ? "next" : "prev");
+          } else if (sp < 0.89) {
+            // Chapter 3
+            st.isTurning = false;
+            st.turnProgress = 0;
+            if (currentChapter !== 3) onChapterChange(3, "prev");
+          } else if (sp < 0.97) {
+            // Page 3 turn: Chapter 3 -> 4
+            const p = (sp - 0.89) / 0.08;
+            st.isTurning = true;
+            st.turnProgress = p;
+            const target = p > 0.5 ? 4 : 3;
+            if (target !== currentChapter) onChapterChange(target, p > 0.5 ? "next" : "prev");
+          } else {
+            // Chapter 4
+            st.isTurning = false;
+            st.turnProgress = 0;
+            if (currentChapter !== 4) onChapterChange(4, "next");
+          }
+        }
+      }
+
+      // 1. Mouse Parallax Lerp & Orientation
       st.mouseCurrentRotX += (st.mouseTargetRotX - st.mouseCurrentRotX) * 0.07;
       st.mouseCurrentRotY += (st.mouseTargetRotY - st.mouseCurrentRotY) * 0.07;
 
       if (bookGroup) {
-        bookGroup.rotation.x = st.mouseCurrentRotX + st.scrollOffsetRotX;
-        bookGroup.rotation.y = st.mouseCurrentRotY;
+        bookGroup.rotation.x = st.baseRotX + st.mouseCurrentRotX + st.scrollOffsetRotX;
+        bookGroup.rotation.y = st.baseRotY + st.mouseCurrentRotY;
+      }
+
+      // Smooth Camera Zoom
+      if (camera) {
+        camera.position.z += (st.cameraTargetZ - camera.position.z) * 0.08;
       }
 
       // 2. Cover Opening / Closing Animation Lerp
-      st.coverAngle += (st.targetCoverAngle - st.coverAngle) * 0.09;
+      st.coverAngle += (st.targetCoverAngle - st.coverAngle) * 0.12;
       if (coverPivot) {
         coverPivot.rotation.y = st.coverAngle;
       }
 
       // 3. Dynamic Page Turn Curl Physics
       if (st.isTurning && turningPageMesh && originalPagePositionsRef.current) {
-        // Progress toward target (0 -> 1 for Next, or 1 -> 0 for Prev)
-        st.turnProgress += (st.targetTurnProgress - st.turnProgress) * 0.12;
+        turningPageMesh.visible = true;
+        if (typeof sp !== "number") {
+          // Progress toward target (0 -> 1 for Next, or 1 -> 0 for Prev)
+          st.turnProgress += (st.targetTurnProgress - st.turnProgress) * 0.12;
+        }
 
-        const p = st.turnProgress;
+        const p = Math.max(0, Math.min(1, st.turnProgress));
         turningPagePivot.rotation.y = -p * Math.PI;
 
         // Curved bending algorithm:
@@ -583,13 +666,15 @@ export function ThreeBookCanvas({
         posAttr.needsUpdate = true;
         turningPageMesh.geometry.computeVertexNormals();
 
-        // Check if turn completed
-        if (Math.abs(st.targetTurnProgress - st.turnProgress) < 0.005) {
+        // Check if manual turn completed
+        if (typeof sp !== "number" && Math.abs(st.targetTurnProgress - st.turnProgress) < 0.005) {
           st.isTurning = false;
           st.turnProgress = st.targetTurnProgress;
           turningPageMesh.visible = false;
           setIsFlipping(false);
         }
+      } else if (turningPageMesh) {
+        turningPageMesh.visible = false;
       }
 
       // 4. Subtle Bookmark Ribbon Sway Physics
@@ -764,23 +849,30 @@ export function ThreeBookCanvas({
       <div
         className="absolute top-4 left-4 right-4 sm:left-8 sm:right-8 flex items-center justify-between pointer-events-none z-30"
       >
-        {/* Closed/Open State Toggle Pill */}
-        <button
-          type="button"
-          onClick={toggleBookOpen}
-          className="pointer-events-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-mono font-medium backdrop-blur-md shadow-md transition-all hover:scale-105"
-          style={{
-            backgroundColor: isDark ? "rgba(18, 33, 28, 0.85)" : "rgba(255, 255, 255, 0.9)",
-            borderColor: isDark ? "rgba(147, 226, 197, 0.25)" : "rgba(15, 56, 44, 0.18)",
-            color: isDark ? "#83dfbd" : "#1a533f",
-          }}
-          title={isOpen ? "Inspect 3D Hardcover Cover" : "Open 2-Page Reading Spread"}
-        >
-          {isOpen ? <Eye size={13} /> : <BookOpen size={13} />}
-          <span>{isOpen ? "INSPECT 3D COVER" : "OPEN 2-PAGE SPREAD"}</span>
-        </button>
+        {/* Closed/Open State Toggle Pill (hidden in scroll-controlled mode) */}
+        {!isScrollControlled ? (
+          <button
+            type="button"
+            onClick={toggleBookOpen}
+            className="pointer-events-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-mono font-medium backdrop-blur-md shadow-md transition-all hover:scale-105"
+            style={{
+              backgroundColor: isDark ? "rgba(18, 33, 28, 0.85)" : "rgba(255, 255, 255, 0.9)",
+              borderColor: isDark ? "rgba(147, 226, 197, 0.25)" : "rgba(15, 56, 44, 0.18)",
+              color: isDark ? "#83dfbd" : "#1a533f",
+            }}
+            title={isOpen ? "Inspect 3D Hardcover Cover" : "Open 2-Page Reading Spread"}
+          >
+            {isOpen ? <Eye size={13} /> : <BookOpen size={13} />}
+            <span>{isOpen ? "INSPECT 3D COVER" : "OPEN 2-PAGE SPREAD"}</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono backdrop-blur-md bg-black/40 border-white/10 text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>3D WEBGL HARDCOVER · VOL. 04</span>
+          </div>
+        )}
 
-        {/* 3D Drag Hint Banner */}
+        {/* 3D Drag / Scroll Hint Banner */}
         <div
           className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-mono backdrop-blur-md opacity-80"
           style={{
@@ -790,7 +882,7 @@ export function ThreeBookCanvas({
           }}
         >
           <Sparkles size={11} className="text-emerald-500 animate-pulse" />
-          <span>DRAG PAGE EDGE OR SWIPE TO TURN</span>
+          <span>{isScrollControlled ? "SCROLL OR DRAG TO TURN PAGES" : "DRAG PAGE EDGE OR SWIPE TO TURN"}</span>
         </div>
 
         {/* Quick Chapter Navigation Buttons */}
@@ -831,20 +923,38 @@ export function ThreeBookCanvas({
       </div>
 
       {/* 3. Hybrid UI Overlay Layer: Renders crisp, accessible typography onto open spread */}
-      {isOpen && (
+      {(isOpen || isScrollControlled) && (
         <div
           className="relative z-10 w-full h-full p-4 sm:p-8 lg:p-12 pointer-events-auto flex flex-col justify-center transition-opacity duration-300"
           style={{
-            opacity: isFlipping ? 0.45 : 1,
-            pointerEvents: isFlipping ? "none" : "auto",
+            opacity:
+              isScrollControlled && typeof scrollProgress === "number"
+                ? scrollProgress < 0.10
+                  ? 0
+                  : scrollProgress < 0.16
+                  ? (scrollProgress - 0.10) / 0.06
+                  : isFlipping
+                  ? 0.45
+                  : 1
+                : isFlipping
+                ? 0.45
+                : 1,
+            pointerEvents:
+              isScrollControlled && typeof scrollProgress === "number"
+                ? scrollProgress >= 0.15 && !isFlipping
+                  ? "auto"
+                  : "none"
+                : isOpen && !isFlipping
+                ? "auto"
+                : "none",
           }}
         >
           {children}
         </div>
       )}
 
-      {/* 4. Closed State Interactive Card Overlay */}
-      {!isOpen && (
+      {/* 4. Closed State Interactive Card Overlay (only for non-scroll modal view) */}
+      {!isOpen && !isScrollControlled && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
           <div
             className="pointer-events-auto max-w-md p-6 sm:p-8 rounded-2xl border backdrop-blur-md shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-300"

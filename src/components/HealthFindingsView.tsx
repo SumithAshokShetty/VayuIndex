@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { ThreeBookCanvas } from "@/components/ThreeBookCanvas";
 import {
   ArrowLeft,
@@ -279,6 +279,37 @@ export function HealthFindingsView() {
     return Number((livePm25 / 22.0).toFixed(1));
   }, [livePm25]);
 
+  // Pinned 3D Journal Scroll Physics (Inspired by maray.ai)
+  const scrollTrackRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState<number>(0);
+
+  const { scrollYProgress } = useScroll({
+    target: scrollTrackRef,
+    offset: ["start start", "end end"],
+  });
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    setScrollProgress(latest);
+  });
+
+  const scrollToChapter = (chap: number) => {
+    if (!scrollTrackRef.current) return;
+    const track = scrollTrackRef.current;
+    const rect = track.getBoundingClientRect();
+    const trackTop = window.scrollY + rect.top;
+    const trackScrollable = track.offsetHeight - window.innerHeight;
+    if (trackScrollable <= 0) return;
+
+    // Checkpoint targets for 4 chapters:
+    // Chap 1: 0.22, Chap 2: 0.50, Chap 3: 0.78, Chap 4: 0.98
+    const targets = [0.22, 0.50, 0.78, 0.98];
+    const targetP = targets[chap - 1] ?? 0.22;
+    window.scrollTo({
+      top: trackTop + trackScrollable * targetP,
+      behavior: "smooth",
+    });
+  };
+
   const handleNextChapter = () => {
     if (currentChapter < 4) {
       setTurnDirection("next");
@@ -388,79 +419,132 @@ export function HealthFindingsView() {
       {/* 2. MODE A: 3D INTERACTIVE HARDCOVER NOTEBOOK JOURNAL              */}
       {/* ------------------------------------------------------------------ */}
       {viewMode === "journal" ? (
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          {/* Chapter Quick Jumper Tabs (Styled as Notebook Index Ribbons) */}
-          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
-            <span className="text-[11px] font-mono text-[var(--dash-muted)] uppercase tracking-wider flex items-center gap-1.5 shrink-0 mr-2">
-              <Compass size={12} />
-              <span>CHAPTERS:</span>
-            </span>
-            <div className="flex items-center gap-2 shrink-0">
-              {[
-                { num: 1, title: "01. Atmospheric Inhalation" },
-                { num: 2, title: "02. PM2.5 Pathophysiology" },
-                { num: 3, title: "03. Sensitive Populations" },
-                { num: 4, title: "04. Medical Interventions" },
-              ].map((ch) => (
-                <button
-                  key={ch.num}
-                  type="button"
-                  onClick={() => {
-                    setTurnDirection(ch.num > currentChapter ? "next" : "prev");
-                    setCurrentChapter(ch.num);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-mono transition-all flex items-center gap-1.5 ${
-                    currentChapter === ch.num
-                      ? isDark
-                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 shadow-sm font-bold"
-                        : "bg-emerald-100 border-emerald-700 text-emerald-900 shadow-sm font-bold"
-                      : isDark
-                      ? "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-neutral-200"
-                      : "bg-white/70 border-neutral-200 text-neutral-600 hover:text-neutral-900"
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      currentChapter === ch.num ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"
-                    }`}
-                  />
-                  <span>{ch.title}</span>
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 ml-auto shrink-0">
-              <button
-                type="button"
-                onClick={handlePrevChapter}
-                disabled={currentChapter === 1}
-                className="p-2 rounded-lg border text-xs font-mono disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-500/10 transition-colors"
-                title="Previous Page (Turn Left)"
-                aria-label="Previous Chapter"
+        <>
+          {/* -------------------------------------------------------------- */}
+          {/* 2. 3D HARDCOVER PINNED SCROLL SEQUENCE (Inspired by maray.ai)  */}
+          {/* -------------------------------------------------------------- */}
+          <div ref={scrollTrackRef} className="relative w-full h-[450vh]">
+            <div className="sticky top-0 h-screen w-full flex flex-col justify-center items-center overflow-hidden">
+              {/* Hero Editorial Header Overlay (Fade out when scrollProgress >= 0.12) */}
+              <div
+                className="absolute inset-0 z-20 pointer-events-none flex items-center justify-between px-6 sm:px-12 lg:px-20 max-w-7xl mx-auto w-full transition-all duration-300"
+                style={{
+                  opacity: scrollProgress < 0.12 ? 1 - scrollProgress / 0.12 : 0,
+                  transform: `translateY(${scrollProgress < 0.12 ? -scrollProgress * 120 : -30}px)`,
+                  pointerEvents: scrollProgress < 0.08 ? "auto" : "none",
+                }}
               >
-                <ArrowLeft size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={handleNextChapter}
-                disabled={currentChapter === 4}
-                className="p-2 rounded-lg border text-xs font-mono disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-500/10 transition-colors"
-                title="Next Page (Turn Right)"
-                aria-label="Next Chapter"
-              >
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
+                {/* Left Column: Hero Editorial Title & Subtitle */}
+                <div className="max-w-md space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium border bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    VAYU INDEX · CLINICAL REPOSITORY
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-[var(--dash-ink)] leading-[1.12]">
+                    Health &amp; Safety Journal
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[var(--dash-muted)] leading-relaxed font-normal">
+                    An editorial hardbound compendium detailing particulate biological infiltration, CPCB clinical exposure thresholds, and certified countermeasures.
+                  </p>
+                  <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="text-xs font-mono font-medium px-3 py-1.5 rounded-lg border bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border-[var(--dash-rule)]">
+                      {liveCity} CPCB AQI: <strong>{liveAqi}</strong> (Severe)
+                    </span>
+                    <span className="text-xs font-mono text-[var(--dash-muted)] flex items-center gap-1 animate-pulse">
+                      Scroll to open journal ↓
+                    </span>
+                  </div>
+                </div>
 
-          {/* 3D WebGL Hardcover & Interactive Page-Turn Canvas */}
-          <ThreeBookCanvas
-            currentChapter={currentChapter}
-            onChapterChange={(chap, dir) => {
-              setTurnDirection(dir);
-              setCurrentChapter(chap);
-            }}
-            isDark={isDark}
-          >
+                {/* Right Column: Plus-Marked Table of Contents (as seen in maray.ai) */}
+                <div className="hidden lg:flex flex-col max-w-xs space-y-3 text-right">
+                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    COMPENDIUM CHAPTERS
+                  </span>
+                  <ul className="space-y-2.5 text-xs font-mono text-[var(--dash-muted)]">
+                    <li
+                      onClick={() => scrollToChapter(1)}
+                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
+                    >
+                      <span>01 PM2.5 vs PM10 Infiltration</span>
+                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
+                    </li>
+                    <li
+                      onClick={() => scrollToChapter(2)}
+                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
+                    >
+                      <span>02 CPCB NAQI Clinical Breakpoints</span>
+                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
+                    </li>
+                    <li
+                      onClick={() => scrollToChapter(3)}
+                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
+                    >
+                      <span>03 Vulnerable Cohort Matrix</span>
+                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
+                    </li>
+                    <li
+                      onClick={() => scrollToChapter(4)}
+                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
+                    >
+                      <span>04 Certified Gear &amp; Protocols</span>
+                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
+                    </li>
+                  </ul>
+                  <div className="pt-2">
+                    <span className="text-[11px] font-mono text-emerald-500/80 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 inline-block">
+                      Scroll or drag to turn pages
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Chapter Navigation Pill (Active when reading pages, scrollProgress >= 0.12) */}
+              <div
+                className="absolute top-4 left-4 right-4 sm:left-8 sm:right-8 z-30 pointer-events-none flex items-center justify-between transition-opacity duration-300"
+                style={{
+                  opacity: scrollProgress >= 0.12 ? 1 : 0,
+                  pointerEvents: scrollProgress >= 0.12 ? "auto" : "none",
+                }}
+              >
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-mono font-medium backdrop-blur-md bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border-[var(--dash-rule)] shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>CHAPTER 0{currentChapter} OF 04</span>
+                  <span className="hidden sm:inline text-[var(--dash-muted)]">
+                    · {currentChapter === 1 ? "Pathophysiology" : currentChapter === 2 ? "CPCB Scale" : currentChapter === 3 ? "Sensitive Cohorts" : "Equipment"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 pointer-events-auto">
+                  {[1, 2, 3, 4].map((ch) => (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => scrollToChapter(ch)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-mono transition-all border ${
+                        currentChapter === ch
+                          ? "bg-emerald-500 text-white border-emerald-600 font-bold shadow-sm"
+                          : "bg-[var(--dash-surface)] text-[var(--dash-muted)] border-[var(--dash-rule)] hover:text-[var(--dash-ink)]"
+                      }`}
+                    >
+                      CH 0{ch}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3D WebGL Hardcover & Interactive Page-Turn Canvas */}
+              <div className="w-full h-full max-w-7xl mx-auto flex items-center justify-center p-2 sm:p-4">
+                <ThreeBookCanvas
+                  currentChapter={currentChapter}
+                  onChapterChange={(chap, dir) => {
+                    setTurnDirection(dir);
+                    setCurrentChapter(chap);
+                  }}
+                  isDark={isDark}
+                  scrollProgress={scrollProgress}
+                  isScrollControlled={true}
+                >
             {/* The Open Two-Page Spread Hybrid UI Overlay */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -1163,8 +1247,11 @@ export function HealthFindingsView() {
                   </div>
                 </motion.div>
               </AnimatePresence>
-          </ThreeBookCanvas>
-        </main>
+                </ThreeBookCanvas>
+              </div>
+            </div>
+          </div>
+        </>
       ) : (
         /* ------------------------------------------------------------------ */
         /* 3. MODE B: FLAT EDITORIAL GRID DASHBOARD (RESPONSIVE & SCROLL-DRIVEN) */
