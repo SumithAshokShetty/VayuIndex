@@ -193,7 +193,7 @@ async function fetchOpenAQ({ latitude, longitude }: Coordinates, apiKey: string)
       concentrations.o3 = { value: current.ozone, unit: (units.ozone as ConcentrationUnit) || "ppm" };
     }
 
-    const aqiResult = calculateCompositeAqi(concentrations, "epa");
+    const aqiResult = calculateCompositeAqi(concentrations, "cpcb");
 
     const newest = readings[0];
     const distanceKm = haversineKm(latitude, longitude, location.coordinates!.latitude!, location.coordinates!.longitude!);
@@ -219,7 +219,7 @@ async function fetchOpenAQ({ latitude, longitude }: Coordinates, apiKey: string)
       stationLatitude: location.coordinates!.latitude!,
       stationLongitude: location.coordinates!.longitude!,
       fallbackNote: aqiResult.aqi !== null
-        ? `Nearest station · ${distanceKm.toFixed(1)} km away. Calculated US EPA AQI from station sensor observations.`
+        ? `Nearest station · ${distanceKm.toFixed(1)} km away. Calculated CPCB NAQI from station sensor observations.`
         : `Nearest station · ${distanceKm.toFixed(1)} km away. AQI is not supplied by this measurement feed.`,
       attribution: [
         { name: "OpenAQ", url: "https://openaq.org/" },
@@ -489,8 +489,8 @@ export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: st
     concentrations.o3 = { value: current.ozone, unit: "µg/m³" };
   }
 
-  // Calculate composite AQI strictly using the US EPA standard matching the UI label
-  const aqiResult = calculateCompositeAqi(concentrations, "epa");
+  // Calculate composite AQI strictly using the official Indian CPCB NAQI standard
+  const aqiResult = calculateCompositeAqi(concentrations, "cpcb");
 
   const finalAqi = aqiResult.aqi ?? nearestBaseline?.aqi ?? 50;
 

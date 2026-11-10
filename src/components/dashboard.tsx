@@ -64,12 +64,12 @@ function getHealthGuidance(aqi: number | null) {
     label: "No composite AQI",
     advice: "This source does not provide a comparable AQI. Review the individual pollutant readings and their timestamps.",
   };
-  if (aqi <= 50) return { label: "Low concern", advice: "Air quality is satisfactory. Usual outdoor activity is generally fine." };
-  if (aqi <= 100) return { label: "Moderate concern", advice: "Unusually sensitive people may wish to reduce prolonged outdoor exertion." };
-  if (aqi <= 150) return { label: "Sensitive groups", advice: "Sensitive groups should reduce prolonged or intense outdoor exertion." };
-  if (aqi <= 200) return { label: "Elevated concern", advice: "People may experience effects. Sensitive groups should limit prolonged outdoor exertion." };
-  if (aqi <= 300) return { label: "High concern", advice: "Reduce outdoor exertion and consider moving activities indoors." };
-  return { label: "Very high concern", advice: "Avoid outdoor exertion and follow local public-health guidance." };
+  if (aqi <= 50) return { label: "Good Air Quality", advice: "Minimal impact. Air quality is satisfactory; enjoy usual outdoor activities." };
+  if (aqi <= 100) return { label: "Satisfactory", advice: "Minor breathing discomfort may be experienced by unusually sensitive people." };
+  if (aqi <= 200) return { label: "Moderate", advice: "Breathing discomfort to people with lung, asthma, or heart diseases." };
+  if (aqi <= 300) return { label: "Poor", advice: "Breathing discomfort to most people on prolonged exposure. Sensitive groups should reduce outdoor exertion." };
+  if (aqi <= 400) return { label: "Very Poor", advice: "Respiratory illness on prolonged exposure. Vulnerable groups should avoid outdoor exertion." };
+  return { label: "Severe", advice: "Affects healthy individuals and seriously impacts those with existing respiratory or cardiac ailments. Stay indoors." };
 }
 
 export function Dashboard() {
@@ -264,7 +264,7 @@ export function Dashboard() {
               <TelemetryCard key={`${location.latitude}:${location.longitude}`} air={air} aqi={aqi} dominantPollutant={dominantPollutant} location={location} loading={loading} error={error}/>
 
               <section className="health-warning" aria-live="polite">
-                <div className="health-warning-top"><span className="health-warning-icon"><ShieldAlert size={16}/></span><span className="section-kicker">HEALTH CONTEXT · US EPA</span></div>
+                <div className="health-warning-top"><span className="health-warning-icon"><ShieldAlert size={16}/></span><span className="section-kicker">HEALTH CONTEXT · CPCB NAQI</span></div>
                 <h2>{guidance.label}</h2>
                 <p>{guidance.advice}</p>
                 <a href="/risk">Personal risk guidance <ArrowUpRight size={13}/></a>

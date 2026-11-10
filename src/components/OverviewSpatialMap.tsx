@@ -29,21 +29,21 @@ export {
 };
 
 function getAqiCategory(aqi: number) {
-  if (aqi <= 50) return { category: "Good", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" };
-  if (aqi <= 100) return { category: "Moderate", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" };
-  if (aqi <= 150) return { category: "Unhealthy for Sensitive", color: "#f97316", bg: "rgba(249, 115, 22, 0.15)" };
-  if (aqi <= 200) return { category: "Unhealthy", color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)" };
-  if (aqi <= 300) return { category: "Very Unhealthy", color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.15)" };
-  return { category: "Hazardous", color: "#881337", bg: "rgba(136, 19, 55, 0.15)" };
+  if (aqi <= 50) return { category: "Good", color: "#00b050", bg: "rgba(0, 176, 80, 0.15)" };
+  if (aqi <= 100) return { category: "Satisfactory", color: "#92d050", bg: "rgba(146, 208, 80, 0.15)" };
+  if (aqi <= 200) return { category: "Moderate", color: "#ffbf00", bg: "rgba(255, 191, 0, 0.15)" };
+  if (aqi <= 300) return { category: "Poor", color: "#ff7c00", bg: "rgba(255, 124, 0, 0.15)" };
+  if (aqi <= 400) return { category: "Very Poor", color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)" };
+  return { category: "Severe", color: "#7030a0", bg: "rgba(112, 48, 160, 0.15)" };
 }
 
 function getAqiAdvisory(aqi: number): string {
-  if (aqi <= 50) return "Air quality is satisfactory; enjoy normal outdoor air exposure.";
-  if (aqi <= 100) return "Acceptable air quality; exceptionally sensitive individuals should monitor prolonged exertion.";
-  if (aqi <= 150) return "Sensitive groups (asthma, children, elderly) may experience health effects; limit heavy exertion.";
-  if (aqi <= 200) return "Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.";
-  if (aqi <= 300) return "Health alert: The risk of health effects is increased for everyone. Avoid prolonged outdoor exertion.";
-  return "Health warning of emergency conditions: the entire population is more likely to be affected. Stay indoors.";
+  if (aqi <= 50) return "Minimal impact; air quality is satisfactory for regular outdoor activities.";
+  if (aqi <= 100) return "Minor breathing discomfort may be experienced by unusually sensitive people.";
+  if (aqi <= 200) return "Breathing discomfort to people with lung, asthma, or heart diseases.";
+  if (aqi <= 300) return "Breathing discomfort to most people on prolonged outdoor exposure.";
+  if (aqi <= 400) return "Respiratory illness on prolonged exposure. Significant risk to vulnerable groups.";
+  return "Severe air emergency: affects healthy people and seriously impacts those with existing ailments. Stay indoors.";
 }
 
 export interface MetricIntensity {
@@ -380,24 +380,23 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
             const aqRes = await fetch(`/api/air-quality?lat=${latitude}&lng=${longitude}`);
             if (aqRes.ok) {
               const aqData = await aqRes.json();
-              if (aqData.aqi !== undefined && aqData.aqi !== null) {
-                detectedAqi = Math.round(aqData.aqi);
+              const curr = aqData.current || aqData;
+              if (curr.aqi !== undefined && curr.aqi !== null) {
+                detectedAqi = Math.round(curr.aqi);
                 const cat = getAqiCategory(detectedAqi);
                 detectedStatus = cat.category;
                 detectedAdvisory = getAqiAdvisory(detectedAqi);
               }
-              if (aqData.pollutants) {
-                detectedPollutants = {
-                  pm2_5: Math.round((aqData.pollutants.pm2_5?.value ?? closest.pollutants.pm2_5) * 10) / 10,
-                  pm10: Math.round((aqData.pollutants.pm10?.value ?? closest.pollutants.pm10) * 10) / 10,
-                  ozone: Math.round((aqData.pollutants.ozone?.value ?? closest.pollutants.ozone) * 10) / 10,
-                  no2: Math.round((aqData.pollutants.no2?.value ?? closest.pollutants.no2) * 10) / 10,
-                  so2: Math.round((aqData.pollutants.so2?.value ?? closest.pollutants.so2) * 10) / 10,
-                  co: Math.round((aqData.pollutants.co?.value ?? closest.pollutants.co) * 10) / 10,
-                };
-              }
-              if (aqData.source?.station) {
-                detectedProvenance = `${aqData.source.station} · Live Telemetry`;
+              detectedPollutants = {
+                pm2_5: Math.round((curr.pm2_5 ?? closest.pollutants.pm2_5) * 10) / 10,
+                pm10: Math.round((curr.pm10 ?? closest.pollutants.pm10) * 10) / 10,
+                ozone: Math.round((curr.ozone ?? closest.pollutants.ozone) * 10) / 10,
+                no2: Math.round((curr.nitrogen_dioxide ?? closest.pollutants.no2) * 10) / 10,
+                so2: Math.round((curr.sulphur_dioxide ?? closest.pollutants.so2) * 10) / 10,
+                co: Math.round((curr.carbon_monoxide ?? closest.pollutants.co) * 10) / 10,
+              };
+              if (aqData.stationName) {
+                detectedProvenance = `${aqData.stationName} · CPCB Official Telemetry`;
               }
             }
           } catch {
@@ -1388,7 +1387,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
 
             {/* Provenance Pill Badge (Image 2) */}
             <div className="relative z-10 mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--dash-surface)]/90 border border-[var(--dash-rule)] backdrop-blur-md self-start text-[11px] font-mono text-[var(--dash-ink)] shadow-xs">
-              <span>US AQI - forecast model - as of {liveTimeFormatted}</span>
+              <span>CPCB AQI · Live Telemetry · as of {liveTimeFormatted}</span>
             </div>
           </div>
 

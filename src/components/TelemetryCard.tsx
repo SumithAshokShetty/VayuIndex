@@ -15,17 +15,17 @@ const POLLUTANTS = [
   { key: "ozone", index: "us_aqi_ozone", label: "O₃" },
 ] as const;
 
-const EPA_BANDS = [
+const CPCB_BANDS = [
   { max: 50, label: "Good", color: AQI_COLORS[0] },
-  { max: 100, label: "Moderate", color: AQI_COLORS[1] },
-  { max: 150, label: "Unhealthy for sensitive groups", color: AQI_COLORS[2] },
-  { max: 200, label: "Unhealthy", color: AQI_COLORS[3] },
-  { max: 300, label: "Very unhealthy", color: AQI_COLORS[4] },
-  { max: 500, label: "Hazardous", color: AQI_COLORS[5] },
+  { max: 100, label: "Satisfactory", color: AQI_COLORS[1] },
+  { max: 200, label: "Moderate", color: AQI_COLORS[2] },
+  { max: 300, label: "Poor", color: AQI_COLORS[3] },
+  { max: 400, label: "Very Poor", color: AQI_COLORS[4] },
+  { max: 500, label: "Severe", color: AQI_COLORS[5] },
 ] as const;
 
 function getBand(value: number) {
-  return EPA_BANDS.find((band) => value <= band.max) ?? EPA_BANDS[5];
+  return CPCB_BANDS.find((band) => value <= band.max) ?? CPCB_BANDS[5];
 }
 
 function formatValue(value: unknown) {
@@ -94,7 +94,7 @@ export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, 
 
       <div className="telemetry-aqi">
         <div className="telemetry-aqi-copy">
-          <span className="telemetry-label">US EPA AIR QUALITY INDEX</span>
+          <span className="telemetry-label">CPCB NATIONAL AIR QUALITY INDEX</span>
           <div className="telemetry-value-line">
             <span className="telemetry-value" ref={counterRef} aria-label={aqi === null ? "AQI unavailable" : `Air Quality Index ${aqi}`}>
               {loading ? "···" : aqi === null ? "—" : Math.round(aqi)}

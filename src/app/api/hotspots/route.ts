@@ -255,12 +255,12 @@ const GLOBAL_CITIES_META: Array<{
 ];
 
 function getCategoryFromAQI(aqi: number) {
-  if (aqi <= 50) return { status: "Good", advisory: "Air quality is satisfactory and poses minimal health risk." };
-  if (aqi <= 100) return { status: "Moderate", advisory: "Air quality is acceptable; sensitive individuals should monitor prolonged exertion." };
-  if (aqi <= 150) return { status: "Unhealthy for Sensitive Groups", advisory: "Members of sensitive groups may experience health effects. General public is less affected." };
-  if (aqi <= 200) return { status: "Unhealthy", advisory: "Everyone may begin to experience health effects; sensitive groups should avoid outdoor exertion." };
-  if (aqi <= 300) return { status: "Very Unhealthy", advisory: "Health alert: The risk of health effects is significantly elevated for all individuals." };
-  return { status: "Hazardous", advisory: "Emergency warning: The entire population is likely affected. Minimize outdoor exposure." };
+  if (aqi <= 50) return { status: "Good", advisory: "Minimal impact; air quality is satisfactory." };
+  if (aqi <= 100) return { status: "Satisfactory", advisory: "Minor breathing discomfort may be experienced by sensitive people." };
+  if (aqi <= 200) return { status: "Moderate", advisory: "Breathing discomfort to people with lungs, asthma, and heart diseases." };
+  if (aqi <= 300) return { status: "Poor", advisory: "Breathing discomfort to most people on prolonged outdoor exposure." };
+  if (aqi <= 400) return { status: "Very Poor", advisory: "Respiratory illness on prolonged exposure. Pronounced effect on vulnerable groups." };
+  return { status: "Severe", advisory: "Severe atmospheric burden: affects healthy people and seriously impacts those with existing ailments. Stay indoors." };
 }
 
 async function fetchOpenAQForCity(lat: number, lng: number, apiKey: string): Promise<Record<string, number> | null> {
@@ -409,7 +409,7 @@ export async function GET() {
               if (typeof pol.co === "number") concentrations.co = { value: pol.co > 25 ? pol.co / 1000 : pol.co, unit: "mg/m³" };
               if (typeof pol.ozone === "number") concentrations.o3 = { value: pol.ozone, unit: "µg/m³" };
 
-              const aqiRes = calculateCompositeAqi(concentrations, "epa");
+              const aqiRes = calculateCompositeAqi(concentrations, "cpcb");
               if (aqiRes.aqi !== null) {
                 finalAqi = aqiRes.aqi;
                 finalPollutants = {
@@ -439,7 +439,7 @@ export async function GET() {
               if (typeof openAqData.co === "number") concentrations.co = { value: openAqData.co > 25 ? openAqData.co / 1000 : openAqData.co, unit: "mg/m³" };
               if (typeof openAqData.ozone === "number") concentrations.o3 = { value: openAqData.ozone, unit: "µg/m³" };
 
-              const aqiRes = calculateCompositeAqi(concentrations, "epa");
+              const aqiRes = calculateCompositeAqi(concentrations, "cpcb");
               if (aqiRes.aqi !== null) {
                 finalAqi = aqiRes.aqi;
                 finalPollutants = {

@@ -74,7 +74,7 @@ export const PARAMETERS: ParameterDef[] = [
     unit: "AQI",
     threshold: 50,
     thresholdLabel: "EPA Good (50)",
-    description: "Standard US EPA composite air quality index",
+    description: "Standard CPCB composite air quality index",
   },
   {
     key: "pm2_5",

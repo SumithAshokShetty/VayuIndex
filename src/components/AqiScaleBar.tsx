@@ -5,11 +5,11 @@ import { AQI_COLORS } from "@/lib/aqi-calculator";
 
 const BANDS = [
   { min: 0, max: 50, label: "GOOD", range: "0–50", color: AQI_COLORS[0], width: 10 },
-  { min: 51, max: 100, label: "MODERATE", range: "51–100", color: AQI_COLORS[1], width: 10 },
-  { min: 101, max: 150, label: "SENSITIVE", range: "101–150", color: AQI_COLORS[2], width: 10 },
-  { min: 151, max: 200, label: "UNHEALTHY", range: "151–200", color: AQI_COLORS[3], width: 10 },
-  { min: 201, max: 300, label: "VERY UNHEALTHY", range: "201–300", color: AQI_COLORS[4], width: 20 },
-  { min: 301, max: 500, label: "HAZARDOUS", range: "301+", color: AQI_COLORS[5], width: 40 },
+  { min: 51, max: 100, label: "SATISFACTORY", range: "51–100", color: AQI_COLORS[1], width: 10 },
+  { min: 101, max: 200, label: "MODERATE", range: "101–200", color: AQI_COLORS[2], width: 20 },
+  { min: 201, max: 300, label: "POOR", range: "201–300", color: AQI_COLORS[3], width: 20 },
+  { min: 301, max: 400, label: "VERY POOR", range: "301–400", color: AQI_COLORS[4], width: 20 },
+  { min: 401, max: 500, label: "SEVERE", range: "401–500", color: AQI_COLORS[5], width: 20 },
 ] as const;
 
 export function AqiScaleBar({ value }: { value: number | null }) {
@@ -17,9 +17,9 @@ export function AqiScaleBar({ value }: { value: number | null }) {
   const markerPosition = value === null ? 0 : Math.max(0, Math.min(100, value / 5));
 
   return (
-    <section className="aqi-scale-reference" aria-label="US EPA AQI category reference">
+    <section className="aqi-scale-reference" aria-label="CPCB AQI category reference">
       <div className="aqi-scale-reference-heading">
-        <div><span className="section-kicker">READ THE INDEX</span><h2>US EPA air quality scale</h2></div>
+        <div><span className="section-kicker">READ THE INDEX</span><h2>CPCB National Air Quality Scale</h2></div>
         <span className="aqi-scale-reference-note">COLOR INDICATES LEVEL OF CONCERN</span>
       </div>
       <div className="aqi-bands" role="img" aria-label={value === null ? "AQI scale from 0 to 500" : `Current AQI ${Math.round(value)} on a scale from 0 to 500`}>

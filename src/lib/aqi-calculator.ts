@@ -37,9 +37,9 @@ export type AqiResult = {
 
 type Breakpoint = { concentrationLow: number; concentrationHigh: number; indexLow: number; indexHigh: number };
 
-export const AQI_COLORS = ["#00E400", "#FFFF00", "#FF7E00", "#FF0000", "#8F3F97", "#7E0023"] as const;
+export const AQI_COLORS = ["#00b050", "#92d050", "#ffbf00", "#ff7c00", "#ef4444", "#7030a0"] as const;
 const EPA_CATEGORIES = ["Good", "Moderate", "Unhealthy for Sensitive Groups", "Unhealthy", "Very Unhealthy", "Hazardous"] as const;
-const CPCB_CATEGORIES = ["Good", "Satisfactory", "Moderately Polluted", "Poor", "Very Poor", "Severe"] as const;
+const CPCB_CATEGORIES = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"] as const;
 const EPA_AQI_BANDS: readonly [number, number][] = [[0, 50], [51, 100], [101, 150], [151, 200], [201, 300], [301, 500]];
 const CPCB_AQI_BANDS: readonly [number, number][] = [[0, 50], [51, 100], [101, 200], [201, 300], [301, 400], [401, 500]];
 
@@ -109,6 +109,7 @@ const CPCB: Record<Pollutant, readonly Breakpoint[]> = {
     { concentrationLow: 61, concentrationHigh: 90, indexLow: 101, indexHigh: 200 },
     { concentrationLow: 91, concentrationHigh: 120, indexLow: 201, indexHigh: 300 },
     { concentrationLow: 121, concentrationHigh: 250, indexLow: 301, indexHigh: 400 },
+    { concentrationLow: 251, concentrationHigh: 380, indexLow: 401, indexHigh: 500 },
   ],
   pm10: [
     { concentrationLow: 0, concentrationHigh: 50, indexLow: 0, indexHigh: 50 },
@@ -116,6 +117,7 @@ const CPCB: Record<Pollutant, readonly Breakpoint[]> = {
     { concentrationLow: 101, concentrationHigh: 250, indexLow: 101, indexHigh: 200 },
     { concentrationLow: 251, concentrationHigh: 350, indexLow: 201, indexHigh: 300 },
     { concentrationLow: 351, concentrationHigh: 430, indexLow: 301, indexHigh: 400 },
+    { concentrationLow: 431, concentrationHigh: 550, indexLow: 401, indexHigh: 500 },
   ],
   no2: [
     { concentrationLow: 0, concentrationHigh: 40, indexLow: 0, indexHigh: 50 },
@@ -123,6 +125,7 @@ const CPCB: Record<Pollutant, readonly Breakpoint[]> = {
     { concentrationLow: 81, concentrationHigh: 180, indexLow: 101, indexHigh: 200 },
     { concentrationLow: 181, concentrationHigh: 280, indexLow: 201, indexHigh: 300 },
     { concentrationLow: 281, concentrationHigh: 400, indexLow: 301, indexHigh: 400 },
+    { concentrationLow: 401, concentrationHigh: 550, indexLow: 401, indexHigh: 500 },
   ],
   so2: [
     { concentrationLow: 0, concentrationHigh: 40, indexLow: 0, indexHigh: 50 },
@@ -130,6 +133,7 @@ const CPCB: Record<Pollutant, readonly Breakpoint[]> = {
     { concentrationLow: 81, concentrationHigh: 380, indexLow: 101, indexHigh: 200 },
     { concentrationLow: 381, concentrationHigh: 800, indexLow: 201, indexHigh: 300 },
     { concentrationLow: 801, concentrationHigh: 1600, indexLow: 301, indexHigh: 400 },
+    { concentrationLow: 1601, concentrationHigh: 2000, indexLow: 401, indexHigh: 500 },
   ],
   co: [
     { concentrationLow: 0, concentrationHigh: 1, indexLow: 0, indexHigh: 50 },
@@ -137,6 +141,7 @@ const CPCB: Record<Pollutant, readonly Breakpoint[]> = {
     { concentrationLow: 2.1, concentrationHigh: 10, indexLow: 101, indexHigh: 200 },
     { concentrationLow: 10.1, concentrationHigh: 17, indexLow: 201, indexHigh: 300 },
     { concentrationLow: 17.1, concentrationHigh: 34, indexLow: 301, indexHigh: 400 },
+    { concentrationLow: 34.1, concentrationHigh: 50, indexLow: 401, indexHigh: 500 },
   ],
   o3: [
     { concentrationLow: 0, concentrationHigh: 50, indexLow: 0, indexHigh: 50 },
@@ -144,6 +149,7 @@ const CPCB: Record<Pollutant, readonly Breakpoint[]> = {
     { concentrationLow: 101, concentrationHigh: 168, indexLow: 101, indexHigh: 200 },
     { concentrationLow: 169, concentrationHigh: 208, indexLow: 201, indexHigh: 300 },
     { concentrationLow: 209, concentrationHigh: 748, indexLow: 301, indexHigh: 400 },
+    { concentrationLow: 749, concentrationHigh: 1000, indexLow: 401, indexHigh: 500 },
   ],
 };
 
@@ -183,9 +189,11 @@ function roundForStandard(value: number, standard: AqiStandard, pollutant: Pollu
 
 function categoryFor(aqi: number, standard: AqiStandard) {
   const bands = standard === "epa" ? EPA_AQI_BANDS : CPCB_AQI_BANDS;
+  const categories = standard === "epa" ? EPA_CATEGORIES : CPCB_CATEGORIES;
+  if (aqi <= 0) return { category: categories[0], color: AQI_COLORS[0] };
   const band = bands.findIndex(([, high], index) => aqi <= high && (index === 0 || aqi >= bands[index][0]));
-  const safeBand = Math.max(0, band);
-  return { category: (standard === "epa" ? EPA_CATEGORIES : CPCB_CATEGORIES)[safeBand], color: AQI_COLORS[safeBand] };
+  const safeBand = band === -1 ? bands.length - 1 : band;
+  return { category: categories[safeBand], color: AQI_COLORS[safeBand] };
 }
 
 function interpolate(value: number, breaks: readonly Breakpoint[]): number | null {
@@ -205,7 +213,7 @@ function interpolate(value: number, breaks: readonly Breakpoint[]): number | nul
 export function calculateSubIndex(
   pollutant: Pollutant,
   input: PollutantConcentration,
-  standard: AqiStandard = "epa",
+  standard: AqiStandard = "cpcb",
 ): AqiSubIndex | null {
   if (!Number.isFinite(input.value) || input.value < 0) return null;
   const unit = unitFor(standard, pollutant);
@@ -224,7 +232,7 @@ export function calculateSubIndex(
 /** Composite AQI is the maximum valid pollutant sub-index. */
 export function calculateCompositeAqi(
   concentrations: Partial<Record<Pollutant, PollutantConcentration>>,
-  standard: AqiStandard = "epa",
+  standard: AqiStandard = "cpcb",
 ): AqiResult {
   const subIndices: Partial<Record<Pollutant, AqiSubIndex>> = {};
   for (const pollutant of Object.keys(concentrations) as Pollutant[]) {

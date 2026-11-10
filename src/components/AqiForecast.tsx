@@ -31,7 +31,7 @@ export function AqiForecast({ location }: { location: Location }) {
   const [data, setData] = useState<AirSeriesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [standard, setStandard] = useState<Standard>("epa");
+  const [standard, setStandard] = useState<Standard>("cpcb");
 
   useEffect(() => {
     const controller = new AbortController(); setLoading(true); setError(null);

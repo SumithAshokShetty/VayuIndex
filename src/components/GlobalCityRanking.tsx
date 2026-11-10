@@ -547,8 +547,8 @@ export function GlobalCityRanking({ onSelectLocation }: { onSelectLocation: (loc
 
       <p className="global-ranking-footnote">
         Rankings are computed dynamically from real-time official ground observation monitors (CPCB, WAQI, OpenAQ)
-        and Copernicus CAMS atmospheric chemistry reanalysis. US EPA AQI standard is applied uniformly across all
-        locations to ensure scientific consistency.
+        and Copernicus CAMS atmospheric chemistry reanalysis. CPCB AQI standard is applied uniformly across all
+        locations to ensure consistency.
       </p>
     </section>
   );
