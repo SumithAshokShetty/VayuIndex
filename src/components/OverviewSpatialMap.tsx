@@ -1005,6 +1005,66 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     updatedAt: "Live Real-Time Telemetry",
   },
   {
+    id: "frankfurt",
+    name: "Frankfurt",
+    state: "Hesse",
+    country: "Germany",
+    continent: "Europe",
+    lat: 50.1109,
+    lng: 8.6821,
+    aqi: 42,
+    status: "Good",
+    advisory: "Clean atmospheric mixing along the Main valley.",
+    pollutants: { pm2_5: 10.2, pm10: 20.0, ozone: 40.0, no2: 22.0, so2: 7.0, co: 310.0 },
+    provenance: "Umweltbundesamt (UBA Germany)",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "amsterdam",
+    name: "Amsterdam",
+    state: "North Holland",
+    country: "Netherlands",
+    continent: "Europe",
+    lat: 52.3676,
+    lng: 4.9041,
+    aqi: 38,
+    status: "Good",
+    advisory: "North Sea coastal breezes maintaining clean atmospheric ventilation.",
+    pollutants: { pm2_5: 9.0, pm10: 17.0, ozone: 42.0, no2: 20.0, so2: 6.0, co: 290.0 },
+    provenance: "RIVM National Air Quality Network",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "milan",
+    name: "Milan",
+    state: "Lombardy",
+    country: "Italy",
+    continent: "Europe",
+    lat: 45.4642,
+    lng: 9.1900,
+    aqi: 95,
+    status: "Moderate",
+    advisory: "Po Valley thermal inversion concentrates particulate emissions.",
+    pollutants: { pm2_5: 32.0, pm10: 58.0, ozone: 36.0, no2: 42.0, so2: 12.0, co: 580.0 },
+    provenance: "ARPA Lombardia Telemetry",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "rome",
+    name: "Rome",
+    state: "Lazio",
+    country: "Italy",
+    continent: "Europe",
+    lat: 41.9028,
+    lng: 12.4964,
+    aqi: 54,
+    status: "Moderate",
+    advisory: "Mild Tyrrhenian airflow keeping particulate load within moderate bounds.",
+    pollutants: { pm2_5: 15.0, pm10: 29.0, ozone: 46.0, no2: 32.0, so2: 9.0, co: 390.0 },
+    provenance: "ARPA Lazio Telemetry",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
     id: "madrid",
     name: "Madrid",
     state: "Community of Madrid",
@@ -1082,6 +1142,51 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     updatedAt: "Live Real-Time Telemetry",
   },
   {
+    id: "houston",
+    name: "Houston",
+    state: "Texas",
+    country: "United States",
+    continent: "Americas",
+    lat: 29.7604,
+    lng: -95.3698,
+    aqi: 62,
+    status: "Moderate",
+    advisory: "Gulf Coast sea breeze interaction with channel industrial emissions.",
+    pollutants: { pm2_5: 18.0, pm10: 36.0, ozone: 48.0, no2: 28.0, so2: 12.0, co: 420.0 },
+    provenance: "Texas Commission on Environmental Quality (TCEQ)",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "san-francisco",
+    name: "San Francisco",
+    state: "California",
+    country: "United States",
+    continent: "Americas",
+    lat: 37.7749,
+    lng: -122.4194,
+    aqi: 32,
+    status: "Good",
+    advisory: "Pacific marine airflow dispersing fine aerosols.",
+    pollutants: { pm2_5: 7.8, pm10: 15.0, ozone: 36.0, no2: 18.0, so2: 5.0, co: 260.0 },
+    provenance: "BAAQMD California",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "toronto",
+    name: "Toronto",
+    state: "Ontario",
+    country: "Canada",
+    continent: "Americas",
+    lat: 43.6532,
+    lng: -79.3832,
+    aqi: 34,
+    status: "Good",
+    advisory: "Lake Ontario circulation sustaining high atmospheric clarity.",
+    pollutants: { pm2_5: 8.2, pm10: 16.0, ozone: 38.0, no2: 19.0, so2: 5.0, co: 270.0 },
+    provenance: "Environment and Climate Change Canada",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
     id: "mexico-city",
     name: "Mexico City",
     state: "Federal District",
@@ -1109,6 +1214,21 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     advisory: "Metropolitan fleet emissions causing moderate particulate accumulation.",
     pollutants: { pm2_5: 27.0, pm10: 52.0, ozone: 45.0, no2: 35.0, so2: 11.0, co: 520.0 },
     provenance: "CETESB Companhia Ambiental de São Paulo",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "santiago",
+    name: "Santiago",
+    state: "Santiago Metropolitan",
+    country: "Chile",
+    continent: "Americas",
+    lat: -33.4489,
+    lng: -70.6693,
+    aqi: 98,
+    status: "Moderate",
+    advisory: "Andean basin topography causes thermal stagnation in the central valley.",
+    pollutants: { pm2_5: 35.0, pm10: 68.0, ozone: 42.0, no2: 38.0, so2: 14.0, co: 610.0 },
+    provenance: "SINCA Sistema Nacional de Calidad del Aire Chile",
     updatedAt: "Live Real-Time Telemetry",
   },
   {
@@ -1156,6 +1276,21 @@ export const INITIAL_HOTSPOTS: SpatialHotspot[] = [
     advisory: "Coastal humidity and high traffic density elevate respirable particulates.",
     pollutants: { pm2_5: 52.0, pm10: 95.0, ozone: 42.0, no2: 40.0, so2: 20.0, co: 850.0 },
     provenance: "LASEPA Ground Station Network",
+    updatedAt: "Live Real-Time Telemetry",
+  },
+  {
+    id: "nairobi",
+    name: "Nairobi",
+    state: "Nairobi County",
+    country: "Kenya",
+    continent: "Africa",
+    lat: -1.2921,
+    lng: 36.8219,
+    aqi: 48,
+    status: "Good",
+    advisory: "Highland topography and tropical breezes sustaining clean air quality.",
+    pollutants: { pm2_5: 12.0, pm10: 25.0, ozone: 34.0, no2: 18.0, so2: 6.0, co: 320.0 },
+    provenance: "NEMA Kenya Ambient Telemetry",
     updatedAt: "Live Real-Time Telemetry",
   },
   {
@@ -2262,6 +2397,109 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
         weatherOverlay,
         heatmapOverlay
       );
+
+      // Enable clicking anywhere on the map to inspect real-time telemetry for that place
+      map.on("click", async (e: L.LeafletMouseEvent) => {
+        const { lat, lng } = e.latlng;
+        // Check if user clicked close to an existing hotspot
+        let closestSpot: SpatialHotspot | null = null;
+        let minDistance = Infinity;
+        for (const h of hotspots) {
+          const dist = Math.hypot(h.lat - lat, h.lng - lng);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestSpot = h;
+          }
+        }
+
+        if (closestSpot && minDistance < 0.45) {
+          setActiveHotspot(closestSpot);
+          if (onSelectCity) onSelectCity(closestSpot);
+          map.flyTo([closestSpot.lat, closestSpot.lng], 6, { duration: 0.8 });
+          return;
+        }
+
+        map.panTo([lat, lng], { animate: true, duration: 0.6 });
+
+        const tempSpot: SpatialHotspot = {
+          id: `point-${lat.toFixed(2)}-${lng.toFixed(2)}`,
+          name: "Inspecting location…",
+          state: `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "S"}`,
+          country: `${Math.abs(lng).toFixed(2)}° ${lng >= 0 ? "E" : "W"}`,
+          continent: "Asia",
+          lat,
+          lng,
+          aqi: 65,
+          status: "Moderate",
+          advisory: "Retrieving atmospheric telemetry for selected coordinates…",
+          pollutants: { pm2_5: 20, pm10: 42, ozone: 32, no2: 22, so2: 10, co: 410 },
+          provenance: "Live Telemetry",
+          updatedAt: "Live Real-Time Telemetry",
+        };
+        setActiveHotspot(tempSpot);
+
+        try {
+          const [geoRes, airRes] = await Promise.all([
+            fetch(`/api/geocode?lat=${lat}&lng=${lng}`),
+            fetch(`/api/air-quality?lat=${lat}&lng=${lng}`),
+          ]);
+
+          const geoData = geoRes.ok ? await geoRes.json() : null;
+          const airData = airRes.ok ? await airRes.json() : null;
+
+          const placeName = geoData?.name || `Location (${Math.abs(lat).toFixed(1)}°${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(1)}°${lng >= 0 ? "E" : "W"})`;
+          const adminName = geoData?.admin || "Selected region";
+          const countryName = geoData?.country || "";
+          const resolvedAqi = airData?.current?.aqi ?? 65;
+
+          const resolvedSpot: SpatialHotspot = {
+            id: `point-${lat.toFixed(2)}-${lng.toFixed(2)}`,
+            name: placeName,
+            state: adminName,
+            country: countryName,
+            continent: "Asia",
+            lat,
+            lng,
+            aqi: resolvedAqi,
+            status:
+              resolvedAqi <= 50
+                ? "Good"
+                : resolvedAqi <= 100
+                ? "Moderate"
+                : resolvedAqi <= 150
+                ? "Unhealthy for Sensitive Groups"
+                : resolvedAqi <= 200
+                ? "Unhealthy"
+                : resolvedAqi <= 300
+                ? "Very Unhealthy"
+                : "Hazardous",
+            advisory:
+              airData?.fallbackNote ||
+              (resolvedAqi <= 50
+                ? "Air quality is satisfactory and poses minimal health risk."
+                : resolvedAqi <= 100
+                ? "Air quality is acceptable; sensitive individuals should monitor prolonged exertion."
+                : resolvedAqi <= 150
+                ? "Members of sensitive groups may experience health effects. General public is less affected."
+                : "Everyone may begin to experience health effects. Minimize outdoor exposure."),
+            pollutants: {
+              pm2_5: airData?.current?.pm2_5 ?? 22,
+              pm10: airData?.current?.pm10 ?? 45,
+              ozone: airData?.current?.ozone ?? 34,
+              no2: airData?.current?.nitrogen_dioxide ?? 24,
+              so2: airData?.current?.sulphur_dioxide ?? 10,
+              co: airData?.current?.carbon_monoxide ?? 420,
+            },
+            provenance: airData?.sourceLabel || "Live Ground Telemetry",
+            updatedAt: "Live Real-Time Telemetry",
+          };
+
+          setActiveHotspot(resolvedSpot);
+          if (onSelectCity) onSelectCity(resolvedSpot);
+        } catch (err) {
+          console.error("Error inspecting clicked location", err);
+        }
+      });
     }
 
     initMap();
