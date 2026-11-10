@@ -1346,91 +1346,94 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
       {/* ---------------------------------------------------- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
         {/* Chart 2: Side-by-Side Parameter Snapshot (Grouped Bar Normalized) */}
-        <article className="lg:col-span-7 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
-                CHART 02 · MULTI-POLLUTANT BURDEN VS BENCHMARK
+        <article className="lg:col-span-7 p-6 sm:p-7 rounded-2xl border border-[var(--dash-rule)] bg-[var(--dash-surface)] shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <span className="text-xs font-mono uppercase tracking-widest text-[var(--dash-muted)] font-bold">
+                  CHART 02 · MULTI-POLLUTANT BURDEN VS BENCHMARK
+                </span>
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
+                  Pollutant Burden vs WHO Safe Limit
+                </h2>
+              </div>
+              <span className="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)] self-start sm:self-auto">
+                % of WHO Safe Limit
               </span>
-              <h2 className="text-2xl font-bold tracking-tight text-[var(--dash-ink)] mt-1">
-                Pollutant Burden vs WHO Safe Limit
-              </h2>
             </div>
-            <span className="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)] self-start sm:self-auto">
-              % of WHO Safe Limit
-            </span>
+
+            <div className="w-full h-80 sm:h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={snapshotData} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid
+                    stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
+                    strokeDasharray="3 3"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="pollutant"
+                    tick={{ fill: "var(--dash-muted)", fontSize: 13, fontWeight: 600 }}
+                  />
+                  <YAxis
+                    tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
+                    width={55}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--dash-surface)",
+                      borderColor: "var(--dash-rule)",
+                      borderRadius: "10px",
+                      fontSize: "13px",
+                      color: "var(--dash-ink)",
+                      padding: "10px 14px",
+                    }}
+                    formatter={(val: any, name: any, item: any) => [
+                      `${Number(val).toFixed(1)}% of WHO limit (${item.payload[`${name}_raw`]})`,
+                      name,
+                    ]}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
+                  <ReferenceLine
+                    y={100}
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    label={{
+                      value: "100% WHO Safe Limit",
+                      fill: "#ef4444",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      position: "insideTopRight",
+                    }}
+                  />
+                  {locations.map((loc, idx) => (
+                    <Bar
+                      key={loc.name}
+                      dataKey={loc.name}
+                      name={loc.name}
+                      fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
+                      radius={[4, 4, 0, 0]}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <div className="w-full h-80 sm:h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={snapshotData} margin={{ top: 16, right: 12, left: 14, bottom: 0 }}>
-                <CartesianGrid
-                  stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="pollutant"
-                  tick={{ fill: "var(--dash-muted)", fontSize: 13, fontWeight: 600 }}
-                />
-                <YAxis
-                  tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
-                  label={{
-                    value: "% of WHO Safe Limit",
-                    angle: -90,
-                    position: "insideLeft",
-                    fill: "var(--dash-muted)",
-                    fontSize: 12,
-                    offset: 12,
-                  }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--dash-surface)",
-                    borderColor: "var(--dash-rule)",
-                    borderRadius: "10px",
-                    fontSize: "13px",
-                    color: "var(--dash-ink)",
-                    padding: "10px 14px",
-                  }}
-                  formatter={(val: any, name: any, item: any) => [
-                    `${Number(val).toFixed(1)}% of WHO limit (${item.payload[`${name}_raw`]})`,
-                    name,
-                  ]}
-                />
-                <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
-                <ReferenceLine
-                  y={100}
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  strokeDasharray="4 4"
-                  label={{
-                    value: "100% WHO Safe Limit",
-                    fill: "#ef4444",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    position: "insideTopRight",
-                  }}
-                />
-                {locations.map((loc, idx) => (
-                  <Bar
-                    key={loc.name}
-                    dataKey={loc.name}
-                    name={loc.name}
-                    fill={LOCATION_THEMES[idx % LOCATION_THEMES.length].stroke}
-                    radius={[4, 4, 0, 0]}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-[var(--dash-muted)] font-medium">
-            <span>
-              <strong>WHO Benchmarks:</strong> PM₂.₅: 15 µg/m³ · PM₁₀: 45 µg/m³ · NO₂: 25 µg/m³ · SO₂: 40 µg/m³ · CO: 4.0 mg/m³ · O₃: 100 µg/m³
-            </span>
-            <span className="text-rose-500 font-semibold">
-              Bars &gt; 100% exceed safe limits
-            </span>
+          <div>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-[var(--dash-muted)] font-medium">
+              <span>
+                <strong>WHO Benchmarks:</strong> PM₂.₅: 15 µg/m³ · PM₁₀: 45 µg/m³ · NO₂: 25 µg/m³ · SO₂: 40 µg/m³ · CO: 4.0 mg/m³ · O₃: 100 µg/m³
+              </span>
+              <span className="text-rose-500 font-semibold">
+                Bars &gt; 100% exceed safe limits
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-xs sm:text-sm text-[var(--dash-muted)] mt-3 font-medium">
+              <strong>WHO Exposure Baseline:</strong> Normalizes every pollutant onto a unified percentage scale against World Health Organization 24-hour limits. Red dashed line indicates the 100% safety threshold; bars exceeding 100% signal hazardous atmospheric concentrations with elevated health risks.
+            </div>
           </div>
         </article>
 
@@ -1524,7 +1527,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
             <BarChart
               data={stackedCompositionData}
               layout="horizontal"
-              margin={{ top: 12, right: 12, left: 16, bottom: 0 }}
+              margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
             >
               <CartesianGrid
                 stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
@@ -1535,14 +1538,8 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
               <YAxis
                 tick={{ fill: "var(--dash-muted)", fontSize: 12 }}
                 domain={[0, 100]}
-                label={{
-                  value: "% of Total Burden",
-                  angle: -90,
-                  position: "insideLeft",
-                  fill: "var(--dash-muted)",
-                  fontSize: 12,
-                  offset: 14,
-                }}
+                width={45}
+                tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
                 contentStyle={{
