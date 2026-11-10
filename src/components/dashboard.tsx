@@ -14,8 +14,9 @@ import { AqiForecast } from "@/components/AqiForecast";
 import { useTheme } from "@/lib/use-theme";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
 
+import { GlobalCityRanking } from "@/components/GlobalCityRanking";
+
 const GlobeEngine = dynamic(() => import("@/components/GlobeEngine").then((module) => module.GlobeEngine), { ssr: false, loading: () => <div className="globe-loading">Loading spatial engine…</div> });
-const GlobalCityRanking = dynamic(() => import("@/components/GlobalCityRanking").then((module) => module.GlobalCityRanking), { ssr: false });
 
 const DEFAULT_LOCATION: Location = {
   name: "New Delhi",
