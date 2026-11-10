@@ -69,7 +69,33 @@ export type CpcbStationGroup = {
   pollutants: Record<string, number>;
 };
 
-let cpcbCache: { timestamp: number; stations: CpcbStationGroup[] } | null = null;
+export type CpcbCityAggregate = {
+  city: string;
+  state: string;
+  latitude: number;
+  longitude: number;
+  aqi: number;
+  status: string;
+  advisory: string;
+  dominantPollutant: string;
+  pollutants: {
+    pm2_5: number | null;
+    pm10: number | null;
+    no2: number | null;
+    so2: number | null;
+    co: number | null;
+    ozone: number | null;
+  };
+  subIndices: Partial<Record<string, number>>;
+  stationCount: number;
+  lastUpdate: string;
+};
+
+let cpcbCache: {
+  timestamp: number;
+  stations: CpcbStationGroup[];
+  cityAggregates: Map<string, CpcbCityAggregate>;
+} | null = null;
 const CPCB_CACHE_TTL_MS = 8 * 60 * 1000;
 
 export function isIndiaCoordinates(latitude: number, longitude: number): boolean {
@@ -311,52 +337,189 @@ async function fetchOpenMeteo({ latitude, longitude }: Coordinates): Promise<Air
   }
 }
 
-export async function fetchCPCBStations(apiKey: string): Promise<CpcbStationGroup[]> {
+function getCpcbAdvisory(aqi: number) {
+  if (aqi <= 50) return { status: "Good", advisory: "Minimal impact; air quality is satisfactory." };
+  if (aqi <= 100) return { status: "Satisfactory", advisory: "Minor breathing discomfort may be experienced by sensitive people." };
+  if (aqi <= 200) return { status: "Moderate", advisory: "Breathing discomfort to people with lungs, asthma, and heart diseases." };
+  if (aqi <= 300) return { status: "Poor", advisory: "Breathing discomfort to most people on prolonged outdoor exposure." };
+  if (aqi <= 400) return { status: "Very Poor", advisory: "Respiratory illness on prolonged exposure. Pronounced effect on vulnerable groups." };
+  return { status: "Severe", advisory: "Severe atmospheric burden: affects healthy people and seriously impacts those with existing ailments. Stay indoors." };
+}
+
+async function loadCPCBPayload(apiKey: string): Promise<{ stations: CpcbStationGroup[]; cityAggregates: Map<string, CpcbCityAggregate> }> {
   const now = Date.now();
   if (cpcbCache && now - cpcbCache.timestamp < CPCB_CACHE_TTL_MS) {
-    return cpcbCache.stations;
+    return { stations: cpcbCache.stations, cityAggregates: cpcbCache.cityAggregates };
   }
 
-  const endpoint = `https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69?api-key=${encodeURIComponent(apiKey)}&format=json&limit=500`;
+  const endpoint = `https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69?api-key=${encodeURIComponent(apiKey)}&format=json&limit=4000`;
   const res = await fetch(endpoint, {
     cache: "no-store",
     headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`data.gov.in CPCB request returned ${res.status}`);
   const payload = (await res.json()) as { records?: CpcbRecord[] };
 
-  const groupMap = new Map<string, CpcbStationGroup>();
+  // 1. Group records strictly by station
+  const stationMap = new Map<string, CpcbStationGroup>();
+  // 2. Group records strictly by city
+  const cityMap = new Map<
+    string,
+    {
+      city: string;
+      state: string;
+      latitude: number;
+      longitude: number;
+      lastUpdate: string;
+      stations: Set<string>;
+      pollutantVals: {
+        pm2_5: number[];
+        pm10: number[];
+        no2: number[];
+        so2: number[];
+        co: number[];
+        ozone: number[];
+      };
+    }
+  >();
+
   for (const r of payload.records || []) {
     const stationName = (r.station || "").trim();
-    if (!stationName) continue;
+    const cityName = (r.city || "").trim();
+    const stateName = (r.state || "").trim();
     const lat = Number(r.latitude);
     const lng = Number(r.longitude);
-    const key = stationName.toLowerCase();
-
-    if (!groupMap.has(key)) {
-      groupMap.set(key, {
-        station: stationName,
-        city: (r.city || "").trim(),
-        state: (r.state || "").trim(),
-        latitude: Number.isFinite(lat) ? lat : 0,
-        longitude: Number.isFinite(lng) ? lng : 0,
-        lastUpdate: r.last_update || new Date().toISOString(),
-        pollutants: {},
-      });
-    }
-
-    const group = groupMap.get(key)!;
     const avgVal = Number(r.avg_value ?? r.pollutant_avg);
     const rawPol = (r.pollutant_id || "").toUpperCase().replace(/[._\s-]/g, "");
-    if (!isNaN(avgVal) && rawPol) {
-      group.pollutants[rawPol] = avgVal;
+
+    // Process Station
+    if (stationName) {
+      const stationKey = stationName.toLowerCase();
+      if (!stationMap.has(stationKey)) {
+        stationMap.set(stationKey, {
+          station: stationName,
+          city: cityName,
+          state: stateName,
+          latitude: Number.isFinite(lat) ? lat : 0,
+          longitude: Number.isFinite(lng) ? lng : 0,
+          lastUpdate: r.last_update || new Date().toISOString(),
+          pollutants: {},
+        });
+      }
+      const stGroup = stationMap.get(stationKey)!;
+      if (!isNaN(avgVal) && rawPol && avgVal >= 0) {
+        stGroup.pollutants[rawPol] = avgVal;
+      }
+    }
+
+    // Process City strictly grouped by city key
+    if (cityName) {
+      const cityKey = cityName.toLowerCase();
+      if (!cityMap.has(cityKey)) {
+        cityMap.set(cityKey, {
+          city: cityName,
+          state: stateName,
+          latitude: Number.isFinite(lat) && lat !== 0 ? lat : 0,
+          longitude: Number.isFinite(lng) && lng !== 0 ? lng : 0,
+          lastUpdate: r.last_update || new Date().toISOString(),
+          stations: new Set(),
+          pollutantVals: {
+            pm2_5: [],
+            pm10: [],
+            no2: [],
+            so2: [],
+            co: [],
+            ozone: [],
+          },
+        });
+      }
+
+      const cEntry = cityMap.get(cityKey)!;
+      if (cEntry.latitude === 0 && Number.isFinite(lat) && lat !== 0) cEntry.latitude = lat;
+      if (cEntry.longitude === 0 && Number.isFinite(lng) && lng !== 0) cEntry.longitude = lng;
+      if (stationName) cEntry.stations.add(stationName);
+      if (r.last_update) cEntry.lastUpdate = r.last_update;
+
+      if (!isNaN(avgVal) && rawPol && avgVal >= 0) {
+        if (rawPol === "PM25" || rawPol === "PM2.5") cEntry.pollutantVals.pm2_5.push(avgVal);
+        else if (rawPol === "PM10") cEntry.pollutantVals.pm10.push(avgVal);
+        else if (rawPol === "NO2") cEntry.pollutantVals.no2.push(avgVal);
+        else if (rawPol === "SO2") cEntry.pollutantVals.so2.push(avgVal);
+        else if (rawPol === "CO") cEntry.pollutantVals.co.push(avgVal > 25 ? avgVal / 1000 : avgVal);
+        else if (rawPol === "OZONE" || rawPol === "O3") cEntry.pollutantVals.ozone.push(avgVal);
+      }
     }
   }
 
-  const stations = Array.from(groupMap.values());
-  cpcbCache = { timestamp: now, stations };
+  // 3. Compute CPCB sub-indices strictly for each specific city (no cross-city fallback leakage!)
+  const cityAggregates = new Map<string, CpcbCityAggregate>();
+  for (const [cityKey, entry] of cityMap.entries()) {
+    // Representative concentration across the city's stations:
+    // Extract highest sub-index reading among active pollutants strictly for that specific city
+    const maxVal = (arr: number[]) => (arr.length ? Math.max(...arr) : null);
+    const pol = {
+      pm2_5: maxVal(entry.pollutantVals.pm2_5),
+      pm10: maxVal(entry.pollutantVals.pm10),
+      no2: maxVal(entry.pollutantVals.no2),
+      so2: maxVal(entry.pollutantVals.so2),
+      co: maxVal(entry.pollutantVals.co),
+      ozone: maxVal(entry.pollutantVals.ozone),
+    };
+
+    const concentrations: Partial<Record<Pollutant, PollutantConcentration>> = {};
+    if (typeof pol.pm2_5 === "number") concentrations.pm2_5 = { value: pol.pm2_5, unit: "µg/m³" };
+    if (typeof pol.pm10 === "number") concentrations.pm10 = { value: pol.pm10, unit: "µg/m³" };
+    if (typeof pol.no2 === "number") concentrations.no2 = { value: pol.no2, unit: "µg/m³" };
+    if (typeof pol.so2 === "number") concentrations.so2 = { value: pol.so2, unit: "µg/m³" };
+    if (typeof pol.co === "number") concentrations.co = { value: pol.co, unit: "mg/m³" };
+    if (typeof pol.ozone === "number") concentrations.o3 = { value: pol.ozone, unit: "µg/m³" };
+
+    const aqiRes = calculateCompositeAqi(concentrations, "cpcb");
+    if (aqiRes.aqi !== null && aqiRes.aqi > 0) {
+      const { status, advisory } = getCpcbAdvisory(aqiRes.aqi);
+      const subIndicesRecord: Partial<Record<string, number>> = {};
+      for (const [k, v] of Object.entries(aqiRes.subIndices)) {
+        if (v) subIndicesRecord[k] = v.value;
+      }
+
+      cityAggregates.set(cityKey, {
+        city: entry.city,
+        state: entry.state,
+        latitude: entry.latitude,
+        longitude: entry.longitude,
+        aqi: aqiRes.aqi,
+        status,
+        advisory,
+        dominantPollutant: aqiRes.dominantPollutant?.toUpperCase() || "PM2.5",
+        pollutants: {
+          pm2_5: pol.pm2_5 !== null ? Math.round(pol.pm2_5 * 10) / 10 : null,
+          pm10: pol.pm10 !== null ? Math.round(pol.pm10 * 10) / 10 : null,
+          no2: pol.no2 !== null ? Math.round(pol.no2 * 10) / 10 : null,
+          so2: pol.so2 !== null ? Math.round(pol.so2 * 10) / 10 : null,
+          co: pol.co !== null ? Math.round(pol.co * 10) / 10 : null,
+          ozone: pol.ozone !== null ? Math.round(pol.ozone * 10) / 10 : null,
+        },
+        subIndices: subIndicesRecord,
+        stationCount: entry.stations.size,
+        lastUpdate: entry.lastUpdate,
+      });
+    }
+  }
+
+  const stations = Array.from(stationMap.values());
+  cpcbCache = { timestamp: now, stations, cityAggregates };
+  return { stations, cityAggregates };
+}
+
+export async function fetchCPCBStations(apiKey: string): Promise<CpcbStationGroup[]> {
+  const { stations } = await loadCPCBPayload(apiKey);
   return stations;
+}
+
+export async function fetchCPCBCityAggregates(apiKey: string): Promise<Map<string, CpcbCityAggregate>> {
+  const { cityAggregates } = await loadCPCBPayload(apiKey);
+  return cityAggregates;
 }
 
 export async function fetchCPCB({ latitude, longitude }: Coordinates, apiKey: string): Promise<AirQualityResponse | null> {
