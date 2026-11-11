@@ -4,9 +4,11 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Globe,
   Info,
+  Layers,
   Navigation,
   Search,
   Share2,
+  X,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap, Layer, TileLayer } from "leaflet";
@@ -303,6 +305,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
   const [weatherOverlay, setWeatherOverlay] = useState(false);
   const [windOverlay, setWindOverlay] = useState(false);
   const [heatmapOverlay, setHeatmapOverlay] = useState(false);
+  const [mobileLayersOpen, setMobileLayersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [liveUpdating, setLiveUpdating] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -1333,7 +1336,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
       {/* ------------------------------------------------------------------ */}
       {/* 1. Dedicated Leaflet Container (Clean Bounds & Theme-Adaptive Cartography) */}
       {/* ------------------------------------------------------------------ */}
-      <div className="relative w-full h-[650px] rounded-2xl overflow-hidden border border-[var(--dash-rule)] shadow-xl bg-[var(--dash-surface-soft)]">
+      <div className="overview-spatial-map-container relative w-full max-w-full h-[520px] sm:h-[650px] rounded-2xl overflow-hidden border border-[var(--dash-rule)] shadow-xl bg-[var(--dash-surface-soft)]">
         {/* Full Spatial Map Canvas */}
         <div ref={mapContainerRef} className="absolute inset-0 z-0 w-full h-full" />
 
@@ -1348,7 +1351,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
         {/* ------------------------------------------------------------------ */}
         {/* Left Floating Drawer: Absolute Pinning with Theme Adaptive Card */}
         {/* ------------------------------------------------------------------ */}
-        <div className="absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto max-h-[618px] overflow-y-auto scrollbar-thin">
+        <div className="overview-spatial-map-controls absolute top-4 left-4 z-20 w-[calc(100%-2rem)] sm:w-full sm:max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto max-h-[618px] overflow-y-auto scrollbar-thin">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-2.5">
             <div>
@@ -1532,13 +1535,13 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Top Right GPS Location Target Button (Image 1) */}
+        {/* Top Right Action Buttons: GPS Location & Mobile Layers Toggle */}
         {/* ------------------------------------------------------------------ */}
-        <div className="absolute top-4 right-54 sm:right-56 z-20 pointer-events-auto">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
           <button
             type="button"
             onClick={() => detectUserLocation(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] hover:text-[var(--dash-accent)] shadow-xl transition-all active:scale-95 text-xs font-mono font-bold"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] hover:text-[var(--dash-accent)] shadow-xl transition-all active:scale-95 text-xs font-mono font-bold cursor-pointer"
             title="Detect my physical location and view real-time readings"
           >
             <Navigation
@@ -1549,15 +1552,36 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
               {isLocating ? "Locating..." : userLocationDetected ? "My Location" : "Detect Location"}
             </span>
           </button>
+
+          {/* Mobile Layers Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setMobileLayersOpen((v) => !v)}
+            className="sm:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] hover:text-[var(--dash-accent)] shadow-xl transition-all active:scale-95 text-xs font-mono font-bold cursor-pointer"
+            title="Toggle Map Layers"
+          >
+            <Layers size={14} className="text-[var(--dash-accent)]" />
+            <span>Layers</span>
+          </button>
         </div>
 
         {/* ------------------------------------------------------------------ */}
         {/* Right Floating Map Layers Panel */}
         {/* ------------------------------------------------------------------ */}
-        <div className="absolute top-4 right-4 z-20 backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] rounded-2xl p-4 text-[var(--dash-ink)] shadow-2xl w-48 space-y-3 pointer-events-auto">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)] block border-b border-[var(--dash-rule)] pb-1.5">
-            MAP LAYERS
-          </span>
+        <div className={`${mobileLayersOpen ? "block" : "hidden"} sm:block absolute top-16 sm:top-4 right-4 z-30 sm:z-20 backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] rounded-2xl p-4 text-[var(--dash-ink)] shadow-2xl w-48 space-y-3 pointer-events-auto max-h-[calc(100%-5rem)] overflow-y-auto`}>
+          <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-1.5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)]">
+              MAP LAYERS
+            </span>
+            <button
+              type="button"
+              onClick={() => setMobileLayersOpen(false)}
+              className="sm:hidden text-[var(--dash-muted)] hover:text-[var(--dash-ink)] p-0.5 cursor-pointer"
+              aria-label="Close layers"
+            >
+              <X size={14} />
+            </button>
+          </div>
 
           <div className="space-y-1.5">
             {[

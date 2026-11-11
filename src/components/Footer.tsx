@@ -75,7 +75,7 @@ export function Footer({ className }: { className?: string } = {}) {
             <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-[#83dfbd]">
               NAVIGATION
             </span>
-            <nav className="flex flex-col items-start gap-2.5 font-sans text-xs sm:text-[13px]">
+            <nav className="footer-column-links flex flex-col items-start gap-2.5 font-sans text-xs sm:text-[13px]">
               <a
                 href="/overview"
                 className="text-neutral-600 dark:text-[#c4d4cc] hover:text-neutral-950 dark:hover:text-[#83dfbd] flex items-center gap-2 group transition-colors"
@@ -119,7 +119,7 @@ export function Footer({ className }: { className?: string } = {}) {
             <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-[#83dfbd]">
               DATA SOURCES
             </span>
-            <nav className="flex flex-col items-start gap-2.5 font-sans text-xs sm:text-[13px]">
+            <nav className="footer-column-links flex flex-col items-start gap-2.5 font-sans text-xs sm:text-[13px]">
               <a
                 href="https://openaq.org/"
                 target="_blank"

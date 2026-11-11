@@ -8,7 +8,7 @@ export function InteractiveLandingGlobe() {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const mountedRef = useRef(false);
   const readyFrameRef = useRef<number | null>(null);
-  const [size, setSize] = useState({ width: 600, height: 600 });
+  const [size, setSize] = useState({ width: 300, height: 300 });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

@@ -289,7 +289,7 @@ export function GlobeEngine({
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
-  const [size, setSize] = useState({ width: 600, height: 500 });
+  const [size, setSize] = useState({ width: 300, height: 300 });
   const [countries, setCountries] = useState<object[]>([]);
   const [livePoints, setLivePoints] = useState(BASE_HEATMAP_POINTS);
 

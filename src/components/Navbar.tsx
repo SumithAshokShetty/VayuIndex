@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ArrowRight, Bell, BellRing, Moon, Sun } from "lucide-react";
+import { ArrowRight, Bell, BellRing, Menu, Moon, Sun, X } from "lucide-react";
+import { useState } from "react";
 import { useTheme } from "@/lib/use-theme";
 import { useSmartAlerts } from "@/lib/use-smart-alerts";
 import { SmartAqiAlertsModal } from "@/components/SmartAqiAlertsModal";
@@ -9,6 +10,7 @@ import { InAppAlertBanner } from "@/components/InAppAlertBanner";
 
 export function Navbar() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const {
     config,
@@ -109,8 +111,8 @@ export function Navbar() {
             </a>
 
             {/* Links and CTA on Right */}
-            <div className="flex items-center gap-6 sm:gap-10">
-              <nav className="flex items-center gap-7 lg:gap-8" aria-label="Main navigation">
+            <div className="public-navbar-content flex items-center gap-2 sm:gap-6 min-w-0">
+              <nav className="public-primary-nav hidden lg:flex items-center gap-7 lg:gap-8" aria-label="Main navigation">
                 <a
                   className={`nav-link !h-auto relative py-1 text-[15px] transition-colors no-underline ${
                     currentPath === "/"
@@ -165,9 +167,9 @@ export function Navbar() {
                 </a>
               </nav>
 
-              <div className="editorial-nav-actions flex items-center gap-3 sm:gap-4">
+              <div className="editorial-nav-actions flex items-center gap-2 sm:gap-4">
                 <a
-                  className="nav-explore inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded text-[13px] font-semibold no-underline transition-all hover:-translate-y-0.5"
+                  className="nav-explore hidden sm:inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded text-[13px] font-semibold no-underline transition-all hover:-translate-y-0.5"
                   style={{
                     backgroundColor: isDark ? "rgba(22, 38, 32, 0.85)" : "rgba(250, 250, 250, 0.75)",
                     color: isDark ? "#83dfbd" : "#0f382c",
@@ -196,9 +198,39 @@ export function Navbar() {
                 >
                   {isDark ? <Sun size={16} /> : <Moon size={16} />}
                 </button>
+                <button
+                  className="mobile-nav-toggle flex lg:hidden items-center justify-center"
+                  type="button"
+                  onClick={() => setMobileMenuOpen((open) => !open)}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="public-mobile-navigation"
+                  aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                >
+                  {mobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
+                </button>
               </div>
             </div>
           </div>
+          <nav id="public-mobile-navigation" className={`mobile-nav-panel ${mobileMenuOpen ? "is-open" : ""}`} aria-label="Mobile navigation" aria-hidden={!mobileMenuOpen}>
+            {[
+              { href: "/", label: "Home" },
+              { href: "/overview", label: "Overview" },
+              { href: "/dashboard", label: "Global view" },
+              { href: "/compare", label: "Compare" },
+              { href: "/health", label: "Health & Safety" },
+              { href: "/risk", label: "Personal risk" },
+              { href: "/about", label: "About" },
+            ].map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={currentPath === item.href ? "page" : undefined}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
         </header>
 
         {/* Floating In-App Banner & Modal */}
@@ -239,9 +271,9 @@ export function Navbar() {
       >
         <div className="w-full max-w-[1780px] mx-auto px-4 sm:px-8 lg:px-12 h-full flex items-center justify-between">
           {/* Brand on Left: VAYU INDEX title + GLOBAL AIR INTELLIGENCE monospaced subtext */}
-          <a className="brand flex items-center gap-3 text-inherit no-underline min-w-[180px] sm:min-w-[220px]" href="/" aria-label="Vayu Index home">
+          <a className="brand flex items-center gap-2.5 sm:gap-3 text-inherit no-underline min-w-0 flex-shrink" href="/" aria-label="Vayu Index home">
             <span
-              className="brand-mark h-[35px] w-[35px] rounded-[11px] flex items-center justify-center gap-[3px] -rotate-6 transition-transform"
+              className="brand-mark h-[35px] w-[35px] rounded-[11px] flex items-center justify-center gap-[3px] -rotate-6 transition-transform flex-shrink-0"
               style={{
                 border: isDark ? "1px solid rgba(147, 226, 197, 0.36)" : "1px solid #bcd7ca",
                 background: isDark
@@ -254,18 +286,18 @@ export function Navbar() {
               <i style={{ width: 3, height: 18, borderRadius: 8, background: isDark ? "#83dfbd" : "#21815e" }} />
               <i style={{ width: 3, height: 13, borderRadius: 8, background: isDark ? "#83dfbd" : "#21815e", opacity: 0.85 }} />
             </span>
-            <span className="brand-copy flex flex-col gap-0.5">
-              <strong className="text-base font-bold tracking-tight" style={{ color: isDark ? "#eff4ef" : "#171717" }}>
+            <span className="brand-copy flex flex-col gap-0.5 min-w-0">
+              <strong className="text-base font-bold tracking-tight truncate" style={{ color: isDark ? "#eff4ef" : "#171717" }}>
                 VAYU<span style={{ color: isDark ? "#83dfbd" : "#21815e", marginLeft: 3 }}>INDEX</span>
               </strong>
-              <small className="text-[10px] font-mono tracking-widest text-neutral-500">
+              <small className="text-[10px] font-mono tracking-widest text-neutral-500 truncate">
                 GLOBAL AIR INTELLIGENCE
               </small>
             </span>
           </a>
 
           {/* Navigation Tabs Center */}
-          <nav className="main-nav h-full flex items-center gap-7 lg:gap-8" aria-label="Main navigation">
+          <nav className="main-nav h-full hidden lg:flex items-center gap-7 lg:gap-8" aria-label="Main navigation">
             {[
               { href: "/", label: "Home" },
               { href: "/overview", label: "Overview" },
@@ -313,7 +345,7 @@ export function Navbar() {
           </nav>
 
           {/* Right Accessories: ● STATION DATA green live indicator badge & Smart Alerts & Theme Toggle */}
-          <div className="top-actions flex items-center gap-3 sm:gap-4 min-w-[160px] sm:min-w-[200px] justify-end">
+          <div className="top-actions flex items-center gap-2 sm:gap-4 min-w-0 sm:min-w-[200px] justify-end flex-shrink-0">
             <span
               className="dashboard-status flex items-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.09em] whitespace-nowrap"
               style={{ color: isDark ? "#adb8b0" : "#666b60" }}
@@ -346,8 +378,29 @@ export function Navbar() {
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <button
+              className="mobile-nav-toggle flex lg:hidden items-center justify-center"
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="workspace-mobile-navigation"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            >
+              {mobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
+            </button>
           </div>
         </div>
+        <nav id="workspace-mobile-navigation" className={`mobile-nav-panel ${mobileMenuOpen ? "is-open" : ""}`} aria-label="Mobile navigation" aria-hidden={!mobileMenuOpen}>
+          {[
+            { href: "/", label: "Home" },
+            { href: "/overview", label: "Overview" },
+            { href: "/dashboard", label: "Global view" },
+            { href: "/compare", label: "Compare" },
+            { href: "/health", label: "Health & Safety" },
+            { href: "/risk", label: "Personal risk" },
+            { href: "/about", label: "About" },
+          ].map((item) => <a key={item.href} href={item.href} aria-current={currentPath === item.href ? "page" : undefined} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>)}
+        </nav>
       </header>
 
       {/* Floating In-App Banner & Modal */}

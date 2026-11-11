@@ -1,6 +1,7 @@
 import type { AirQualityResponse } from "@/lib/types";
 import { compiledAgentGraph, type State } from "@/lib/agent-graph";
 import { getAirQuality } from "@/lib/api-orchestrator";
+import { INITIAL_HOTSPOTS } from "@/lib/spatial-ground-truth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -73,6 +74,27 @@ function extractPlaces(question: string): string[] {
 }
 
 async function resolvePlace(place: string, fallbackCountry?: string) {
+  const normalize = (value: string) => value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const normalizedPlace = normalize(place);
+  const knownPlace = INITIAL_HOTSPOTS.find((hotspot) => {
+    const sameName = normalize(hotspot.name) === normalizedPlace ||
+      normalize(`${hotspot.name} ${hotspot.state}`) === normalizedPlace;
+    const sameCountry = !fallbackCountry || normalize(hotspot.country) === normalize(fallbackCountry);
+    return sameName && sameCountry;
+  });
+
+  // Prefer the app's curated city coordinates if geocoding is unavailable or
+  // returns a less specific match. Live telemetry is still fetched below.
+  if (knownPlace) {
+    return {
+      name: knownPlace.name,
+      admin: knownPlace.state,
+      country: knownPlace.country,
+      latitude: knownPlace.lat,
+      longitude: knownPlace.lng,
+    };
+  }
+
   const searchName = fallbackCountry && !place.toLowerCase().includes(fallbackCountry.toLowerCase())
     ? `${place}, ${fallbackCountry}`
     : place;

@@ -447,7 +447,7 @@ export function AqiShareCardModal({
 
             {/* Interactive Card Canvas Preview (Render Target for html-to-image) */}
             <div
-              className={`flex justify-center items-center py-6 px-3 overflow-x-auto rounded-2xl border ${
+              className={`flex justify-center items-center py-4 sm:py-6 px-1 sm:px-3 overflow-x-auto max-w-full rounded-2xl border ${
                 isDark
                   ? "bg-[#0b100d] border-[#223028]"
                   : "bg-[#eaedea] border-[#d2dbd4]"
@@ -455,7 +455,7 @@ export function AqiShareCardModal({
             >
               <div
                 ref={cardRef}
-                className={`relative flex flex-col justify-between p-7 sm:p-8 rounded-2xl border shadow-2xl transition-all duration-300 overflow-hidden select-none ${themeStyles.bg} ${themeStyles.border} ${aspectConfig.widthClass}`}
+                className={`relative flex flex-col justify-between p-5 sm:p-8 rounded-2xl border shadow-2xl transition-all duration-300 overflow-hidden select-none max-w-full ${themeStyles.bg} ${themeStyles.border} ${aspectConfig.widthClass}`}
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
                   boxShadow: `0 25px 60px ${themeStyles.glow}`,
