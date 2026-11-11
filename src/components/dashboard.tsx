@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as Popover from "@radix-ui/react-popover";
 import { motion } from "framer-motion";
-import { ArrowUpRight, LocateFixed, Map, Minus, Moon, Plus, RotateCcw, Search, Share2, ShieldAlert, Sun } from "lucide-react";
+import { ArrowUpRight, Bell, LocateFixed, Map, Minus, Moon, Plus, RotateCcw, Search, Share2, ShieldAlert, Sun } from "lucide-react";
 import { AqiScaleBar } from "@/components/AqiScaleBar";
 import { TelemetryCard } from "@/components/TelemetryCard";
 import { DashboardMotion } from "@/components/DashboardMotion";
@@ -13,6 +13,7 @@ import { HistoricalTracker } from "@/components/HistoricalTracker";
 import { AqiForecast } from "@/components/AqiForecast";
 import { AqiShareCardModal } from "@/components/AqiShareCardModal";
 import { useTheme } from "@/lib/use-theme";
+import { useSmartAlerts } from "@/lib/use-smart-alerts";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
 import { CONTINENTS, type Continent } from "@/lib/continents";
 
@@ -95,6 +96,7 @@ export function Dashboard() {
   const [globeMetric, setGlobeMetric] = useState<"aqi" | "pm2_5">("aqi");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { checkTelemetry, setModalOpen: setAlertsModalOpen } = useSmartAlerts();
   const [activeView, setActiveView] = useState<DashboardView>("live");
 
   useEffect(() => {
@@ -103,6 +105,13 @@ export function Dashboard() {
       setActiveView(requestedView);
     }
   }, []);
+
+  useEffect(() => {
+    if (air?.current && typeof air.current.aqi === "number") {
+      const pm2_5Val = typeof air.current.pm2_5 === "number" ? air.current.pm2_5 : undefined;
+      checkTelemetry(location.name, air.current.aqi, pm2_5Val);
+    }
+  }, [air, location.name, checkTelemetry]);
 
   const selectLocation = useCallback((nextLocation: Location) => setLocation(nextLocation), []);
 
@@ -138,8 +147,25 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("vayu-location");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
+          setLocation(parsed);
+        }
+      }
+    } catch {}
     detectUserLocation();
   }, [detectUserLocation]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && location) {
+      try {
+        localStorage.setItem("vayu-location", JSON.stringify(location));
+      } catch {}
+    }
+  }, [location]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -242,6 +268,16 @@ export function Dashboard() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 dark:text-amber-300 font-mono text-[11px] font-bold border border-amber-500/30 active:scale-95 transition-all cursor-pointer shadow-xs"
+                      onClick={() => setAlertsModalOpen(true)}
+                      title="Set Smart AQI Threshold Alert"
+                      aria-label="Set Smart AQI Threshold Alert"
+                    >
+                      <Bell size={13} />
+                      <span>Alert</span>
+                    </button>
+                    <button
+                      type="button"
                       className="share-report-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-[11px] font-bold active:scale-95 transition-all cursor-pointer shadow-md"
                       onClick={() => setShareModalOpen(true)}
                       title="Generate Social Sharing Card"
@@ -278,7 +314,7 @@ export function Dashboard() {
                 <div className="location-coordinates">{locationCoordinates(location)}</div>
               </section>
 
-              <TelemetryCard key={`${location.latitude}:${location.longitude}`} air={air} aqi={aqi} dominantPollutant={dominantPollutant} location={location} loading={loading} error={error} onShare={() => setShareModalOpen(true)}/>
+              <TelemetryCard key={`${location.latitude}:${location.longitude}`} air={air} aqi={aqi} dominantPollutant={dominantPollutant} location={location} loading={loading} error={error} onShare={() => setShareModalOpen(true)} onSetAlert={() => setAlertsModalOpen(true)}/>
 
               <section className="health-warning" aria-live="polite">
                 <div className="health-warning-top flex items-center justify-between gap-2">

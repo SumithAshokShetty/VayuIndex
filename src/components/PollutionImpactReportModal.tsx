@@ -37,8 +37,6 @@ interface PollutionImpactReportModalProps {
   initialData?: AirSeriesResponse | null;
 }
 
-type TimeHorizon = "30d" | "annual2025" | "multiyear";
-
 export function PollutionImpactReportModal({
   open,
   onOpenChange,
@@ -49,7 +47,6 @@ export function PollutionImpactReportModal({
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const [horizon, setHorizon] = useState<TimeHorizon>("30d");
   const [data, setData] = useState<AirSeriesResponse | null>(initialData ?? null);
   const [loading, setLoading] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -287,50 +284,6 @@ Full Telemetry & Reanalysis: https://vayuindex.org/dashboard?city=${encodeURICom
               >
                 <X size={18} />
               </button>
-            </div>
-
-            {/* Timeframe Scope Selector */}
-            <div className="my-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-                  Audit Scope:
-                </span>
-                {(
-                  [
-                    { id: "30d", label: "30-Day Synthesis", desc: "Copernicus CAMS" },
-                    { id: "annual2025", label: "Annual 2025 Audit", desc: "Full Year Mean" },
-                    { id: "multiyear", label: "2017–2025 Archive", desc: "Long-Term Record" },
-                  ] as const
-                ).map((h) => {
-                  const isSelected = horizon === h.id;
-                  return (
-                    <button
-                      key={h.id}
-                      type="button"
-                      onClick={() => setHorizon(h.id)}
-                      className={`flex flex-col items-start px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer border ${
-                        isSelected
-                          ? "bg-emerald-700 text-white border-emerald-600 shadow-md"
-                          : isDark
-                          ? "bg-[#18231d] text-[#c5d8cb] border-[#25372d] hover:bg-[#202f27]"
-                          : "bg-white text-[#223026] border-[#cbd6ce] hover:bg-[#edf2ee]"
-                      }`}
-                    >
-                      <span className="text-[12px] font-black">{h.label}</span>
-                      <span className={`text-[9px] font-mono ${isSelected ? "text-emerald-100" : "text-neutral-500"}`}>
-                        {h.desc}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[9px] font-black tracking-wider bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                  <i className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  STATUTORY REANALYSIS
-                </span>
-              </div>
             </div>
 
             {/* PRINTABLE / EXPORTABLE REPORT TARGET */}

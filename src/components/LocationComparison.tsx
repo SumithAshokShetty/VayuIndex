@@ -48,6 +48,7 @@ import { MeteorologicalMatrixCard } from "./compare/MeteorologicalMatrixCard";
 import { DiurnalHazardHeatmap } from "./compare/DiurnalHazardHeatmap";
 import { AqiShareCardModal } from "@/components/AqiShareCardModal";
 import { PollutionImpactReportModal } from "@/components/PollutionImpactReportModal";
+import { CompareAiInsights } from "@/components/CompareAiInsights";
 
 // ==========================================
 // Types & Constants
@@ -1643,6 +1644,15 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
           <strong>Atmospheric Load Synthesis:</strong> Identifies which pollutants dominate each city&apos;s air space. A dominant red/amber block indicates fine and coarse particulate dust (PM₂.₅ and PM₁₀) requiring filtration masks, while high cyan/purple/teal segments signal combustion gas pollutants (NO₂, SO₂, CO) typical of dense commuter traffic and fossil energy infrastructure.
         </div>
       </article>
+
+      {/* ---------------------------------------------------- */}
+      {/* Tier 7: AI Atmospheric Comparison Synthesis (Groq)   */}
+      {/* ---------------------------------------------------- */}
+      <CompareAiInsights
+        locations={locations}
+        liveData={liveData}
+        locationKey={locationKey}
+      />
 
       {shareTarget && (
         <AqiShareCardModal

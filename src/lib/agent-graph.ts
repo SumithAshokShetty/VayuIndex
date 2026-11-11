@@ -246,14 +246,13 @@ export async function synthesis_node(state: State): Promise<Partial<State>> {
     apiKey: process.env.GROQ_API_KEY,
     model: process.env.GROQ_MODEL || "qwen/qwen3.8-27b",
     temperature: 0.3,
-    maxTokens: 260,
+    maxTokens: 420,
   });
 
   const systemPrompt = new SystemMessage(
-    "You are the Executive Synthesis AI agent for Vayu Index. Answer the user's inquiry directly and concisely, " +
-    "synthesizing reports from the Data Auditor, Trend Predictor, and Health Specialist. " +
-    "Maintain clear provenance: explicitly distinguish station measurements from model estimates. " +
-    "Do not provide medical diagnosis. Conclude with a brief reminder that this is general environmental intelligence."
+    "You are Ask Vayu, the helpful assistant for the Vayu Index air-quality platform. Answer relevant questions about AQI and CPCB NAQI, PM2.5, PM10 and other pollutants, air-quality science, station and modeled data provenance, maps, city comparisons, forecasts, history, personal exposure risk, health and safety guidance, and the platform's features. Answer general questions only when they relate to air quality or Vayu Index; briefly redirect unrelated requests. " +
+    "Answer the latest question directly. Use the supplied telemetry only for its stated location, and only when it helps answer the question. A selected location does not limit the places you can discuss. When the user asks about multiple places and the context includes a current-readings list, compare every listed place and its source; only say a place is unavailable if its own entry says no reading was returned. Never send the user elsewhere for readings already included in the context. Never invent measurements, sources, forecasts, or health facts; if a requested place has no verified reading in the supplied context, say so briefly and still answer the general part. " +
+    "Keep replies concise and non-repetitive. Give one answer, not separate agent reports. Use clean Markdown with short paragraphs and bullets on separate lines when useful; never repeat the question or add a generic disclaimer unless the answer gives health guidance. Do not diagnose or prescribe."
   );
 
   const userPrompt = new HumanMessage(

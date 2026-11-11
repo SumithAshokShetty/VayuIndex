@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowUpRight, LocateFixed, ShieldCheck } from "lucide-react";
-import { AiAssistant } from "@/components/AiAssistant";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowUpRight, LocateFixed, Navigation, ShieldCheck } from "lucide-react";
 import { PersonalRiskCalculator, type RiskProfile } from "@/components/PersonalRiskCalculator";
 import type { AirQualityResponse, Location } from "@/lib/types";
 
@@ -15,15 +14,102 @@ export function RiskWorkspace() {
   const [location, setLocation] = useState<Location>(INITIAL_LOCATION);
   const [air, setAir] = useState<AirQualityResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<RiskProfile>(INITIAL_PROFILE);
   const [forecast, setForecast] = useState<ForecastPoint[]>([]);
   const [weather, setWeather] = useState<Record<string, number | string | null> | undefined>();
   const [history, setHistory] = useState<HistoricalReadings>();
 
+
+  useEffect(() => {
+    const detail = { air, location, profile, forecast, weather, history: air?.provider === "open-meteo" ? history : undefined };
+    (window as Window & { __vayuAssistantContext?: typeof detail }).__vayuAssistantContext = detail;
+    window.dispatchEvent(new CustomEvent("vayu-assistant-context", { detail }));
+  }, [air, location, profile, forecast, weather, history]);
+
+  // Initialize location from localStorage or URL query params
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const latParam = searchParams.get("lat");
+      const lngParam = searchParams.get("lng");
+      const cityParam = searchParams.get("city");
+      if (latParam && lngParam) {
+        setLocation({
+          name: cityParam || "Custom Location",
+          admin: "",
+          country: "",
+          latitude: parseFloat(latParam),
+          longitude: parseFloat(lngParam),
+        });
+        return;
+      }
+
+      const saved = localStorage.getItem("vayu-location");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
+          setLocation(parsed);
+          return;
+        }
+      }
+    } catch {}
+
+    // If no saved location, try detecting
+    detectUserLocation();
+  }, []);
+
+  const detectUserLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        try {
+          const response = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+          if (response.ok) {
+            const place = (await response.json()) as { name?: string; admin?: string; country?: string };
+            if (place.name) {
+              const detectedLoc: Location = {
+                name: place.name,
+                admin: place.admin || "Detected location",
+                country: place.country || "",
+                latitude: lat,
+                longitude: lng,
+              };
+              setLocation(detectedLoc);
+              try {
+                localStorage.setItem("vayu-location", JSON.stringify(detectedLoc));
+              } catch {}
+              setDetectingLocation(false);
+              return;
+            }
+          }
+        } catch {}
+
+        const fallbackLoc: Location = {
+          name: "Detected location",
+          admin: "Browser coordinates",
+          latitude: lat,
+          longitude: lng,
+        };
+        setLocation(fallbackLoc);
+        try {
+          localStorage.setItem("vayu-location", JSON.stringify(fallbackLoc));
+        } catch {}
+        setDetectingLocation(false);
+      },
+      () => setDetectingLocation(false),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 }
+    );
+  }, []);
+
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams({ lat: String(location.latitude), lng: String(location.longitude) });
+    setLoading(true);
     fetch(`/api/air-quality?${params}`, { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
         const payload = await response.json() as AirQualityResponse | { error?: string };
@@ -57,14 +143,36 @@ export function RiskWorkspace() {
   }, [location]);
 
   return <main className="risk-page">
-    <section className="risk-page-intro"><span className="risk-eyebrow"><i/> PHASE 5 · PERSONAL EXPOSURE</span><h1>Air quality is shared.<br/><em>Exposure is personal.</em></h1><p>Put local air readings in context with age, health, activity, and time outdoors. The profile stays in this page; asking the assistant sends it with your question to Groq for that response.</p></section>
-    <div className="risk-current-place"><LocateFixed size={15}/><span>{location.name}, {location.country}</span><span>{loading ? "FETCHING CURRENT AIR" : error ? "SOURCE UNAVAILABLE" : air?.sourceLabel ?? "NO DATA SOURCE"}</span></div>
+    <section className="risk-page-intro"><span className="risk-eyebrow"><i/> PHASE 5 · PERSONAL EXPOSURE</span><h1>Air quality is shared.<br/><em>Exposure is personal.</em></h1><p>Put local air readings in context with age, health, activity, and time outdoors. Grounded in real-time telemetry from your exact location.</p></section>
+    <div className="risk-current-place">
+      <button 
+        type="button" 
+        onClick={detectUserLocation} 
+        disabled={detectingLocation}
+        title="Detect your current location via GPS" 
+        className="risk-detect-pill"
+      >
+        <LocateFixed size={14} className={detectingLocation ? "animate-spin text-emerald-600" : "text-emerald-700"} />
+        <span>{detectingLocation ? "DETECTING GPS…" : "MY CURRENT LOCATION"}</span>
+      </button>
+      <span className="risk-current-place-name"><strong>{location.name}</strong>{location.country ? `, ${location.country}` : location.admin ? `, ${location.admin}` : ""}</span>
+      <span>{loading ? "FETCHING CURRENT AIR" : error ? "SOURCE UNAVAILABLE" : air?.sourceLabel ?? "NO DATA SOURCE"}</span>
+    </div>
     {error && <p className="risk-fetch-error" role="status">{error}</p>}
     <div className="risk-workspace-grid">
-      <PersonalRiskCalculator aqi={typeof air?.current.aqi === "number" ? air.current.aqi : null} locationName={location.name} sourceLabel={loading ? "Fetching air data…" : air?.sourceLabel ?? "No source available"} provenance={air?.provenance ?? null} profile={profile} onProfileChange={setProfile}/>
+      <PersonalRiskCalculator 
+        aqi={typeof air?.current.aqi === "number" ? air.current.aqi : null} 
+        air={air}
+        location={location}
+        locationName={location.name} 
+        sourceLabel={loading ? "Fetching air data…" : air?.sourceLabel ?? "No source available"} 
+        provenance={air?.provenance ?? null} 
+        profile={profile} 
+        onProfileChange={setProfile}
+        onDetectLocation={detectUserLocation}
+      />
       <aside className="risk-principles-card"><span className="risk-principles-icon"><ShieldCheck size={19}/></span><span className="risk-eyebrow">HOW TO READ THIS</span><h2>A context score, not a diagnosis.</h2><p>The weighted score illustrates how the selected profile changes relative exposure. The AQI and source reading remain visible, and modeled estimates are identified separately from station observations.</p><a href="/about">Explore data sources <ArrowUpRight size={14}/></a><small>General public information. Follow local health authority guidance.</small></aside>
     </div>
 
-    <AiAssistant air={air} location={location} profile={profile} forecast={forecast} weather={weather} history={air?.provider === "open-meteo" ? history : undefined}/>
   </main>;
 }

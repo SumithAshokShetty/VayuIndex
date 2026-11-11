@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
+import { AiAssistant } from "@/components/AiAssistant";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body>
         <Navbar />
         {children}
+        <AiAssistant />
       </body>
     </html>
   );

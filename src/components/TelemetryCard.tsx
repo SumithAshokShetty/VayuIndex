@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { Activity, Clock3, Radio, Share2, Wind } from "lucide-react";
+import { Activity, Bell, Clock3, Radio, Share2, Wind } from "lucide-react";
 import { AQI_COLORS } from "@/lib/aqi-calculator";
 import type { AirQualityResponse, Location } from "@/lib/types";
 
@@ -45,9 +45,10 @@ type TelemetryCardProps = {
   loading: boolean;
   error: string | null;
   onShare?: () => void;
+  onSetAlert?: () => void;
 };
 
-export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, error, onShare }: TelemetryCardProps) {
+export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, error, onShare, onSetAlert }: TelemetryCardProps) {
   const counterRef = useRef<HTMLSpanElement | null>(null);
   const band = aqi === null ? null : getBand(aqi);
   const source = air?.provider === "cpcb" ? "CPCB OFFICIAL TELEMETRY"
@@ -85,6 +86,17 @@ export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, 
       <div className="telemetry-heading">
         <span className="section-kicker"><Activity size={13}/> LIVE TELEMETRY</span>
         <div className="flex items-center gap-2">
+          {onSetAlert && (
+            <button
+              type="button"
+              onClick={onSetAlert}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-amber-600/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 hover:bg-amber-500/20 active:scale-95 transition-all cursor-pointer"
+              title="Set Smart AQI Threshold Alert"
+            >
+              <Bell size={11} />
+              <span>Alert</span>
+            </button>
+          )}
           {onShare && (
             <button
               type="button"
