@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Sparkles, TrendingUp, AlertTriangle, Wind, Flame, Factory, Compass, FileText } from "lucide-react";
+import { Sparkles, TrendingUp, AlertTriangle, Wind, Flame, Factory, Compass } from "lucide-react";
 import type { Location } from "@/lib/types";
 import { locationKey } from "../LocationComparison";
 
@@ -142,17 +142,6 @@ export function AiComparativeInsightBanner({
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-xs font-bold bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border border-[var(--dash-rule)]">
               PM₁₀ DELTA: +{pm10Variance}%
             </span>
-          )}
-          {onGenerateDossier && (
-            <button
-              type="button"
-              onClick={() => onGenerateDossier(highest.loc)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer ml-auto sm:ml-0"
-              title={`Generate Historical Impact Report for ${highest.loc.name}`}
-            >
-              <FileText size={13} />
-              <span>Pollution Impact Report</span>
-            </button>
           )}
         </div>
       </div>
