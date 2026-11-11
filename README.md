@@ -1,52 +1,246 @@
-# Vayu Index
+# 🌍 Vayu Index — Global Air Intelligence & Biological Health Sentinel
 
-Real-Time Global Air Intelligence & Personal Risk Engine.
+<div align="center">
 
-## Current increment
+![Next.js 15](https://img.shields.io/badge/Next.js%2015-black?style=for-the-badge&logo=next.js&logoColor=white)
+![React 19](https://img.shields.io/badge/React%2019-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript%205-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS 4](https://img.shields.io/badge/Tailwind%20CSS%204-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white)
+![Groq AI](https://img.shields.io/badge/Groq%20Cloud-Qwen%2027B-F55036?style=for-the-badge)
 
-The root route is a cinematic landing page with a scroll-driven globe story. The live dashboard lives at `/dashboard`, project and data-source details are at `/about`, and the next-part placeholder lives at `/risk`. The interface uses a restrained light palette with green accents. Internal page links are ordinary HTML anchors on purpose, so moving between routes performs full document requests instead of Next.js client-side transitions. In-page scrolling on `/` remains a normal document scroll.
+**Real-time global atmospheric telemetry, 3D WebGL spatial heatmaps, personalized biological exposure metrics, and 72-hour machine learning forecasting in one unified platform.**
 
-The App Router dashboard searches global places and displays the selected location's AQI or reported pollutant concentrations, source, and observation/model time. `src/lib/api-orchestrator.ts` tries nearby OpenAQ station measurements first, then a WAQI station AQI when configured and attributable, and finally Open-Meteo's CAMS model estimate. OpenAQ and Open-Meteo results use a per-edge-instance, 10-minute in-memory cache; WAQI responses are excluded to respect WAQI's no-cache terms. This cache is best-effort and is not shared across Vercel instances. OpenAQ concentration readings are shown without inventing an AQI from sensor values captured at different times. WAQI does not provide usable concentration units in every feed, so this UI displays its AQI only. City lookup uses the Open-Meteo Geocoding API through a typed Edge Route Handler.
+[Live Application](https://vayu-index-pi.vercel.app) • [Architecture](#-system-architecture-blueprint--data-flow) • [Features](#-key-features--capabilities) • [Data Flow](#-step-by-step-data-flow-walkthrough) • [Getting Started](#-getting-started--local-development)
 
-The Phase 2 dashboard uses an editorial 35/65 split layout, a light/dark token set, GSAP AQI counter, source timestamp and provenance, pollutant telemetry, a public-health context card, and a Framer Motion AQI reference marker. The right spatial viewport is reserved for a future Three.js/WebGL layer; the current Earth is a decorative SVG, and its markers are explicitly not station data.
+</div>
 
-The current visual system adapts the supplied portfolio design notes into a light-first product UI: Outfit display headings, Inter body text, DM Mono data labels, neutral flat surfaces, rounded controls, and restrained transitions. Green remains Vayu's air-intelligence accent.
+---
 
-`src/lib/aqi-calculator.ts` contains separate US EPA and CPCB breakpoint mappings, unit conversions, sub-index colors, and maximum-pollutant composite calculation. It expects concentrations averaged over the standard's required period; it must not be applied to a single instantaneous sensor sample as an official AQI.
+## 📌 Executive Summary
 
-The normalized endpoint is `GET /api/air-quality?lat=28.6139&lng=77.2090`. It returns `provider` and `provenance` fields so station observations remain distinct from the Open-Meteo/CAMS modeled estimate. Older `latitude` and `longitude` parameter names are accepted for compatibility. The AQI calculator is kept separate from this endpoint until a provider supplies valid standard-period averages; OpenAQ `/latest` values alone are individual readings, not enough to claim an EPA or CPCB AQI.
+While conventional weather apps display ambiguous 3-digit numbers like *"AQI 286"*, the average citizen, parent, or athlete has no intuitive grasp of what that number means biologically. 
 
-These are regional atmospheric model estimates, not ground-station observations. The globe is illustrative and its markers do not represent stations. CAMS global forecasts have an approximately 45 km grid; CAMS European air-quality forecasts have approximately 11 km resolution. A recent model timestamp does not mean a fresh local sensor observation. Ground-station integration and the personal risk engine are later increments.
+**Vayu Index** solves this by converting raw atmospheric chemistry into human reality:
+- Translating particulate concentrations into **equivalent cigarettes inhaled per day** ($22\,\mu\text{g/m}^3 \text{ PM}_{2.5} \approx 1\text{ cigarette}$) and **projected lifespan reduction**.
+- Computing a personalized **Biological Exposure Risk Score** dynamically adjusted for age, asthma/cardiac health conditions, inhalation rates, and outdoor exposure windows.
+- Projecting toxic nocturnal pollution spikes up to 3 days in advance using a **Custom Lagged Autoregressive GBDT (XGBoost/LightGBM)** machine learning model with $95\%$ confidence bounds.
+- Empowering immediate intervention via a **Smart Alert Sentinel** delivering cross-device push notifications, mobile haptic vibration pulses, and synthesized acoustic chimes.
 
-## Run locally
+---
 
-Requirements: Node.js 20.9 or later and npm.
+## 🏗 System Architecture Blueprint & Data Flow
 
-```powershell
-npm install
-Copy-Item .env.example .env.local
-npm run dev
+Below is the verified multi-tier system architecture and data ingestion blueprint powering Vayu Index:
+
+<div align="center">
+
+![Vayu Index System Architecture Blueprint](public/architecture-diagram.jpg)
+
+</div>
+
+### Architectural Tiers Breakdown
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ 1. CLIENT PRESENTATION TIER (Next.js 15, React 19, Three.js, Leaflet)             │
+│    • 3D WebGL Globe (Particle Flows)   • 2D Spatial Heatmaps (Multi-pollutant)   │
+│    • Personal Biological Risk Engine   • Smart Alerts Sentinel (Push & Haptics)  │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │ API Calls (with coordinates & params)
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ 2. EDGE API GATEWAY LAYER (Next.js 15 Serverless Edge Handlers)                   │
+│    • /api/air-quality (Live Ingestion)  • /api/forecast (72h Chronology & ML)     │
+│    • /api/compare-ai (Synthesis Route)  • /api/geocode (Spatial Resolution)       │
+│    • /api/weather (Micro-meteorology)   • /api/agent-reasoning (AI Copilot)       │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │ Inference Requests & Normalized Feeds
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ 3. MACHINE LEARNING & AI INFERENCE LAYER                                          │
+│    • Groq Cloud LLM via LangGraph (Qwen-27B Atmospheric Health Synthesis)         │
+│    • Custom Autoregressive GBDT Forecaster (Inversion Physics & 95% CI Bounds)    │
+│    • Berkeley Earth Inhalation Translation Model (PM2.5 to Cigarette Equivalency) │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         ▲
+                                         │ Fetch, Validate & Enrich Telemetry
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ 4. EXTERNAL DATA TELEMETRY SOURCES                                                │
+│    • CPCB India (Official Ground Sensors)  • OpenAQ v3 (Global Ground Truth)      │
+│    • Copernicus CAMS (EU Earth Observation)• Open-Meteo (Weather & Chemical Grid) │
+│    • WAQI (World Air Quality Index Global Archive)                                │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Add your real `OPENAQ_API_KEY`, `WAQI_API_KEY`, and (for the later AI agent) `GROQ_API_KEY` values to `.env.local`, then restart the server. Do not put secrets in `.env.example` or in any `NEXT_PUBLIC_` variable. The server also accepts the legacy `WAQI_API_TOKEN` variable. If the station keys are blank, the dashboard uses Open-Meteo. Its public endpoint requires no key for non-commercial use; commercial access uses a separate customer endpoint and key. Open <http://localhost:3000>. Press `Ctrl+C` in the terminal to stop the development server.
+---
 
-## Chosen stack
+## 🔄 Step-by-Step Data Flow Walkthrough
 
-- Next.js 15 App Router, React 19, TypeScript strict mode
-- Tailwind CSS 4 with a shadcn/ui configuration and Radix UI primitives
-- GSAP ScrollTrigger for the pinned landing-page scroll story and GSAP for the AQI number roll-up; Framer Motion for page entrance and future spring-driven panels
-- Vercel Edge Route Handlers for air data and geocoding
-- Open-Meteo APIs for geocoding and regional model estimates
-- OpenAQ v3 and WAQI station feeds as configured, accessed only from server routes
+### Step 1: User Interaction (Client Tier)
+* **Input Parameters**: User selects or auto-detects their location via GPS (e.g., *Delhi, India: $28.61^\circ\text{ N}, 77.21^\circ\text{ E}$*), configures their demographic risk profile (Age, Respiratory conditions, Activity level), and chooses a timeframe ($24\text{h}$, $7\text{d}$, or $72\text{h}$ forecast).
+* **Processing**: Client mounts the 3D WebGL Globe with particle streamlines, renders the 2D multi-layer Leaflet heatmap, and captures user preferences.
+* **Output**: Formulates typed API requests dispatched to the Edge Gateway.
 
-The project plan introduces the remaining selected tools alongside the parts that need them: Three.js and `react-globe.gl`, Leaflet/MapLibre and heatmaps, Recharts/Plotly, Turf.js, the TypeScript personal risk engine, then LangGraph/FastAPI (or Vercel AI SDK), Groq `qwen/qwen3.8-27b`, Redis/Upstash, social cards, voice, and push alerts. Provider credentials and private keys will stay server-side.
+### Step 2: API Gateway (Edge Layer)
+* **Input Parameters**: Dispatches parallel HTTP requests:
+  * `GET /api/air-quality?lat=28.61&lng=77.21`
+  * `GET /api/forecast?lat=28.61&lng=77.21&days=3`
+  * `POST /api/compare-ai` (City A vs City B pollutant vectors)
+* **Processing**: Validates coordinates, applies in-memory edge caching, handles upstream failovers across ground stations, and normalizes disparate provider units into standard $\mu\text{g/m}^3$ and CPCB NAQI sub-indices.
+* **Output**: Delivers structured, clean telemetry payloads to the Intelligence and Modeling Layer.
 
-## Data sources
+### Step 3: ML & AI Inference (Intelligence Layer)
+* **Input Parameters**: Current pollutant readings ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3$), historical lag observations ($T-1\text{h}$ through $T-24\text{h}$), and meteorological variables (temperature, boundary layer height, wind advection).
+* **Processing**:
+  * **Custom GBDT Forecasting**: Evaluates $\hat{y} = f(X)$ using an autoregressive gradient-boosted decision tree ensemble modeling diurnal traffic modulation ($1.22\times$ morning, $1.28\times$ evening) and nocturnal temperature inversions ($1.34\times$ midnight-to-dawn accumulation) with dynamic $95\%$ confidence error bounds.
+  * **Groq LLM Reasoning**: Dispatches telemetry deltas to Groq's high-speed inference engine running `qwen/qwen3.8-27b` to synthesize a concise 3-bullet comparative environmental dossier.
+  * **Inhalation Translation**: Applies the Berkeley Earth formula ($22\,\mu\text{g/m}^3 \text{ PM}_{2.5} / 24\text{h} = 1\text{ cigarette}$) and computes estimated life expectancy reduction against WHO safe baselines ($5\,\mu\text{g/m}^3$).
+* **Output**: Enriched forecast trajectories, calculated biological exposure scores, and contextual clinical advisories.
 
-- [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api) — city names to coordinates.
-- [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) — current model conditions, pollutant concentrations, and US AQI.
-- [Copernicus Atmosphere Monitoring Service](https://atmosphere.copernicus.eu/) — atmospheric model data attributed through Open-Meteo.
-- [OpenAQ v3](https://docs.openaq.org/) — nearby station observations. Its API key is read only in the server-side route.
-- [World Air Quality Index Project API](https://aqicn.org/api/) — nearby AQI fallback. WAQI requires a token; its data is not cached and response attribution is displayed.
+### Step 4: Response to User (Client Tier)
+* **Output Delivered**:
+  * Real-time AQI with GSAP animated counter and CPCB 6-color severity badge.
+  * 3D spatial globe with interactive coordinate inspection.
+  * Personalized clinical precautions, indoor HEPA filtration schedules, and optimal outdoor activity windows.
+  * Real-time **Smart Alerts**: Native Web Push notification, mobile device haptic vibration pulse (`[250, 100, 250]` ms), and synthesized harmonic double-tone audio chime.
 
-WAQI's published terms prohibit using its data in paid applications and require explicit agreement for public use by a for-profit company. They also require attribution and prohibit caching or archiving WAQI data. Confirm the intended release fits those terms before deploying WAQI data publicly.
+---
+
+## 🌟 Key Features & Capabilities
+
+### 1. 3D WebGL Planetary Globe (`/dashboard`)
+* **GPU-Accelerated Spatial Engine**: Built on Three.js and `react-globe.gl` displaying live global atmospheric flow.
+* **Dynamic Streamlines**: Particle advection flows visualizing global wind vectors and thermal gradients.
+* **Multi-Layer Selector**: Seamless switching between **AQI**, **$\text{PM}_{2.5}$**, **$\text{PM}_{10}$**, **Ozone ($\text{O}_3$)**, **Nitrogen Dioxide ($\text{NO}_2$)**, **Sulphur Dioxide ($\text{SO}_2$)**, and **Carbon Monoxide ($\text{CO}$)**.
+* **Click-to-Inspect**: Click any point on Earth to reverse-geocode coordinates and pull instantaneous ground or model telemetry.
+
+### 2. 72-Hour ML Forecaster & Inversion Modeling (`/dashboard`)
+* **Top 4 Executive KPI Badges**:
+  * **Peak Projected AQI**: (e.g., `221 Poor at Thu 12 PM`) — pre-warns users of upcoming dangerous spikes.
+  * **Cleanest Air Window**: (e.g., `65 Satisfactory near Wed 5 AM`) — optimal window for running, sports, and natural ventilation.
+  * **Cumulative 72h Burden**: Time-weighted mean AQI quantifying overall systemic exposure.
+  * **Confidence Margin**: Dynamic uncertainty interval (`±14 AQI Margin`).
+* **Interactive Controls**:
+  * Scale selection: `CPCB NAQI (India Statutory)` vs `US-EPA AQI`.
+  * `✓ 95% Confidence Band` toggleable uncertainty ribbon.
+  * `🧪 Test Custom ML Forecaster`: Simulation switch activating Vayu's on-the-fly local GBDT engine if external APIs fail.
+
+### 3. Biological Exposure Impact & Cigarette Equivalency (`/overview`)
+* **Berkeley Earth Mathematical Translation**: Converts daily $\text{PM}_{2.5}$ inhalation into equivalent cigarettes smoked ($22\,\mu\text{g/m}^3 = 1\text{ cigarette}$).
+* **Lifespan Impact Quantification**: Calculates estimated life years lost compared to living in an airshed complying with WHO safe standards (e.g., `-12.7 years`).
+* **Cumulative Projections**: Annualized inhalation burden calculations (e.g., `~2,221 cigarettes / year`).
+
+### 4. Personal Biological Exposure Risk Calculator (`/risk`)
+* **Multi-Variable Inhalation Scoring**:
+  * **Age Group**: Child (0–17, $1.35\times$), Adult (18–64, $1.0\times$), Senior (65+, $1.4\times$).
+  * **Medical Profile**: Standard ($1.0\times$), Asthma/Respiratory ($1.65\times$), Cardiovascular ($1.5\times$).
+  * **Ventilation Volume**: Light/Resting ($7.5\,\text{L/min}$, $1.0\times$), Moderate commute ($24.0\,\text{L/min}$, $1.3\times$), High-intensity cardio ($65.0\,\text{L/min}$, $1.75\times$).
+  * **Exposure Window**: $<1\text{h}$ ($1.0\times$), $1\text{--}3\text{h}$ ($1.25\times$), $3+\text{h}$ ($1.6\times$).
+* **5 Clinical Severity Score Tiers**:
+  * $\ge 800$: `Critical Hazardous Cellular Threat` (*Acute Systemic Influx*)
+  * $\ge 500$: `Severe Toxic Inhalation Burden` (*High Cardiopulmonary Burden*)
+  * $\ge 300$: `Elevated Systemic Stress`
+  * $\ge 150$: `Moderate Environmental Load`
+  * $< 150$: `Minimal Baseline Burden`
+
+### 5. AI Atmospheric Comparison Synthesis (`/compare`)
+* **Comparative Visual Analytics**:
+  * *Chart 01*: Continuous chronological dual-city trajectory vs EPA & CPCB standards.
+  * *Chart 02*: Multi-pollutant grouped bar chart vs statutory limits.
+  * *Chart 03*: Multi-axis radar diagram displaying atmospheric chemical signatures.
+  * *Chart 04*: 100% relative stacked composition area chart.
+* **Groq Qwen-27B Synthesis**: Generates conversational 3-bullet executive takeaways detailing severity deltas, dominant emission vectors, and commuter health advisories.
+
+### 6. Smart AQI Alerts Sentinel (Cross-Platform Mobile & Desktop)
+* **Continuous Monitoring**: Adjustable threshold slider from **50 (Good)** to **450 (Severe)**.
+* **Quick Presets**: `100+ Moderate`, `150+ Sensitive`, `200+ Poor` (Default), `300+ Very Poor`, `400+ Severe`.
+* **Multi-Channel Dispatch**:
+  * **Mobile & Desktop Web Push**: Instant background notifications on Android Chrome, Edge, and iOS Safari 16.4+ (PWA).
+  * **Mobile Haptic Vibration**: Pulses smartphone motor with a double buzz (`[250, 100, 250]` ms) via the HTML5 Vibration API.
+  * **Acoustic Alert Ping**: Synthesized dual-tone harmonic chime ($520 \to 680\,\text{Hz}$) generated purely in-browser with the Web Audio API.
+  * **Alert Fatigue Damper**: Cooldown intervals (`1h`, `3h`, `6h`, `24h`) preventing notification spam.
+
+### 7. Social Infographics & Impact Dossier Export
+* **Social Sharing Card**: Generates 2.5× Retina graphics for Instagram, WhatsApp, X, and LinkedIn in `1:1 Square`, `9:16 Story`, and `16:9 Landscape` formats with dynamic scannable QR codes.
+* **Verified PDF Impact Dossier**: One-click download of a comprehensive multi-year particulate trajectory table (2021–2025 Projected) with statutory compliance statuses.
+
+---
+
+## 🛠 Technology Stack
+
+| Domain | Technology / Library | Purpose |
+| :--- | :--- | :--- |
+| **Framework** | Next.js 15 (App Router) | High-performance server rendering & Edge Route Handlers |
+| **Language** | TypeScript (Strict Mode) | End-to-end type safety for meteorological schemas |
+| **Core UI** | React 19, Tailwind CSS 4 | Modern components, tokens, and responsive layouts |
+| **Animations** | Framer Motion, GSAP | Spring physics, fluid dialogs, and rolling number tickers |
+| **3D Graphics** | Three.js, `react-globe.gl` | Interactive 60 FPS planetary digital twin and particle shaders |
+| **2D Mapping** | Leaflet.js | Global raster & vector multi-pollutant spatial heatmaps |
+| **Charting** | Recharts | Responsive chronological, radar, bar, and stacked area charts |
+| **LLM & Agents** | Groq Cloud SDK, LangGraph | Ultra-low latency inference using `qwen/qwen3.8-27b` |
+| **ML Engine** | Custom Autoregressive GBDT | Lagged multi-step Gradient-Boosted Decision Tree forecaster |
+| **Device APIs** | Web Push, Vibration, Web Audio | Multi-channel desktop/mobile notifications and haptic pings |
+| **Document Export**| `jspdf`, `html2canvas`, `qrcode.react` | High-fidelity PDF report dossier and social share card rendering |
+
+---
+
+## 🚀 Getting Started & Local Development
+
+### Prerequisites
+- Node.js `20.9.0` or higher
+- npm or yarn
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/SumithAshokShetty/VayuIndex.git
+cd VayuIndex
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Configure Environment Variables
+Create a `.env.local` file in the root directory:
+```env
+# Optional API Keys for Live Station Observations & AI Synthesis
+OPENAQ_API_KEY=your_openaq_api_key_here
+WAQI_API_KEY=your_waqi_api_token_here
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=qwen/qwen3.8-27b
+```
+*(Note: If API keys are omitted, the application automatically uses Open-Meteo and Vayu's deterministic mathematical fallback engines without breaking).*
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 5. Run Type Checking & Build
+```bash
+npm run typecheck
+npm run build
+```
+
+---
+
+## 📊 Authentic Data Sources & Attribution
+
+- **[CPCB India](https://cpcb.nic.in)** — Official Central Pollution Control Board station telemetry and National Air Quality Index (NAQI) sub-index breakpoints.
+- **[OpenAQ API v3](https://docs.openaq.org)** — Global open-source ground-truth station observation feeds.
+- **[Copernicus CAMS](https://atmosphere.copernicus.eu)** — European Union Earth Observation Programme atmospheric dispersion reanalysis.
+- **[Open-Meteo Air Quality & Weather API](https://open-meteo.com)** — Multi-pollutant global grids, 72-hour forecasts, and meteorological variables.
+- **[WAQI](https://aqicn.org)** — World Air Quality Index global real-time station archive.
+- **[Berkeley Earth](https://berkeleyearth.org)** — Peer-reviewed atmospheric pollution to cigarette inhalation mathematical model.
+
+---
+
+## 👥 Hackathon Submission & Authors
+* **Project**: Vayu Index
+* **Repository**: [https://github.com/SumithAshokShetty/VayuIndex](https://github.com/SumithAshokShetty/VayuIndex)
+* **Author**: Sumith Ashok Shetty
+* **License**: MIT
