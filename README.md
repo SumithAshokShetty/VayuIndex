@@ -11,7 +11,7 @@
 
 **Real-time global atmospheric telemetry, 3D WebGL spatial heatmaps, personalized biological exposure metrics, and 72-hour machine learning forecasting in one unified platform.**
 
-[Live Application](https://vayu-index-pi.vercel.app) • [Architecture](#-system-architecture-blueprint--data-flow) • [Features](#-key-features--capabilities) • [Data Flow](#-step-by-step-data-flow-walkthrough) • [Getting Started](#-getting-started--local-development)
+[Live Application](https://vayu-index-pi.vercel.app) • [Demo Video](https://drive.google.com/file/d/1EB6gD6egqN0wVHnZ_IYXw89LbueMhJ30/view?usp=sharing) • [Architecture](#-system-architecture-blueprint--data-flow) • [Features](#-key-features--capabilities) • [Data Flow](#-step-by-step-data-flow-walkthrough) • [Getting Started](#-getting-started--local-development)
 
 </div>
 
@@ -228,19 +228,36 @@ npm run build
 
 ---
 
-## 📊 Authentic Data Sources & Attribution
+## 🏛️ Integrated Public and Government Data Sources & APIs
 
-- **[CPCB India](https://cpcb.nic.in)** — Official Central Pollution Control Board station telemetry and National Air Quality Index (NAQI) sub-index breakpoints.
-- **[OpenAQ API v3](https://docs.openaq.org)** — Global open-source ground-truth station observation feeds.
-- **[Copernicus CAMS](https://atmosphere.copernicus.eu)** — European Union Earth Observation Programme atmospheric dispersion reanalysis.
-- **[Open-Meteo Air Quality & Weather API](https://open-meteo.com)** — Multi-pollutant global grids, 72-hour forecasts, and meteorological variables.
-- **[WAQI](https://aqicn.org)** — World Air Quality Index global real-time station archive.
-- **[Berkeley Earth](https://berkeleyearth.org)** — Peer-reviewed atmospheric pollution to cigarette inhalation mathematical model.
+### 1. CPCB (Central Pollution Control Board, India)
+Official Indian government data source providing real-time ground-station air quality telemetry and National Air Quality Index (NAQI) pollutant sub-index breakpoints.
+
+### 2. OpenAQ API (v2/v3)
+Global open-access air quality data platform providing measurements from ground-based ambient air monitoring stations across multiple countries.
+
+### 3. Copernicus CAMS (Copernicus Atmosphere Monitoring Service – European Union)
+Provides global atmospheric composition, chemical dispersion, and particulate matter reanalysis data to support atmospheric intelligence and pollution analysis.
+
+### 4. Open-Meteo Air Quality & Weather API
+Provides hourly air quality forecasts for up to 72 hours, including PM2.5, PM10, NO2, SO2, CO, and O3 concentrations, along with meteorological parameters such as wind speed, wind direction, humidity, and temperature.
+
+### 5. WAQI (World Air Quality Index)
+Provides international air quality station information, real-time AQI readings, and historical air quality data where available.
+
+### 6. Open-Meteo Geocoding API
+Enables global city search, geographical location resolution, administrative location identification, and GPS coordinate mapping for location-based air quality monitoring.
+
+### 7. Berkeley Earth
+Peer-reviewed atmospheric pollution to cigarette inhalation mathematical model ($22\,\mu\text{g/m}^3 \text{ PM}_{2.5} / 24\text{h} \approx 1\text{ cigarette}$).
+
+> **Integration Impact**: These integrations enable Vayu Index to combine ground-based measurements, satellite-assisted atmospheric modelling, meteorological forecasts, and geographical intelligence into a unified global air quality monitoring and forecasting platform.
 
 ---
 
 ## 👥 Hackathon Submission & Authors
 * **Project**: Vayu Index
 * **Repository**: [https://github.com/SumithAshokShetty/VayuIndex](https://github.com/SumithAshokShetty/VayuIndex)
+* **Demo Video**: [Watch on Google Drive](https://drive.google.com/file/d/1EB6gD6egqN0wVHnZ_IYXw89LbueMhJ30/view?usp=sharing)
+* **Live Deployment**: [https://vayu-index-pi.vercel.app](https://vayu-index-pi.vercel.app)
 * **Author**: Sumith Ashok Shetty
-* **License**: MIT
