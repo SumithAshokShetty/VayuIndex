@@ -1887,7 +1887,7 @@ html.dark .dashboard-app .spatial-aqi-chip strong {
 html,
 body {
   max-width: 100%;
-  width: 100%; max-width: 100vw; overflow-x: hidden !important; position: relative;
+  width: 100%; max-width: 100vw; overflow-x: clip !important; position: relative;
 }
 
 body,
@@ -2234,9 +2234,7 @@ html.dark .mobile-nav-panel a[aria-current="page"] {
     letter-spacing: 0.08em;
   }
 
-  .public-navbar-wrapper .smart-alerts-toggle {
-    display: none !important;
-  }
+  /* smart-alerts-toggle visible on mobile */
 
   .app-workspace-navbar-wrapper > div {
     padding-right: 12px !important;
@@ -2256,8 +2254,7 @@ html.dark .mobile-nav-panel a[aria-current="page"] {
     letter-spacing: 0.08em;
   }
 
-  .app-workspace-navbar-wrapper .dashboard-status,
-  .app-workspace-navbar-wrapper .smart-alerts-toggle {
+  .app-workspace-navbar-wrapper .dashboard-status {
     display: none !important;
   }
 
@@ -2345,5 +2342,9 @@ html.dark .mobile-nav-panel a[aria-current="page"] {
 @media (max-width: 600px) { .assistant-launcher { right: 14px !important; bottom: 14px !important; padding: 10px 14px !important; font-size: 11px !important; letter-spacing: 0.08em !important; } }
 
 /* Root overflow prevention */
-html, body { width: 100% !important; max-width: 100vw !important; overflow-x: hidden !important; position: relative !important; margin: 0 !important; padding: 0 !important; }
-main, .app-shell, .editorial-landing, .dashboard-page, .dashboard-frame, .overview-spatial-map-container { max-width: 100vw !important; overflow-x: hidden !important; }
+html, body { width: 100% !important; max-width: 100% !important; overflow-x: clip !important; position: relative !important; margin: 0 !important; padding: 0 !important; }
+main, .app-shell, .editorial-landing, .dashboard-page, .dashboard-frame, .overview-spatial-map-container { max-width: 100% !important; overflow-x: clip !important; }
+
+/* Enforce sticky navbar on all devices */
+.app-workspace-navbar-wrapper, .public-navbar-wrapper { position: sticky !important; top: 0 !important; z-index: 100 !important; width: 100% !important; max-width: 100% !important; }
+.smart-alerts-toggle { display: inline-flex !important; align-items: center !important; justify-content: center !important; flex: 0 0 auto !important; }

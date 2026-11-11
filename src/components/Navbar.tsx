@@ -230,6 +230,25 @@ export function Navbar() {
                 {item.label}
               </a>
             ))}
+            {/* Smart AQI Alerts Sentinel Trigger Card inside Mobile Nav */}
+            <div className="pt-2 mt-1 border-t border-black/10 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setModalOpen(true);
+                }}
+                className="w-full flex items-center justify-between p-2.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 text-inherit text-left cursor-pointer transition-all hover:bg-emerald-500/15"
+              >
+                <span className="flex items-center gap-2">
+                  <BellRing size={15} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="font-mono text-xs font-bold">Smart AQI Alerts</span>
+                </span>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                  {config.enabled ? "ACTIVE" : "CONFIGURE"}
+                </span>
+              </button>
+            </div>
           </nav>
         </header>
 
@@ -347,7 +366,7 @@ export function Navbar() {
           {/* Right Accessories: ● STATION DATA green live indicator badge & Smart Alerts & Theme Toggle */}
           <div className="top-actions flex items-center gap-2 sm:gap-4 min-w-0 sm:min-w-[200px] justify-end flex-shrink-0">
             <span
-              className="dashboard-status flex items-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.09em] whitespace-nowrap"
+              className="dashboard-status hidden md:flex items-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.09em] whitespace-nowrap"
               style={{ color: isDark ? "#adb8b0" : "#666b60" }}
             >
               <i
@@ -399,7 +418,36 @@ export function Navbar() {
             { href: "/health", label: "Health & Safety" },
             { href: "/risk", label: "Personal risk" },
             { href: "/about", label: "About" },
-          ].map((item) => <a key={item.href} href={item.href} aria-current={currentPath === item.href ? "page" : undefined} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>)}
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              aria-current={currentPath === item.href ? "page" : undefined}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.label}
+            </a>
+          ))}
+
+          {/* Smart AQI Alerts Sentinel Trigger Card inside Mobile Nav */}
+          <div className="pt-2 mt-1 border-t border-black/10 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setModalOpen(true);
+              }}
+              className="w-full flex items-center justify-between p-2.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 text-inherit text-left cursor-pointer transition-all hover:bg-emerald-500/15"
+            >
+              <span className="flex items-center gap-2">
+                <BellRing size={15} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="font-mono text-xs font-bold">Smart AQI Alerts</span>
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                {config.enabled ? "ACTIVE" : "CONFIGURE"}
+              </span>
+            </button>
+          </div>
         </nav>
       </header>
 

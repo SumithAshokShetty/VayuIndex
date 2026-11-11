@@ -1274,6 +1274,191 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
   const activeMetric = getLayerMetric(activeHotspot, activeLayer);
   const scaleTiers = getScaleTiers(activeLayer, activeMetric.value);
 
+  const stationCardContent = (
+    <div className="space-y-3.5">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-2.5">
+        <div>
+          <h2 className="text-xl font-extrabold text-[var(--dash-ink)] tracking-tight">
+            {activeHotspot.name}
+          </h2>
+          <span className="text-[10px] font-mono tracking-wider uppercase text-[var(--dash-muted)] font-semibold">
+            {activeHotspot.state ? `${activeHotspot.state}, ` : ""}{activeHotspot.country}
+          </span>
+        </div>
+
+        {onShareCity && (
+          <button
+            type="button"
+            onClick={() => onShareCity(activeHotspot)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm cursor-pointer transition-all active:scale-95"
+            title={`Generate Share Card for ${activeHotspot.name}`}
+          >
+            <Share2 size={12} />
+            <span>Share</span>
+          </button>
+        )}
+      </div>
+
+      {/* Big AQI Banner with City Landmark Art & Provenance Badge (Image 2) */}
+      <div
+        className="p-4 sm:p-5 rounded-2xl border border-[var(--dash-rule)] relative overflow-hidden flex flex-col justify-between shadow-sm min-h-[145px]"
+        style={{
+          background: `linear-gradient(135deg, ${aqiInfo.bg}, transparent)`,
+        }}
+      >
+        {/* Architectural Monument Line-Art in Background (Image 2) */}
+        <div className="absolute right-0 bottom-0 w-3/4 h-full pointer-events-none opacity-30 dark:opacity-20 flex items-end justify-end overflow-hidden pr-1 pb-0.5">
+          {getCityLandmarkSvg(activeHotspot.name, aqiInfo.color)}
+        </div>
+
+        <div className="relative z-10">
+          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)]">
+            AQI
+          </span>
+          <div className="flex items-baseline gap-2.5 mt-0.5">
+            <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight" style={{ color: aqiInfo.color }}>
+              {activeHotspot.aqi}
+            </span>
+            <span className="text-base sm:text-lg font-bold" style={{ color: aqiInfo.color }}>
+              {activeHotspot.status}
+            </span>
+          </div>
+        </div>
+
+        {/* Provenance Pill Badge (Image 2) */}
+        <div className="relative z-10 mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--dash-surface)]/90 border border-[var(--dash-rule)] backdrop-blur-md self-start text-[11px] font-mono text-[var(--dash-ink)] shadow-xs">
+          <span>CPCB AQI · Live Telemetry · as of {liveTimeFormatted}</span>
+        </div>
+      </div>
+
+      {/* Health Advisory Box */}
+      <div className="p-3 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[var(--dash-ink)]">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--dash-accent)] block mb-1">
+          ATMOSPHERIC HEALTH ADVISORY
+        </span>
+        <p className="text-xs leading-relaxed text-[var(--dash-muted)]">
+          {activeHotspot.advisory}
+        </p>
+      </div>
+
+      {/* Regional Weather Details when Weather Overlay is Active */}
+      {weatherOverlay && (
+        <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[var(--dash-ink)] space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-1">
+              <span>🌡️</span> REGIONAL WEATHER
+            </span>
+            <span className="text-[10px] font-mono text-[var(--dash-muted)]">
+              {activeHotspot.weather?.condition || "Live"}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+            <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
+              <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Temp</span>
+              <span className="text-sm font-mono font-extrabold text-[var(--dash-ink)]">
+                {activeHotspot.weather?.temp ?? 26}°C
+              </span>
+            </div>
+            <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
+              <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Humidity</span>
+              <span className="text-sm font-mono font-extrabold text-[var(--dash-ink)]">
+                {activeHotspot.weather?.humidity ?? 48}%
+              </span>
+            </div>
+            <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
+              <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Wind</span>
+              <span className="text-xs font-mono font-extrabold text-sky-600 dark:text-sky-400 block truncate">
+                {activeHotspot.weather?.windSpeed ?? 10} km/h
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Heatmap indicator */}
+      {heatmapOverlay && (
+        <div className="px-3 py-1.5 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[10px] font-mono text-[var(--dash-muted)] flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeMetric.color }} />
+            <span>Heatmap: <strong>{activeMetric.metricLabel}</strong></span>
+          </span>
+          <span className="font-bold" style={{ color: activeMetric.color }}>
+            {activeMetric.category}
+          </span>
+        </div>
+      )}
+
+      {/* Individual Pollutants Progress Bars */}
+      <div className="space-y-1.5 pt-1">
+        <div className="flex items-center justify-between text-[10px] font-mono text-[var(--dash-muted)] border-b border-[var(--dash-rule)] pb-1">
+          <span>Pollutant</span>
+          <span>Concentration</span>
+        </div>
+
+        {/* PM2.5 */}
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-rose-500" /> PM2.5
+          </span>
+          <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.pm2_5} µg/m³</span>
+        </div>
+        <div className="w-full bg-[var(--dash-surface-soft)] h-1.5 rounded-full overflow-hidden border border-[var(--dash-rule)]">
+          <div
+            className="bg-rose-500 h-full rounded-full"
+            style={{ width: `${Math.min(100, (activeHotspot.pollutants.pm2_5 / 150) * 100)}%` }}
+          />
+        </div>
+
+        {/* PM10 */}
+        <div className="flex items-center justify-between gap-3 text-xs mt-2">
+          <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500" /> PM10
+          </span>
+          <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.pm10} µg/m³</span>
+        </div>
+        <div className="w-full bg-[var(--dash-surface-soft)] h-1.5 rounded-full overflow-hidden border border-[var(--dash-rule)]">
+          <div
+            className="bg-amber-500 h-full rounded-full"
+            style={{ width: `${Math.min(100, (activeHotspot.pollutants.pm10 / 250) * 100)}%` }}
+          />
+        </div>
+
+        {/* Ozone */}
+        <div className="flex items-center justify-between gap-3 text-xs mt-2">
+          <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Ozone (O₃)
+          </span>
+          <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.ozone} µg/m³</span>
+        </div>
+
+        {/* NO2 */}
+        <div className="flex items-center justify-between gap-3 text-xs mt-2">
+          <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-sky-500" /> Nitrogen Dioxide (NO₂)
+          </span>
+          <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.no2} µg/m³</span>
+        </div>
+
+        {/* SO2 */}
+        <div className="flex items-center justify-between gap-3 text-xs mt-2">
+          <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-teal-500" /> Sulphur Dioxide (SO₂)
+          </span>
+          <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.so2} µg/m³</span>
+        </div>
+
+        {/* CO */}
+        <div className="flex items-center justify-between gap-3 text-xs mt-2">
+          <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-purple-500" /> Carbon Monoxide (CO)
+          </span>
+          <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.co} µg/m³</span>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4 w-full">
       {/* ------------------------------------------------------------------ */}
@@ -1336,7 +1521,7 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
       {/* ------------------------------------------------------------------ */}
       {/* 1. Dedicated Leaflet Container (Clean Bounds & Theme-Adaptive Cartography) */}
       {/* ------------------------------------------------------------------ */}
-      <div className="overview-spatial-map-container relative w-full max-w-full h-[520px] sm:h-[650px] rounded-2xl overflow-hidden border border-[var(--dash-rule)] shadow-xl bg-[var(--dash-surface-soft)]">
+      <div className="overview-spatial-map-container relative w-full max-w-full h-[380px] sm:h-[480px] lg:h-[650px] rounded-2xl overflow-hidden border border-[var(--dash-rule)] shadow-xl bg-[var(--dash-surface-soft)]">
         {/* Full Spatial Map Canvas */}
         <div ref={mapContainerRef} className="absolute inset-0 z-0 w-full h-full" />
 
@@ -1349,189 +1534,21 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
         />
 
         {/* ------------------------------------------------------------------ */}
-        {/* Left Floating Drawer: Absolute Pinning with Theme Adaptive Card */}
+        {/* Mobile / Tablet Compact Active City Pill on Map Canvas */}
         {/* ------------------------------------------------------------------ */}
-        <div className="overview-spatial-map-controls absolute top-4 left-4 z-20 w-[calc(100%-2rem)] sm:w-full sm:max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3.5 pointer-events-auto max-h-[618px] overflow-y-auto scrollbar-thin">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--dash-rule)] pb-2.5">
-            <div>
-              <h2 className="text-xl font-extrabold text-[var(--dash-ink)] tracking-tight">
-                {activeHotspot.name}
-              </h2>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-[var(--dash-muted)] font-semibold">
-                {activeHotspot.state ? `${activeHotspot.state}, ` : ""}{activeHotspot.country}
-              </span>
-            </div>
-
-            {onShareCity && (
-              <button
-                type="button"
-                onClick={() => onShareCity(activeHotspot)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm cursor-pointer transition-all active:scale-95"
-                title={`Generate Share Card for ${activeHotspot.name}`}
-              >
-                <Share2 size={12} />
-                <span>Share</span>
-              </button>
-            )}
+        <div className="lg:hidden absolute top-4 left-4 z-20 pointer-events-auto">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] shadow-md text-xs font-mono">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: aqiInfo.color }} />
+            <span className="font-bold truncate max-w-[130px]">{activeHotspot.name}</span>
+            <span className="font-extrabold" style={{ color: aqiInfo.color }}>{activeHotspot.aqi}</span>
           </div>
+        </div>
 
-          {/* Big AQI Banner with City Landmark Art & Provenance Badge (Image 2) */}
-          <div
-            className="p-4 sm:p-5 rounded-2xl border border-[var(--dash-rule)] relative overflow-hidden flex flex-col justify-between shadow-sm min-h-[145px]"
-            style={{
-              background: `linear-gradient(135deg, ${aqiInfo.bg}, transparent)`,
-            }}
-          >
-            {/* Architectural Monument Line-Art in Background (Image 2) */}
-            <div className="absolute right-0 bottom-0 w-3/4 h-full pointer-events-none opacity-30 dark:opacity-20 flex items-end justify-end overflow-hidden pr-1 pb-0.5">
-              {getCityLandmarkSvg(activeHotspot.name, aqiInfo.color)}
-            </div>
-
-            <div className="relative z-10">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--dash-muted)]">
-                AQI
-              </span>
-              <div className="flex items-baseline gap-2.5 mt-0.5">
-                <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight" style={{ color: aqiInfo.color }}>
-                  {activeHotspot.aqi}
-                </span>
-                <span className="text-base sm:text-lg font-bold" style={{ color: aqiInfo.color }}>
-                  {activeHotspot.status}
-                </span>
-              </div>
-            </div>
-
-            {/* Provenance Pill Badge (Image 2) */}
-            <div className="relative z-10 mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--dash-surface)]/90 border border-[var(--dash-rule)] backdrop-blur-md self-start text-[11px] font-mono text-[var(--dash-ink)] shadow-xs">
-              <span>CPCB AQI · Live Telemetry · as of {liveTimeFormatted}</span>
-            </div>
-          </div>
-
-          {/* Health Advisory Box */}
-          <div className="p-3 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[var(--dash-ink)]">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--dash-accent)] block mb-1">
-              ATMOSPHERIC HEALTH ADVISORY
-            </span>
-            <p className="text-xs leading-relaxed text-[var(--dash-muted)]">
-              {activeHotspot.advisory}
-            </p>
-          </div>
-
-          {/* Regional Weather Details when Weather Overlay is Active */}
-          {weatherOverlay && (
-            <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[var(--dash-ink)] space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-1">
-                  <span>🌡️</span> REGIONAL WEATHER
-                </span>
-                <span className="text-[10px] font-mono text-[var(--dash-muted)]">
-                  {activeHotspot.weather?.condition || "Live"}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
-                <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
-                  <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Temp</span>
-                  <span className="text-sm font-mono font-extrabold text-[var(--dash-ink)]">
-                    {activeHotspot.weather?.temp ?? 26}°C
-                  </span>
-                </div>
-                <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
-                  <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Humidity</span>
-                  <span className="text-sm font-mono font-extrabold text-[var(--dash-ink)]">
-                    {activeHotspot.weather?.humidity ?? 48}%
-                  </span>
-                </div>
-                <div className="p-1.5 rounded-lg bg-[var(--dash-surface)] border border-[var(--dash-rule)]">
-                  <span className="text-[9px] font-mono text-[var(--dash-muted)] block uppercase">Wind</span>
-                  <span className="text-xs font-mono font-extrabold text-sky-600 dark:text-sky-400 block truncate">
-                    {activeHotspot.weather?.windSpeed ?? 10} km/h
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Active Heatmap indicator */}
-          {heatmapOverlay && (
-            <div className="px-3 py-1.5 rounded-lg bg-[var(--dash-surface-soft)] border border-[var(--dash-rule)] text-[10px] font-mono text-[var(--dash-muted)] flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeMetric.color }} />
-                <span>Heatmap: <strong>{activeMetric.metricLabel}</strong></span>
-              </span>
-              <span className="font-bold" style={{ color: activeMetric.color }}>
-                {activeMetric.category}
-              </span>
-            </div>
-          )}
-
-          {/* Individual Pollutants Progress Bars */}
-          <div className="space-y-1.5 pt-1">
-            <div className="flex items-center justify-between text-[10px] font-mono text-[var(--dash-muted)] border-b border-[var(--dash-rule)] pb-1">
-              <span>Pollutant</span>
-              <span>Concentration</span>
-            </div>
-
-            {/* PM2.5 */}
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500" /> PM2.5
-              </span>
-              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.pm2_5} µg/m³</span>
-            </div>
-            <div className="w-full bg-[var(--dash-surface-soft)] h-1.5 rounded-full overflow-hidden border border-[var(--dash-rule)]">
-              <div
-                className="bg-rose-500 h-full rounded-full"
-                style={{ width: `${Math.min(100, (activeHotspot.pollutants.pm2_5 / 150) * 100)}%` }}
-              />
-            </div>
-
-            {/* PM10 */}
-            <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500" /> PM10
-              </span>
-              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.pm10} µg/m³</span>
-            </div>
-            <div className="w-full bg-[var(--dash-surface-soft)] h-1.5 rounded-full overflow-hidden border border-[var(--dash-rule)]">
-              <div
-                className="bg-amber-500 h-full rounded-full"
-                style={{ width: `${Math.min(100, (activeHotspot.pollutants.pm10 / 250) * 100)}%` }}
-              />
-            </div>
-
-            {/* Ozone */}
-            <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Ozone (O₃)
-              </span>
-              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.ozone} µg/m³</span>
-            </div>
-
-            {/* NO2 */}
-            <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-sky-500" /> Nitrogen Dioxide (NO₂)
-              </span>
-              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.no2} µg/m³</span>
-            </div>
-
-            {/* SO2 */}
-            <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-teal-500" /> Sulphur Dioxide (SO₂)
-              </span>
-              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.so2} µg/m³</span>
-            </div>
-
-            {/* CO */}
-            <div className="flex items-center justify-between gap-3 text-xs mt-2">
-              <span className="font-semibold text-[var(--dash-ink)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-purple-500" /> Carbon Monoxide (CO)
-              </span>
-              <span className="font-mono text-[var(--dash-muted)]">{activeHotspot.pollutants.co} µg/m³</span>
-            </div>
-          </div>
+        {/* ------------------------------------------------------------------ */}
+        {/* Desktop Left Floating Drawer (hidden on mobile/tablet) */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="hidden lg:block overview-spatial-map-controls absolute top-4 left-4 z-20 w-full max-w-sm backdrop-blur-md bg-[var(--dash-surface)]/95 border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-2xl p-5 space-y-3.5 pointer-events-auto max-h-[618px] overflow-y-auto scrollbar-thin">
+          {stationCardContent}
         </div>
 
         {/* ------------------------------------------------------------------ */}
@@ -1652,6 +1669,13 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: 
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Mobile Station Details Card: Show Map First, Then Card Below */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="block lg:hidden w-full backdrop-blur-md bg-[var(--dash-surface)] border border-[var(--dash-rule)] text-[var(--dash-ink)] rounded-2xl shadow-lg p-4 sm:p-5">
+        {stationCardContent}
       </div>
 
       {/* ------------------------------------------------------------------ */}
