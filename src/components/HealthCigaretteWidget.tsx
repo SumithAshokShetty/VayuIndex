@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Car, ChevronRight, Home, Info, ShieldCheck, Wind } from "lucide-react";
+import { Car, ChevronRight, Home, Info, ShieldCheck, Wind, Share2 } from "lucide-react";
 
 interface HealthCigaretteWidgetProps {
   cityName: string;
   pm25: number | null;
   aqi: number | null;
+  onShare?: () => void;
 }
 
-export function HealthCigaretteWidget({ cityName, pm25, aqi }: HealthCigaretteWidgetProps) {
+export function HealthCigaretteWidget({ cityName, pm25, aqi, onShare }: HealthCigaretteWidgetProps) {
   // Berkeley Earth formula: 1 cigarette per day ≈ 22 µg/m³ PM2.5
   const dailyCigarettes = useMemo(() => {
     if (pm25 === null || pm25 <= 0) {
@@ -55,9 +56,22 @@ export function HealthCigaretteWidget({ cityName, pm25, aqi }: HealthCigaretteWi
             </span>
           </h2>
         </div>
-        <span className="text-xs font-mono text-[var(--dash-muted)] self-start sm:self-auto">
-          Source: Berkeley Earth Algorithm
-        </span>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <span className="text-xs font-mono text-[var(--dash-muted)]">
+            Source: Berkeley Earth Algorithm
+          </span>
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition-all active:scale-95 cursor-pointer"
+              title={`Generate Share Card for ${cityName}`}
+            >
+              <Share2 size={12} />
+              <span>Share Card</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Cigarette Equivalency Showcase */}

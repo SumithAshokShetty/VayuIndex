@@ -106,7 +106,7 @@ export function LandingEditorial() {
           {["Tomorrow","begins in the","air."] .map((line,index)=><span className="hero-title-line" key={line}><motion.span variants={{hidden:{y:40,opacity:0},visible:{y:0,opacity:1}}} transition={{duration:.78,ease:[.2,.72,.25,1]}}>{index===2?<em>{line}</em>:line}</motion.span></span>)}
         </motion.h1>
         <motion.p className="hero-description" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.62,delay:.7}}>Understand our atmosphere. See how air changes from one place to another. Find a clearer next step.</motion.p>
-        <motion.div className="hero-actions" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.6,delay:.84}}><a className="hero-primary" href="/dashboard">Explore air intelligence <ArrowUpRight size={15}/></a><a className="hero-secondary" href="#intelligence">Discover the system <ArrowDown size={14}/></a></motion.div>
+        <motion.div className="hero-actions" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.6,delay:.84}}><a className="hero-primary" href="/overview">Explore air intelligence <ArrowUpRight size={15}/></a><a className="hero-secondary" href="#intelligence">Discover the system <ArrowDown size={14}/></a></motion.div>
         <motion.div className="hero-proofline" initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.6,delay:1.1}}><span><i/> STATION + MODEL PROVENANCE</span><span>BUILT FOR A LIVING PLANET</span></motion.div>
       </div>
       <motion.div className="hero-globe-wrap" style={{y:globeY,opacity:globeOpacity,scale:globeScale,rotateX:tiltX,rotateY:tiltY}} onPointerMove={tiltGlobe} onPointerLeave={resetTilt}>
@@ -124,7 +124,7 @@ export function LandingEditorial() {
       <div className="editorial-feature-grid">{FEATURES.map((feature,index)=><FeatureCard feature={feature} index={index} key={feature.number}/>)}</div>
     </section>
 
-    <section className="editorial-cta"><div className="cta-orbit" aria-hidden="true"/><span className="editorial-kicker"><span/> START WITH A PLACE</span><h2>Ready to understand<br/>your atmosphere?</h2><p>Explore current readings, source context, and the changing air around a place you care about.</p><a href="/dashboard">Enter Vayu Index <ArrowUpRight size={15}/></a><span className="cta-index">V · 01</span></section>
+    <section className="editorial-cta"><div className="cta-orbit" aria-hidden="true"/><span className="editorial-kicker"><span/> START WITH A PLACE</span><h2>Ready to understand<br/>your atmosphere?</h2><p>Explore current readings, source context, and the changing air around a place you care about.</p><a href="/overview">Enter Vayu Index <ArrowUpRight size={15}/></a><span className="cta-index">V · 01</span></section>
 
     <Footer />
   </main>;

@@ -6,6 +6,7 @@ import {
   Info,
   Navigation,
   Search,
+  Share2,
 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap, Layer, TileLayer } from "leaflet";
@@ -276,13 +277,14 @@ export function getScaleTiers(layer: MapLayerKey, activeVal: number): ScaleTier[
 interface OverviewSpatialMapProps {
   onSelectCity?: (hotspot: SpatialHotspot) => void;
   selectedCity?: SpatialHotspot;
+  onShareCity?: (hotspot: SpatialHotspot) => void;
 }
 
 interface LeafletContainer extends HTMLDivElement {
   _leaflet_id?: number | string;
 }
 
-export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpatialMapProps) {
+export function OverviewSpatialMap({ onSelectCity, selectedCity, onShareCity }: OverviewSpatialMapProps) {
   const { theme } = useTheme();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
@@ -1357,6 +1359,18 @@ export function OverviewSpatialMap({ onSelectCity, selectedCity }: OverviewSpati
                 {activeHotspot.state ? `${activeHotspot.state}, ` : ""}{activeHotspot.country}
               </span>
             </div>
+
+            {onShareCity && (
+              <button
+                type="button"
+                onClick={() => onShareCity(activeHotspot)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm cursor-pointer transition-all active:scale-95"
+                title={`Generate Share Card for ${activeHotspot.name}`}
+              >
+                <Share2 size={12} />
+                <span>Share</span>
+              </button>
+            )}
           </div>
 
           {/* Big AQI Banner with City Landmark Art & Provenance Badge (Image 2) */}

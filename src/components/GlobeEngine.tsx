@@ -7,6 +7,7 @@ import * as THREE from "three";
 import type { AirQualityResponse, Location } from "@/lib/types";
 import { AQI_COLORS } from "@/lib/aqi-calculator";
 import type { MapLayer } from "@/components/MapLayersPanel";
+import { Continent, getContinentForCoordinates } from "@/lib/continents";
 
 type Weather = { temperature_2m?: number; wind_speed_10m?: number; wind_direction_10m?: number; time?: string };
 type Point = { lat: number; lng: number; aqi: number | null; label: string; value?: number | null };
@@ -19,6 +20,8 @@ type Props = {
   temperature: boolean;
   heatmap?: boolean;
   zoom: number;
+  continent?: Continent;
+  metric?: "aqi" | "pm2_5";
   onLocationSelect: (location: Location) => void;
 };
 
@@ -279,6 +282,8 @@ export function GlobeEngine({
   temperature,
   heatmap = true,
   zoom,
+  continent = "All",
+  metric = "aqi",
   onLocationSelect,
 }: Props) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
@@ -300,6 +305,24 @@ export function GlobeEngine({
     }),
     [air, location, selectedAqi, selectedValue],
   );
+
+  // Generate continent-filtered markers
+  const displayPoints = useMemo<Point[]>(() => {
+    const list: Point[] = [point];
+    if (continent && continent !== "All") {
+      const filtered = BASE_HEATMAP_POINTS
+        .filter((p) => getContinentForCoordinates(p.lat, p.lng) === continent)
+        .slice(0, 16)
+        .map((p, idx) => ({
+          lat: p.lat,
+          lng: p.lng,
+          aqi: metric === "pm2_5" ? Math.round(p.weight * 110) : Math.round(p.weight * 320),
+          label: `${continent} Airshed Sensor #${idx + 1}`,
+        }));
+      list.push(...filtered);
+    }
+    return list;
+  }, [point, continent, metric]);
 
   // Load world country border polygons
   useEffect(() => {
@@ -338,24 +361,51 @@ export function GlobeEngine({
     };
   }, []);
 
-  // Update heatmap points with current selected location reading
+  // Update heatmap points with current selected location reading and continent filter
   const heatmapDataset = useMemo(() => {
-    const points = [...livePoints];
+    let points = [...livePoints];
+    if (continent && continent !== "All") {
+      points = points.filter((p) => getContinentForCoordinates(p.lat, p.lng) === continent);
+    }
     if (air?.current.aqi) {
-      points.push({
-        lat: air.stationLatitude ?? location.latitude,
-        lng: air.stationLongitude ?? location.longitude,
-        weight: Math.min(1, Math.max(0.1, air.current.aqi / 350)),
-      });
+      const airContinent = getContinentForCoordinates(air.stationLatitude ?? location.latitude, air.stationLongitude ?? location.longitude);
+      if (!continent || continent === "All" || airContinent === continent) {
+        const factor = metric === "pm2_5" ? 60 : 350;
+        const aqiNum: number = typeof air.current.aqi === "number" ? air.current.aqi : 0;
+        const pm25Num: number = typeof air.current.pm2_5 === "number" ? air.current.pm2_5 : aqiNum * 0.4;
+        const val: number = metric === "pm2_5" ? pm25Num : aqiNum;
+        points.push({
+          lat: air.stationLatitude ?? location.latitude,
+          lng: air.stationLongitude ?? location.longitude,
+          weight: Math.min(1, Math.max(0.1, val / factor)),
+        });
+      }
     }
     return { id: "global-aqi-plumes", points };
-  }, [livePoints, air, location.latitude, location.longitude]);
+  }, [livePoints, air, location.latitude, location.longitude, continent, metric]);
+
+  const CONTINENT_CENTERS: Record<Continent, { lat: number; lng: number; altitude: number }> = {
+    All: { lat: location.latitude, lng: location.longitude, altitude: 2.25 / zoom },
+    Asia: { lat: 28, lng: 85, altitude: 2.1 },
+    Europe: { lat: 48, lng: 16, altitude: 1.95 },
+    Africa: { lat: 2, lng: 22, altitude: 2.2 },
+    "North America": { lat: 38, lng: -98, altitude: 2.2 },
+    "South America": { lat: -18, lng: -60, altitude: 2.2 },
+    Oceania: { lat: -25, lng: 135, altitude: 2.2 },
+  };
 
   useEffect(() => {
     const globe = globeRef.current;
-    if (!globe) return;
-    globe.pointOfView({ lat: location.latitude, lng: location.longitude, altitude: 2.25 / zoom }, 1100);
-  }, [location.latitude, location.longitude, zoom, ready]);
+    if (!globe || !ready) return;
+    if (continent && continent !== "All") {
+      const target = CONTINENT_CENTERS[continent];
+      if (target) {
+        globe.pointOfView({ lat: target.lat, lng: target.lng, altitude: target.altitude }, 1200);
+      }
+    } else {
+      globe.pointOfView({ lat: location.latitude, lng: location.longitude, altitude: 2.25 / zoom }, 1100);
+    }
+  }, [continent, location.latitude, location.longitude, zoom, ready]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -541,8 +591,8 @@ export function GlobeEngine({
             event?.stopPropagation();
             selectCoordinates(coords);
           }}
-          /* 4. Active Station Telemetry Pin */
-          pointsData={[point]}
+          /* 4. Active Station Telemetry & Continent Hotspot Pins */
+          pointsData={displayPoints}
           pointLat="lat"
           pointLng="lng"
           pointColor={(item) => colorForAqi((item as Point).aqi)}

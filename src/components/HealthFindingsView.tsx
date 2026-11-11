@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { ThreeBookCanvas } from "@/components/ThreeBookCanvas";
+import React, { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,6 +18,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useTheme } from "@/lib/use-theme";
+import { PollutantHealthBreakdown } from "@/components/PollutantHealthBreakdown";
 
 // ---------------------------------------------------------------------------
 // DATA DEFINITIONS & TYPES
@@ -237,12 +237,11 @@ export function HealthFindingsView() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // Display Mode: 3D Luxury Journal vs Flat Editorial Grid
+  // Display Mode: open journal spread or flat editorial grid
   const [viewMode, setViewMode] = useState<"journal" | "grid">("journal");
 
   // Journal Current Chapter: 1 to 4
   const [currentChapter, setCurrentChapter] = useState<number>(1);
-  const [turnDirection, setTurnDirection] = useState<"next" | "prev">("next");
 
   // Interactive Pathophysiology State
   const [activeParticle, setActiveParticle] = useState<"pm10" | "pm25">("pm25");
@@ -279,47 +278,14 @@ export function HealthFindingsView() {
     return Number((livePm25 / 22.0).toFixed(1));
   }, [livePm25]);
 
-  // Pinned 3D Journal Scroll Physics (Inspired by maray.ai)
-  const scrollTrackRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
-
-  const { scrollYProgress } = useScroll({
-    target: scrollTrackRef,
-    offset: ["start start", "end end"],
-  });
-
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    setScrollProgress(latest);
-  });
-
-  const scrollToChapter = (chap: number) => {
-    if (!scrollTrackRef.current) return;
-    const track = scrollTrackRef.current;
-    const rect = track.getBoundingClientRect();
-    const trackTop = window.scrollY + rect.top;
-    const trackScrollable = track.offsetHeight - window.innerHeight;
-    if (trackScrollable <= 0) return;
-
-    // Checkpoint targets for 4 chapters:
-    // Chap 1: 0.22, Chap 2: 0.50, Chap 3: 0.78, Chap 4: 0.98
-    const targets = [0.22, 0.50, 0.78, 0.98];
-    const targetP = targets[chap - 1] ?? 0.22;
-    window.scrollTo({
-      top: trackTop + trackScrollable * targetP,
-      behavior: "smooth",
-    });
-  };
-
   const handleNextChapter = () => {
     if (currentChapter < 4) {
-      setTurnDirection("next");
       setCurrentChapter((prev) => prev + 1);
     }
   };
 
   const handlePrevChapter = () => {
     if (currentChapter > 1) {
-      setTurnDirection("prev");
       setCurrentChapter((prev) => prev - 1);
     }
   };
@@ -337,7 +303,7 @@ export function HealthFindingsView() {
       {/* 1. EDITORIAL HEADER & VIEW SWITCHER                                */}
       {/* ------------------------------------------------------------------ */}
       <header
-        className="w-full border-b backdrop-blur-md sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 transition-colors"
+        className="w-full border-b backdrop-blur-md relative z-10 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 transition-colors"
         style={{
           borderColor: isDark ? "rgba(147, 226, 197, 0.14)" : "rgba(15, 56, 44, 0.12)",
           backgroundColor: isDark ? "rgba(11, 19, 17, 0.88)" : "rgba(247, 246, 240, 0.92)",
@@ -374,7 +340,7 @@ export function HealthFindingsView() {
           </div>
         </div>
 
-        {/* View Switcher: 3D Journal vs Flat Grid */}
+        {/* View Switcher: journal spread or flat grid */}
         <div
           className="flex items-center p-1 rounded-xl border shadow-inner text-xs font-medium"
           style={{
@@ -395,7 +361,7 @@ export function HealthFindingsView() {
             aria-pressed={viewMode === "journal"}
           >
             <BookOpen size={14} />
-            <span>3D Journal Spread</span>
+            <span>Journal Spread</span>
           </button>
           <button
             type="button"
@@ -410,170 +376,31 @@ export function HealthFindingsView() {
             aria-pressed={viewMode === "grid"}
           >
             <LayoutGrid size={14} />
-            <span>Flat Grid Dashboard</span>
+            <span>Editorial Grid</span>
           </button>
         </div>
       </header>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. MODE A: 3D INTERACTIVE HARDCOVER NOTEBOOK JOURNAL              */}
+          {/* 2. MODE A: STATIC OPEN-BOOK JOURNAL                           */}
       {/* ------------------------------------------------------------------ */}
       {viewMode === "journal" ? (
         <>
           {/* -------------------------------------------------------------- */}
-          {/* 2. 3D HARDCOVER PINNED SCROLL SEQUENCE (Inspired by maray.ai)  */}
+          {/* 2. STATIC EDITORIAL JOURNAL SPREAD                                */}
           {/* -------------------------------------------------------------- */}
-          <div ref={scrollTrackRef} className="relative w-full h-[450vh]">
-            <div className="sticky top-0 h-screen w-full flex flex-col justify-center items-center overflow-hidden">
-              {/* Hero Editorial Header Overlay (Fade out when scrollProgress >= 0.12) */}
-              <div
-                className="absolute inset-0 z-20 pointer-events-none flex items-center justify-between px-6 sm:px-12 lg:px-20 max-w-7xl mx-auto w-full transition-all duration-300"
-                style={{
-                  opacity: scrollProgress < 0.12 ? 1 - scrollProgress / 0.12 : 0,
-                  transform: `translateY(${scrollProgress < 0.12 ? -scrollProgress * 120 : -30}px)`,
-                  pointerEvents: scrollProgress < 0.08 ? "auto" : "none",
-                }}
-              >
-                {/* Left Column: Hero Editorial Title & Subtitle */}
-                <div className="max-w-md space-y-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium border bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                    VAYU INDEX · CLINICAL REPOSITORY
-                  </div>
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-[var(--dash-ink)] leading-[1.12]">
-                    Health &amp; Safety Journal
-                  </h1>
-                  <p className="text-xs sm:text-sm text-[var(--dash-muted)] leading-relaxed font-normal">
-                    An editorial hardbound compendium detailing particulate biological infiltration, CPCB clinical exposure thresholds, and certified countermeasures.
-                  </p>
-                  <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span className="text-xs font-mono font-medium px-3 py-1.5 rounded-lg border bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border-[var(--dash-rule)]">
-                      {liveCity} CPCB AQI: <strong>{liveAqi}</strong> (Severe)
-                    </span>
-                    <span className="text-xs font-mono text-[var(--dash-muted)] flex items-center gap-1 animate-pulse">
-                      Scroll to open journal ↓
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right Column: Plus-Marked Table of Contents (as seen in maray.ai) */}
-                <div className="hidden lg:flex flex-col max-w-xs space-y-3 text-right">
-                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
-                    COMPENDIUM CHAPTERS
-                  </span>
-                  <ul className="space-y-2.5 text-xs font-mono text-[var(--dash-muted)]">
-                    <li
-                      onClick={() => scrollToChapter(1)}
-                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
-                    >
-                      <span>01 PM2.5 vs PM10 Infiltration</span>
-                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
-                    </li>
-                    <li
-                      onClick={() => scrollToChapter(2)}
-                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
-                    >
-                      <span>02 CPCB NAQI Clinical Breakpoints</span>
-                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
-                    </li>
-                    <li
-                      onClick={() => scrollToChapter(3)}
-                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
-                    >
-                      <span>03 Vulnerable Cohort Matrix</span>
-                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
-                    </li>
-                    <li
-                      onClick={() => scrollToChapter(4)}
-                      className="flex items-center justify-end gap-2 group hover:text-emerald-500 transition-colors cursor-pointer"
-                    >
-                      <span>04 Certified Gear &amp; Protocols</span>
-                      <span className="text-emerald-500 font-bold group-hover:scale-125 transition-transform">+</span>
-                    </li>
-                  </ul>
-                  <div className="pt-2">
-                    <span className="text-[11px] font-mono text-emerald-500/80 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 inline-block">
-                      Scroll or drag to turn pages
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Chapter Navigation Pill (Active when reading pages, scrollProgress >= 0.12) */}
-              <div
-                className="absolute top-4 left-4 right-4 sm:left-8 sm:right-8 z-30 pointer-events-none flex items-center justify-between transition-opacity duration-300"
-                style={{
-                  opacity: scrollProgress >= 0.12 ? 1 : 0,
-                  pointerEvents: scrollProgress >= 0.12 ? "auto" : "none",
-                }}
-              >
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-mono font-medium backdrop-blur-md bg-[var(--dash-surface-soft)] text-[var(--dash-ink)] border-[var(--dash-rule)] shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>CHAPTER 0{currentChapter} OF 04</span>
-                  <span className="hidden sm:inline text-[var(--dash-muted)]">
-                    · {currentChapter === 1 ? "Pathophysiology" : currentChapter === 2 ? "CPCB Scale" : currentChapter === 3 ? "Sensitive Cohorts" : "Equipment"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5 pointer-events-auto">
-                  {[1, 2, 3, 4].map((ch) => (
-                    <button
-                      key={ch}
-                      type="button"
-                      onClick={() => scrollToChapter(ch)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-mono transition-all border ${
-                        currentChapter === ch
-                          ? "bg-emerald-500 text-white border-emerald-600 font-bold shadow-sm"
-                          : "bg-[var(--dash-surface)] text-[var(--dash-muted)] border-[var(--dash-rule)] hover:text-[var(--dash-ink)]"
-                      }`}
-                    >
-                      CH 0{ch}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3D WebGL Hardcover & Interactive Page-Turn Canvas */}
-              <div className="w-full h-full max-w-7xl mx-auto flex items-center justify-center p-2 sm:p-4">
-                <ThreeBookCanvas
-                  currentChapter={currentChapter}
-                  onChapterChange={(chap, dir) => {
-                    setTurnDirection(dir);
-                    setCurrentChapter(chap);
-                  }}
-                  isDark={isDark}
-                  scrollProgress={scrollProgress}
-                  isScrollControlled={true}
-                >
+          <section className="health-book-track relative w-full min-h-[calc(100vh-72px)] flex items-center justify-center py-8 sm:py-12" aria-label="Health and safety journal">
+            <div className="health-book-sticky w-full flex flex-col items-center justify-center">
+              {/* Always-open physical page spread */}
+              <div className="health-book-wrap w-full h-full max-w-7xl mx-auto flex items-center justify-center p-2 sm:p-4">
+                <div className="health-book-stage" aria-label="Open journal spread">
+                  <div className="health-book-object">
+                    <div className="health-book-pages">
             {/* The Open Two-Page Spread Hybrid UI Overlay */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentChapter}
-                initial={{
-                  opacity: 0,
-                  x: turnDirection === "next" ? 24 : -24,
-                  scale: 0.98,
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                }}
-                exit={{
-                  opacity: 0,
-                  x: turnDirection === "next" ? -24 : 24,
-                  scale: 0.98,
-                }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border relative shadow-xl backdrop-blur-xs"
-                style={{
-                  backgroundColor: isDark ? "rgba(18, 29, 26, 0.96)" : "rgba(253, 251, 247, 0.96)",
-                  borderColor: isDark ? "rgba(147, 226, 197, 0.16)" : "rgba(15, 56, 44, 0.14)",
-                }}
-              >
+            <div key={currentChapter} className="health-book-content grid grid-cols-1 lg:grid-cols-2 relative animate-book-fade">
                 {/* Center Book Crease / Gutter Shadow Divider */}
                 <div
-                  className="hidden lg:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 pointer-events-none z-20"
+                  className="health-book-gutter hidden lg:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 pointer-events-none z-20"
                   style={{
                     background: isDark
                       ? "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.5) 100%)"
@@ -584,7 +411,7 @@ export function HealthFindingsView() {
                   {/* -------------------------------------------------------- */}
                   {/* LEFT PAGE: Concept, Philosophy & Narrative Storytelling */}
                   {/* -------------------------------------------------------- */}
-                  <div className="p-6 sm:p-10 lg:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-dashed border-[var(--dash-rule)] relative">
+                  <div className="health-book-page health-book-page-left p-6 sm:p-10 lg:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-dashed border-[var(--dash-rule)] relative">
                     <div className="space-y-6">
                       {/* Chapter Kicker & Eyebrow */}
                       <div className="flex items-center justify-between text-xs font-mono">
@@ -616,14 +443,14 @@ export function HealthFindingsView() {
                           <div
                             className="p-4 rounded-xl border space-y-3"
                             style={{
-                              backgroundColor: isDark ? "rgba(18, 33, 28, 0.4)" : "rgba(240, 245, 242, 0.6)",
-                              borderColor: isDark ? "rgba(147, 226, 197, 0.15)" : "rgba(15, 56, 44, 0.12)",
+                              backgroundColor: "rgba(238, 243, 240, 0.85)",
+                              borderColor: "rgba(20, 60, 48, 0.15)",
                             }}
                           >
-                            <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-500 uppercase block">
+                            <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-700 uppercase block">
                               EPIDEMIOLOGICAL AXIOM
                             </span>
-                            <p className="text-xs sm:text-sm leading-relaxed text-[var(--dash-muted)]">
+                            <p className="text-xs sm:text-sm leading-relaxed text-[#4e5751]">
                               According to the Central Pollution Control Board (CPCB), prolonged exposure
                               to concentrations above statutory limits induces severe oxidative distress,
                               reducing alveolar elasticity and triggering systemic endothelial inflammation.
@@ -634,28 +461,28 @@ export function HealthFindingsView() {
                           <div
                             className="p-4 rounded-xl border space-y-2.5"
                             style={{
-                              backgroundColor: isDark ? "rgba(220, 38, 38, 0.08)" : "rgba(254, 242, 242, 0.8)",
-                              borderColor: isDark ? "rgba(239, 68, 68, 0.3)" : "rgba(239, 68, 68, 0.25)",
+                              backgroundColor: "rgba(254, 242, 242, 0.9)",
+                              borderColor: "rgba(239, 68, 68, 0.25)",
                             }}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-mono font-bold text-rose-500 uppercase flex items-center gap-1.5">
+                              <span className="text-[11px] font-mono font-bold text-rose-600 uppercase flex items-center gap-1.5">
                                 <Flame size={13} />
                                 <span>INHALATION EQUIVALENT</span>
                               </span>
-                              <span className="text-[10px] font-mono text-[var(--dash-muted)]">
+                              <span className="text-[10px] font-mono text-[#55635a]">
                                 Berkeley Earth Formula
                               </span>
                             </div>
                             <div className="flex items-baseline gap-3">
-                              <span className="text-3xl sm:text-4xl font-mono font-black text-rose-500">
+                              <span className="text-3xl sm:text-4xl font-mono font-black text-rose-600">
                                 ~{cigaretteEquivalent}
                               </span>
-                              <span className="text-xs sm:text-sm font-semibold text-[var(--dash-ink)]">
+                              <span className="text-xs sm:text-sm font-semibold text-[#18221D]">
                                 cigarettes inhaled today in {liveCity}
                               </span>
                             </div>
-                            <p className="text-[11px] text-[var(--dash-muted)] leading-relaxed">
+                            <p className="text-[11px] text-[#4e5751] leading-relaxed">
                               Based on live CPCB ground observation (PM2.5 = {livePm25} µg/m³, PM10 = {livePm10} µg/m³). 1
                               cigarette ≈ 22 µg/m³ PM2.5 per 24 hours.
                             </p>
@@ -753,11 +580,11 @@ export function HealthFindingsView() {
                           <div
                             className="p-4 rounded-xl border space-y-2.5"
                             style={{
-                              backgroundColor: isDark ? "rgba(18, 33, 28, 0.4)" : "rgba(240, 245, 242, 0.6)",
-                              borderColor: isDark ? "rgba(147, 226, 197, 0.15)" : "rgba(15, 56, 44, 0.12)",
+                              backgroundColor: "rgba(238, 243, 240, 0.85)",
+                              borderColor: "rgba(20, 60, 48, 0.15)",
                             }}
                           >
-                            <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-500 uppercase block">
+                            <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-700 uppercase block">
                               CLINICAL SEVERITY THRESHOLDS
                             </span>
                             <ul className="text-xs space-y-1.5 text-[var(--dash-muted)]">
@@ -802,11 +629,11 @@ export function HealthFindingsView() {
                           <div
                             className="p-4 rounded-xl border space-y-2"
                             style={{
-                              backgroundColor: isDark ? "rgba(18, 33, 28, 0.4)" : "rgba(240, 245, 242, 0.6)",
-                              borderColor: isDark ? "rgba(147, 226, 197, 0.15)" : "rgba(15, 56, 44, 0.12)",
+                              backgroundColor: "rgba(238, 243, 240, 0.85)",
+                              borderColor: "rgba(20, 60, 48, 0.15)",
                             }}
                           >
-                            <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-500 uppercase block">
+                            <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-700 uppercase block">
                               WHY SURGICAL MASKS FAIL
                             </span>
                             <p className="text-xs text-[var(--dash-muted)] leading-relaxed">
@@ -830,13 +657,13 @@ export function HealthFindingsView() {
                   {/* -------------------------------------------------------- */}
                   {/* RIGHT PAGE: Interactive UI Widgets, Telemetry & Data Cards */}
                   {/* -------------------------------------------------------- */}
-                  <div className="p-6 sm:p-10 lg:p-12 flex flex-col justify-between relative bg-opacity-40">
+                  <div className="health-book-page health-book-page-right p-6 sm:p-10 lg:p-12 flex flex-col justify-between relative bg-opacity-40">
                     <div className="space-y-6">
                       {/* Chapter 1 Right Content: CPCB NAQI Spectrum Table */}
                       {currentChapter === 1 && (
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-bold">CPCB NAQI Index Spectrum</h3>
+                            <h3 className="text-lg font-bold text-[#18221D]">CPCB NAQI Index Spectrum</h3>
                             <span className="font-mono text-[10px] text-emerald-500 font-bold uppercase">
                               INDIAN STATUTORY SCALE
                             </span>
@@ -891,8 +718,8 @@ export function HealthFindingsView() {
                                   key={tier.label}
                                   className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all ${
                                     isCurrentLive
-                                      ? "ring-2 ring-emerald-500 bg-emerald-500/10 font-semibold"
-                                      : "border-[var(--dash-rule)]"
+                                      ? "ring-2 ring-emerald-600 bg-emerald-500/15 font-semibold text-[#18221D]"
+                                      : "border-[rgba(20,60,48,0.15)] bg-white/70 text-[#18221D]"
                                   }`}
                                 >
                                   <div className="flex items-center gap-2.5">
@@ -901,13 +728,13 @@ export function HealthFindingsView() {
                                       style={{ backgroundColor: tier.color }}
                                     />
                                     <div>
-                                      <span className="font-bold">{tier.label}</span>
-                                      <span className="font-mono text-[10px] text-[var(--dash-muted)] ml-2">
+                                      <span className="font-bold text-[#18221D]">{tier.label}</span>
+                                      <span className="font-mono text-[10px] text-[#55635a] ml-2">
                                         ({tier.range})
                                       </span>
                                     </div>
                                   </div>
-                                  <span className="text-[11px] text-[var(--dash-muted)] max-w-[210px] text-right truncate">
+                                  <span className="text-[11px] text-[#4e5751] max-w-[210px] text-right truncate">
                                     {tier.desc}
                                   </span>
                                 </div>
@@ -1084,8 +911,8 @@ export function HealthFindingsView() {
                           <div
                             className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-xl border text-xs font-medium"
                             style={{
-                              backgroundColor: isDark ? "rgba(18, 33, 28, 0.6)" : "rgba(240, 245, 242, 0.8)",
-                              borderColor: isDark ? "rgba(147, 226, 197, 0.2)" : "rgba(15, 56, 44, 0.15)",
+                              backgroundColor: "rgba(238, 243, 240, 0.85)",
+                              borderColor: "rgba(20, 60, 48, 0.15)",
                             }}
                           >
                             {(
@@ -1128,8 +955,8 @@ export function HealthFindingsView() {
                               transition={{ duration: 0.2 }}
                               className="p-4 rounded-xl border space-y-3"
                               style={{
-                                backgroundColor: isDark ? "rgba(18, 33, 28, 0.4)" : "rgba(255, 255, 255, 0.8)",
-                                borderColor: isDark ? "rgba(147, 226, 197, 0.15)" : "rgba(15, 56, 44, 0.12)",
+                                backgroundColor: "rgba(255, 255, 255, 0.85)",
+                                borderColor: "rgba(20, 60, 48, 0.15)",
                               }}
                             >
                               <div className="flex items-center justify-between">
@@ -1199,12 +1026,8 @@ export function HealthFindingsView() {
                                 onClick={() => setSelectedIntervention(gear)}
                                 className="p-3.5 rounded-xl border cursor-pointer transition-all space-y-2 group"
                                 style={{
-                                  backgroundColor: isDark
-                                    ? "rgba(18, 33, 28, 0.4)"
-                                    : "rgba(255, 255, 255, 0.7)",
-                                  borderColor: isDark
-                                    ? "rgba(147, 226, 197, 0.15)"
-                                    : "rgba(15, 56, 44, 0.12)",
+                                  backgroundColor: "rgba(255, 255, 255, 0.85)",
+                                  borderColor: "rgba(20, 60, 48, 0.15)",
                                 }}
                               >
                                 <div className="flex items-center justify-between">
@@ -1245,16 +1068,33 @@ export function HealthFindingsView() {
                       <span className="font-bold">PAGE 0{currentChapter * 2}</span>
                     </div>
                   </div>
-                </motion.div>
-              </AnimatePresence>
-                </ThreeBookCanvas>
+            </div>
+                    </div>
+                    <nav className="health-book-controls" aria-label="Chapter navigation">
+                      <button type="button" onClick={handlePrevChapter} disabled={currentChapter <= 1} aria-label="Previous chapter"><ArrowLeft size={16} /></button>
+                      <span>CHAPTER 0{currentChapter} <i>/</i> 04</span>
+                      <button type="button" onClick={handleNextChapter} disabled={currentChapter >= 4} aria-label="Next chapter"><ArrowRight size={16} /></button>
+                    </nav>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
+
+          {/* -------------------------------------------------------------- */}
+          {/* TIER 02: MAJOR AIR POLLUTANTS BREAKDOWN & CLINICAL DEEP DIVE    */}
+          {/* -------------------------------------------------------------- */}
+          <PollutantHealthBreakdown
+            livePm25={livePm25}
+            livePm10={livePm10}
+            liveAqi={liveAqi}
+            liveCity={liveCity}
+            isDark={isDark}
+          />
         </>
       ) : (
         /* ------------------------------------------------------------------ */
-        /* 3. MODE B: FLAT EDITORIAL GRID DASHBOARD (RESPONSIVE & SCROLL-DRIVEN) */
+        /* 3. MODE B: EDITORIAL GRID DASHBOARD */
         /* ------------------------------------------------------------------ */
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12">
           {/* Section 1: Hero Exposure Headline */}

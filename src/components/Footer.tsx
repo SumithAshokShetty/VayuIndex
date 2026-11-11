@@ -77,6 +77,13 @@ export function Footer({ className }: { className?: string } = {}) {
             </span>
             <nav className="flex flex-col items-start gap-2.5 font-sans text-xs sm:text-[13px]">
               <a
+                href="/overview"
+                className="text-neutral-600 dark:text-[#c4d4cc] hover:text-neutral-950 dark:hover:text-[#83dfbd] flex items-center gap-2 group transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600/40 dark:bg-emerald-400/40 group-hover:bg-emerald-600 dark:group-hover:bg-[#83dfbd] transition-colors" />
+                Air Intelligence Overview
+              </a>
+              <a
                 href="/dashboard"
                 className="text-neutral-600 dark:text-[#c4d4cc] hover:text-neutral-950 dark:hover:text-[#83dfbd] flex items-center gap-2 group transition-colors"
               >

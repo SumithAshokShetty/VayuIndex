@@ -1,0 +1,301 @@
+Rank,City,2025_AQI,2025_Status,2024_AQI,2024_Status,2023_AQI,2023_Status,2022_AQI,2022_Status,2021_AQI,2021_Status
+1,"Ghaziabad, India",193,Poor,195.0,Poor,186.0,Poor,259.0,Unhealthy,231.0,Unhealthy
+2,"New Delhi, India",191,Poor,203.0,Unhealthy,202.0,Unhealthy,227.0,Unhealthy,195.0,Poor
+3,"Sonipat, India",181,Poor,189.0,Poor,177.0,Poor,199.0,Poor,188.0,Poor
+4,"Faridabad, India",178,Poor,178.0,Poor,165.0,Poor,204.0,Unhealthy,198.0,Poor
+5,"Noida, India",178,Poor,202.0,Unhealthy,185.0,Poor,214.0,Unhealthy,190.0,Poor
+6,"Baghpat, India",175,Poor,,--,,--,,--,,--
+7,"Greater Noida, India",172,Poor,211.0,Unhealthy,219.0,Unhealthy,221.0,Unhealthy,225.0,Unhealthy
+8,"Gurgaon, India",170,Poor,170.0,Poor,151.0,Poor,197.0,Poor,174.0,Poor
+9,"Hapur, India",167,Poor,155.0,Poor,132.0,Poor,179.0,Poor,159.0,Poor
+10,"Rohtak, India",164,Poor,160.0,Poor,152.0,Poor,182.0,Poor,174.0,Poor
+11,"Karnal, India",160,Poor,120.0,Poor,118.0,Poor,147.0,Poor,147.0,Poor
+12,"Bulandshahr, India",160,Poor,167.0,Poor,146.0,Poor,184.0,Poor,186.0,Poor
+13,"Bhiwani, India",159,Poor,147.0,Poor,134.0,Poor,173.0,Poor,164.0,Poor
+14,"Saharanpur, India",158,Poor,139.0,Poor,135.0,Poor,176.0,Poor,155.0,Poor
+15,"Meerut, India",157,Poor,153.0,Poor,137.0,Poor,196.0,Poor,196.0,Poor
+16,"Panipat, India",156,Poor,131.0,Poor,121.0,Poor,157.0,Poor,180.0,Poor
+17,"Charkhi Dadri, India",152,Poor,,--,,--,,--,,--
+18,"Palwal, India",152,Poor,,--,,--,,--,,--
+19,"Kaithal, India",151,Poor,,--,,--,,--,,--
+20,"Hisar, India",151,Poor,132.0,Poor,135.0,Poor,175.0,Poor,170.0,Poor
+21,"Jalandhar, India",150,Poor,114.0,Poor,107.0,Poor,138.0,Poor,114.0,Poor
+22,"Fatehabad, India",150,Poor,,--,,--,,--,,--
+23,"Muzaffarnagar, India",149,Poor,155.0,Poor,161.0,Poor,189.0,Poor,189.0,Poor
+24,"Amritsar, India",149,Poor,123.0,Poor,113.0,Poor,120.0,Poor,127.0,Poor
+25,"Lahore, Pakistan",148,Poor,138.0,Poor,125.0,Poor,214.0,Unhealthy,195.0,Poor
+26,"Jind, India",147,Poor,,--,,--,,--,,--
+27,"Ludhiana, India",144,Poor,114.0,Poor,109.0,Poor,135.0,Poor,107.0,Poor
+28,"Bathinda, India",144,Poor,,--,,--,,--,,--
+29,"Kurukshetra, India",143,Poor,,--,,--,,--,,--
+30,"Lucknow, India",141,Poor,130.0,Poor,136.0,Poor,162.0,Poor,189.0,Poor
+31,"Gorakhpur, India",141,Poor,100.0,Poor,123.0,Poor,120.0,Poor,131.0,Poor
+32,"Patiala, India",140,Poor,113.0,Poor,87.0,Moderate,122.0,Poor,135.0,Poor
+33,"Gurdaspur, India",140,Poor,,--,,--,,--,,--
+34,"Panchkula, India",140,Poor,,--,,--,,--,,--
+35,"Churu, India",137,Poor,98.0,Moderate,,--,,--,,--
+36,"Hajipur, India",136,Poor,,--,,--,,--,,--
+37,"Aligarh, India",134,Poor,109.0,Poor,106.0,Poor,147.0,Poor,153.0,Poor
+38,"Fatehgarh Sahib, India",133,Poor,,--,,--,,--,,--
+39,"Hoshiarpur, India",133,Poor,,--,,--,,--,,--
+40,"Kanpur, India",133,Poor,102.0,Poor,113.0,Poor,142.0,Poor,172.0,Poor
+41,"Sirsa, India",133,Poor,118.0,Poor,112.0,Poor,158.0,Poor,149.0,Poor
+42,"Ambala, India",131,Poor,106.0,Poor,84.0,Moderate,139.0,Poor,126.0,Poor
+43,"Chandigarh, India",131,Poor,120.0,Poor,121.0,Poor,138.0,Poor,98.0,Moderate
+44,"Narnaul, India",130,Poor,,--,,--,,--,,--
+45,"Sambhal, India",129,Poor,106.0,Poor,113.0,Poor,165.0,Poor,170.0,Poor
+46,"Lumbini Sanskriti, Nepal",128,Poor,,--,,--,,--,,--
+47,"Fatehpur, India",128,Poor,103.0,Poor,114.0,Poor,155.0,Poor,154.0,Poor
+48,"Panchkula, India",127,Poor,,--,,--,,--,,--
+49,"Howrah, India",127,Poor,122.0,Poor,114.0,Poor,124.0,Poor,145.0,Poor
+50,"Panipat, India",126,Poor,121.0,Poor,120.0,Poor,142.0,Poor,121.0,Poor
+51,"Bettiah, India",126,Poor,,--,,--,,--,,--
+52,"Patna, India",126,Poor,119.0,Poor,236.0,Unhealthy,209.0,Unhealthy,175.0,Poor
+53,"Bikaner, India",126,Poor,114.0,Poor,118.0,Poor,134.0,Poor,97.0,Moderate
+54,"Serampore, India",126,Poor,,--,,--,,--,,--
+55,"Pathankot, India",124,Poor,98.0,Moderate,43.0,Good,96.0,Moderate,93.0,Moderate
+56,"Gwalior, India",123,Poor,96.0,Moderate,101.0,Poor,149.0,Poor,180.0,Poor
+57,"Kharagpur, India",122,Poor,110.0,Poor,92.0,Moderate,96.0,Moderate,139.0,Poor
+58,"Rupnagar, India",122,Poor,,--,,--,,--,,--
+59,"Sasaram, India",121,Poor,,--,,--,,--,,--
+60,"Bhatapara, India",121,Poor,107.0,Poor,108.0,Poor,134.0,Poor,131.0,Poor
+61,"Bhusawal, India",120,Poor,,--,,--,,--,,--
+62,"Siwan, India",120,Poor,,--,,--,,--,,--
+63,"Kolkata, India",120,Poor,113.0,Poor,112.0,Poor,143.0,Poor,128.0,Poor
+64,"Naihati, India",120,Poor,107.0,Poor,108.0,Poor,134.0,Poor,100.0,Moderate
+65,"Alwar, India",119,Poor,110.0,Poor,112.0,Poor,137.0,Poor,127.0,Poor
+66,"Sitapur, India",118,Poor,103.0,Poor,100.0,Poor,137.0,Poor,130.0,Poor
+67,"Jaunpur, India",118,Poor,79.0,Moderate,73.0,Moderate,115.0,Poor,138.0,Poor
+68,"Jaipur, India",118,Poor,105.0,Poor,106.0,Poor,137.0,Poor,114.0,Poor
+69,"Varanasi, India",118,Poor,79.0,Moderate,84.0,Moderate,96.0,Moderate,147.0,Poor
+70,"Prayagraj, India",117,Poor,,--,,--,,--,,--
+71,"Banda, India",117,Poor,94.0,Moderate,,--,,--,,--
+72,"Rampur, India",117,Poor,102.0,Poor,116.0,Poor,169.0,Poor,174.0,Poor
+73,"Barasat, India",117,Poor,103.0,Poor,100.0,Poor,109.0,Poor,112.0,Poor
+74,"Kashgar, China",116,Poor,159.0,Poor,107.0,Poor,224.0,Unhealthy,213.0,Unhealthy
+75,"Hathras, India",116,Poor,,--,,--,,--,,--
+76,"Cuttack, India",116,Poor,97.0,Moderate,93.0,Moderate,77.0,Moderate,79.0,Moderate
+77,"Kota, India",115,Poor,108.0,Poor,106.0,Poor,137.0,Poor,129.0,Poor
+78,"Bhubaneswar, India",115,Poor,90.0,Moderate,84.0,Moderate,76.0,Moderate,64.0,Moderate
+79,"Tonk, India",115,Poor,103.0,Poor,106.0,Poor,137.0,Poor,134.0,Poor
+80,"Aksu, China",114,Poor,123.0,Poor,107.0,Poor,167.0,Poor,149.0,Poor
+81,"Krishnanagar, India",114,Poor,105.0,Poor,106.0,Poor,124.0,Poor,94.0,Moderate
+82,"Moradabad, India",114,Poor,104.0,Poor,100.0,Poor,137.0,Poor,138.0,Poor
+83,"Haldia, India",114,Poor,103.0,Poor,95.0,Moderate,90.0,Moderate,135.0,Poor
+84,"Holiros, India",114,Poor,103.0,Poor,106.0,Poor,137.0,Poor,146.0,Poor
+85,"Jodhpur, India",114,Poor,103.0,Poor,104.0,Poor,139.0,Poor,119.0,Poor
+86,"Mathura, India",114,Poor,100.0,Moderate,101.0,Poor,139.0,Poor,143.0,Poor
+87,"Pune, India",114,Poor,96.0,Moderate,107.0,Poor,123.0,Poor,112.0,Poor
+88,"Islamabad, Pakistan",113,Poor,100.0,Moderate,72.0,Moderate,96.0,Moderate,133.0,Poor
+89,"Pimpri-Chinchwad, India",113,Poor,,--,,--,,--,,--
+90,"Asansol, India",113,Poor,107.0,Poor,115.0,Poor,139.0,Poor,123.0,Poor
+91,"Birgunj, Nepal",113,Poor,96.0,Moderate,107.0,Poor,164.0,Poor,33.0,Good
+92,"Baharampur, India",113,Poor,102.0,Poor,97.0,Moderate,137.0,Poor,103.0,Poor
+93,"Bahraich, India",113,Poor,79.0,Moderate,91.0,Moderate,142.0,Poor,106.0,Poor
+94,"Bharatpur, Nepal",113,Poor,79.0,Moderate,94.0,Moderate,,--,30.0,Good
+95,"Sikar, India",113,Poor,90.0,Moderate,93.0,Moderate,139.0,Poor,109.0,Poor
+96,"Islamabad, Pakistan",110,Poor,,--,,--,,--,,--
+97,"Al Ain, United Arab Emirates",110,Poor,,--,,--,,--,,--
+98,"Agra, India",110,Poor,90.0,Moderate,82.0,Moderate,131.0,Poor,152.0,Poor
+99,"Siwan, India",110,Poor,75.0,Moderate,81.0,Moderate,101.0,Poor,99.0,Moderate
+100,"Bhimdatta, Nepal",110,Poor,,--,,--,,--,,--
+101,"Navi Mumbai, India",110,Poor,,--,,--,,--,,--
+102,"Peshawar, Pakistan",108,Poor,134.0,Poor,136.0,Poor,189.0,Poor,175.0,Poor
+103,"Rawalpindi, Pakistan",108,Poor,,--,,--,,--,,--
+104,"Mirzapur, India",108,Poor,98.0,Moderate,93.0,Moderate,107.0,Poor,107.0,Poor
+105,"Pali, India",108,Poor,103.0,Poor,113.0,Poor,126.0,Poor,126.0,Poor
+106,"Udham Nagar, India",108,Poor,103.0,Poor,106.0,Poor,128.0,Poor,145.0,Poor
+107,"Indore, India",108,Poor,87.0,Moderate,93.0,Moderate,107.0,Poor,112.0,Poor
+108,"Puri, India",108,Poor,86.0,Moderate,93.0,Moderate,75.0,Moderate,53.0,Moderate
+109,"Bhopal, India",108,Poor,80.0,Moderate,87.0,Moderate,105.0,Poor,112.0,Poor
+110,"Bhiwandi, India",108,Poor,101.0,Poor,106.0,Poor,133.0,Poor,145.0,Poor
+111,"Vadodara, India",107,Poor,101.0,Poor,79.0,Moderate,96.0,Moderate,103.0,Poor
+112,"Bhilwara, India",107,Poor,97.0,Moderate,94.0,Moderate,131.0,Poor,97.0,Moderate
+113,"Bharatpur, India",107,Poor,103.0,Poor,94.0,Moderate,131.0,Poor,130.0,Poor
+114,"Bankura, India",107,Poor,112.0,Poor,114.0,Poor,126.0,Poor,124.0,Poor
+115,"Muzaffarpur, India",107,Poor,122.0,Poor,176.0,Poor,169.0,Poor,167.0,Poor
+116,"Ahmedabad, India",106,Poor,96.0,Moderate,99.0,Moderate,134.0,Poor,133.0,Poor
+117,"Dhar, India",106,Poor,,--,,--,,--,,--
+118,"Jamshedpur, India",106,Poor,86.0,Moderate,85.0,Moderate,131.0,Poor,94.0,Moderate
+119,"Durgapur, India",106,Poor,119.0,Poor,111.0,Poor,144.0,Poor,140.0,Poor
+120,"Bihar Sharif, India",106,Poor,,--,,--,,--,,--
+121,"Vidisha, India",106,Poor,76.0,Moderate,71.0,Moderate,96.0,Moderate,104.0,Poor
+122,"Kullu, India",105,Poor,123.0,Poor,112.0,Poor,118.0,Poor,106.0,Poor
+123,"Rajnandgaon, India",105,Poor,80.0,Moderate,84.0,Moderate,96.0,Moderate,83.0,Moderate
+124,"Pilibhit, India",105,Poor,78.0,Moderate,89.0,Moderate,103.0,Poor,100.0,Poor
+125,"Mira-Bhayandar, India",105,Poor,,--,,--,,--,,--
+126,"Gaya, India",104,Poor,103.0,Poor,123.0,Poor,138.0,Poor,103.0,Poor
+127,"Nimsar, India",104,Poor,98.0,Moderate,106.0,Poor,134.0,Poor,107.0,Poor
+128,"Jaisalmer, India",104,Poor,96.0,Moderate,106.0,Poor,126.0,Poor,101.0,Poor
+129,"Rajkot, India",104,Poor,39.0,Good,45.0,Good,97.0,Moderate,84.0,Moderate
+130,"Mandsaur, India",104,Poor,75.0,Moderate,81.0,Moderate,131.0,Poor,89.0,Moderate
+131,"Mumbai, India",100,Poor,96.0,Moderate,112.0,Poor,131.0,Poor,124.0,Poor
+132,"Thane, India",100,Poor,96.0,Moderate,112.0,Poor,137.0,Poor,132.0,Poor
+133,"Darbhanga, India",100,Poor,,--,,--,,--,,--
+134,"Sanawad, India",100,Poor,86.0,Moderate,93.0,Moderate,132.0,Poor,100.0,Poor
+135,"Jamnagar, India",100,Poor,79.0,Moderate,77.0,Moderate,91.0,Moderate,84.0,Moderate
+136,"Jalgaon, India",100,Poor,74.0,Moderate,79.0,Moderate,94.0,Moderate,68.0,Moderate
+137,"Udhampur, India",100,Poor,41.0,Good,18.0,Good,93.0,Moderate,65.0,Moderate
+138,"Udaipur, India",100,Poor,74.0,Moderate,73.0,Moderate,104.0,Poor,68.0,Moderate
+139,"Dehradun, India",100,Poor,66.0,Moderate,69.0,Moderate,152.0,Poor,132.0,Poor
+140,"Gudha, India",100,Poor,101.0,Poor,87.0,Moderate,107.0,Poor,93.0,Moderate
+141,"Valsad, India",100,Poor,98.0,Moderate,114.0,Poor,137.0,Poor,108.0,Poor
+142,"Srikakulam, India",100,Moderate,78.0,Moderate,100.0,Poor,83.0,Moderate,71.0,Moderate
+143,"Ranchi, India",100,Moderate,58.0,Moderate,58.0,Moderate,96.0,Moderate,59.0,Moderate
+144,"Dhaka, Bangladesh",89,Moderate,,--,,--,,--,,--
+145,"Bhavnagar, India",89,Moderate,96.0,Moderate,93.0,Moderate,119.0,Poor,106.0,Poor
+146,"Dhanbad, India",89,Moderate,96.0,Moderate,107.0,Poor,116.0,Poor,89.0,Moderate
+147,"Damoh, India",89,Moderate,,--,,--,,--,,--
+148,"Vizianagaram, India",89,Moderate,77.0,Moderate,106.0,Poor,82.0,Moderate,83.0,Moderate
+149,"Gandhinagar, India",89,Moderate,81.0,Moderate,93.0,Moderate,105.0,Poor,94.0,Moderate
+150,"Bhuj, India",89,Moderate,60.0,Moderate,63.0,Moderate,50.0,Good,51.0,Moderate
+151,"Porbandar, India",89,Moderate,74.0,Moderate,79.0,Moderate,90.0,Moderate,84.0,Moderate
+152,"Chamarajanagar, India",89,Moderate,42.0,Good,38.0,Good,84.0,Moderate,84.0,Moderate
+153,"Mahesana, India",87,Moderate,79.0,Moderate,87.0,Moderate,100.0,Poor,104.0,Poor
+154,"Burhanpur, India",87,Moderate,78.0,Moderate,84.0,Moderate,98.0,Moderate,74.0,Moderate
+155,"Chapra, India",87,Moderate,,--,,--,,--,,--
+156,"Bazarghar, India",87,Moderate,107.0,Poor,101.0,Poor,149.0,Poor,68.0,Moderate
+157,"Ajmer, India",87,Moderate,87.0,Moderate,84.0,Moderate,124.0,Poor,103.0,Poor
+158,"Paltan, India",85,Moderate,90.0,Moderate,93.0,Moderate,104.0,Poor,112.0,Poor
+159,"Bhimavaram, India",85,Moderate,54.0,Moderate,73.0,Moderate,97.0,Moderate,87.0,Moderate
+160,"Bhaban, India",85,Moderate,73.0,Moderate,93.0,Moderate,182.0,Poor,144.0,Poor
+161,"Bhanupratap, India",84,Moderate,79.0,Moderate,74.0,Moderate,90.0,Moderate,88.0,Moderate
+162,"Abu Dhabi, United Arab Emirates",84,Moderate,,--,,--,,--,,--
+163,"Dubai, United Arab Emirates",84,Moderate,64.0,Moderate,63.0,Moderate,121.0,Poor,71.0,Moderate
+164,"Jabalpur, India",84,Moderate,78.0,Moderate,93.0,Moderate,137.0,Poor,126.0,Poor
+165,"Samastipur, India",83,Moderate,,--,,--,,--,,--
+166,"Arrah, India",83,Moderate,,--,,--,,--,,--
+167,"Roorkee, India",83,Moderate,,--,,--,,--,,--
+168,"Amravati, India",83,Moderate,71.0,Moderate,79.0,Moderate,101.0,Poor,71.0,Moderate
+169,"Ujjain, India",83,Moderate,89.0,Moderate,89.0,Moderate,134.0,Poor,134.0,Poor
+170,"Hotan, China",83,Moderate,88.0,Moderate,94.0,Moderate,,--,,--
+171,"Itahari, Nepal",83,Moderate,79.0,Moderate,93.0,Moderate,,--,117.0,Poor
+172,"Kakinada, India",84,Moderate,57.0,Moderate,79.0,Moderate,72.0,Moderate,68.0,Moderate
+173,"Eluru, India",84,Moderate,50.0,Moderate,61.0,Moderate,93.0,Moderate,59.0,Moderate
+174,"Al Ain, United Arab Emirates",84,Moderate,60.0,Moderate,75.0,Moderate,100.0,Moderate,99.0,Moderate
+175,"Amalapuram, India",84,Moderate,54.0,Moderate,72.0,Moderate,74.0,Moderate,78.0,Moderate
+176,"Secunderabad, India",84,Moderate,68.0,Moderate,64.0,Moderate,82.0,Moderate,91.0,Moderate
+177,"Nagpur, India",84,Moderate,87.0,Moderate,94.0,Moderate,134.0,Poor,94.0,Moderate
+178,"Kishanganj, India",84,Moderate,,--,,--,,--,,--
+179,"Singrauli, India",83,Moderate,,--,,--,,--,,--
+180,"Bandar E Gonaveh, Iran",83,Moderate,76.0,Moderate,81.0,Moderate,144.0,Poor,100.0,Poor
+181,"Karachi, Pakistan",83,Moderate,82.0,Moderate,82.0,Moderate,94.0,Moderate,93.0,Moderate
+182,"Asrah, India",83,Moderate,,--,,--,,--,,--
+183,"Xianyang, China",83,Moderate,109.0,Poor,108.0,Poor,129.0,Poor,112.0,Poor
+184,"Mungra, India",83,Moderate,,--,,--,,--,,--
+185,"Bandar-e Bushehr, Iran",82,Moderate,68.0,Moderate,83.0,Moderate,108.0,Poor,82.0,Moderate
+186,"Rajahmundry, India",82,Moderate,,--,,--,,--,,--
+187,"Vijayawada, India",82,Moderate,67.0,Moderate,82.0,Moderate,60.0,Moderate,82.0,Moderate
+188,"Etawah, India",82,Moderate,86.0,Moderate,89.0,Moderate,120.0,Poor,126.0,Poor
+189,"Malappuram, India",82,Moderate,72.0,Moderate,77.0,Moderate,86.0,Moderate,70.0,Moderate
+190,"Manama, Bahrain",82,Moderate,,--,,--,,--,,--
+191,"Hyderabad, India",82,Moderate,68.0,Moderate,87.0,Moderate,76.0,Moderate,88.0,Moderate
+192,"Nepalgunj, Nepal",82,Moderate,,--,,--,,--,,--
+193,"Haza, China",82,Moderate,97.0,Moderate,110.0,Poor,118.0,Poor,121.0,Poor
+194,"Unnao, India",82,Moderate,68.0,Moderate,79.0,Moderate,91.0,Moderate,69.0,Moderate
+195,"Aurangabad, India",82,Moderate,73.0,Moderate,93.0,Moderate,96.0,Moderate,93.0,Moderate
+196,"Aurangabad, India",81,Moderate,94.0,Moderate,115.0,Poor,149.0,Poor,89.0,Moderate
+197,"Al Jubail, Saudi Arabia",81,Moderate,75.0,Moderate,127.0,Poor,37.0,Good,52.0,Moderate
+198,"Jiangyan, China",81,Moderate,96.0,Moderate,105.0,Poor,113.0,Poor,105.0,Poor
+199,"Jammu, India",81,Moderate,58.0,Moderate,43.0,Good,104.0,Poor,55.0,Moderate
+200,"Gwalior, India",81,Moderate,52.0,Moderate,93.0,Moderate,93.0,Moderate,98.0,Moderate
+201,"Hawalli Al-Ahmadi, Kuwait",81,Moderate,,--,,--,,--,,--
+202,"Akola, India",81,Moderate,73.0,Moderate,79.0,Moderate,93.0,Moderate,64.0,Moderate
+203,"Machilipatnam, India",81,Moderate,60.0,Moderate,83.0,Moderate,64.0,Moderate,58.0,Moderate
+204,"Begusarai, India",81,Moderate,118.0,Poor,226.0,Unhealthy,219.0,Unhealthy,134.0,Poor
+205,"Raiganj, India",81,Moderate,133.0,Poor,151.0,Poor,142.0,Poor,82.0,Moderate
+206,"Shancheng, China",81,Moderate,90.0,Moderate,107.0,Poor,119.0,Poor,120.0,Poor
+207,"Saharsa, India",81,Moderate,147.0,Poor,234.0,Unhealthy,200.0,Poor,115.0,Poor
+208,"Osan, South Korea",81,Moderate,,--,,--,,--,,--
+209,"Doha, Qatar",81,Moderate,,--,,--,,--,,--
+210,"Liwa, Oman",80,Moderate,,--,,--,,--,,--
+211,"Huanglangxi, China",80,Moderate,89.0,Moderate,113.0,Poor,134.0,Poor,116.0,Poor
+212,"Bareilly, India",80,Moderate,78.0,Moderate,93.0,Moderate,160.0,Poor,182.0,Poor
+213,"Karur, India",80,Moderate,,--,,--,,--,,--
+214,"Xinhualu, China",80,Moderate,98.0,Moderate,113.0,Poor,,--,100.0,Poor
+215,"Shangqiu, China",80,Moderate,98.0,Moderate,104.0,Poor,113.0,Poor,122.0,Poor
+216,"Sangareddy, India",80,Moderate,,--,,--,,--,,--
+217,"Ahvaz, Iran",80,Moderate,73.0,Moderate,72.0,Moderate,97.0,Moderate,69.0,Moderate
+218,"Dongzhouding, China",80,Moderate,103.0,Poor,123.0,Poor,137.0,Poor,127.0,Poor
+219,"Guwahati, India",80,Moderate,94.0,Moderate,123.0,Poor,108.0,Poor,127.0,Poor
+220,"Borujerd, Iran",80,Moderate,64.0,Moderate,61.0,Moderate,139.0,Poor,116.0,Poor
+221,"Khorramshahr, Iran",80,Moderate,90.0,Moderate,106.0,Poor,136.0,Poor,112.0,Poor
+222,"Al Qatif, Saudi Arabia",80,Moderate,56.0,Moderate,125.0,Poor,25.0,Good,,--
+223,"Linfen, China",80,Moderate,97.0,Moderate,115.0,Poor,147.0,Poor,134.0,Poor
+224,"Ad Dammam, Saudi Arabia",80,Moderate,,--,,--,,--,,--
+225,"Kaifeng Chengguanzhen, China",80,Moderate,85.0,Moderate,92.0,Moderate,,--,102.0,Poor
+226,"Solapur, India",80,Moderate,71.0,Moderate,48.0,Good,67.0,Moderate,74.0,Moderate
+227,"Firozabad, India",80,Moderate,84.0,Moderate,97.0,Moderate,139.0,Poor,136.0,Poor
+228,"Ilam, Iran",80,Moderate,45.0,Good,32.0,Good,48.0,Good,44.0,Good
+229,"Xuchang, China",80,Moderate,96.0,Moderate,101.0,Poor,90.0,Moderate,105.0,Poor
+230,"Nanyangdao, China",80,Moderate,96.0,Moderate,100.0,Poor,112.0,Poor,106.0,Poor
+231,"Changzhi, China",80,Moderate,94.0,Moderate,112.0,Poor,,--,173.0,Poor
+232,"Hebi, China",80,Moderate,101.0,Poor,106.0,Poor,129.0,Poor,119.0,Poor
+233,"Al Khobar, Saudi Arabia",80,Moderate,72.0,Moderate,106.0,Poor,119.0,Poor,,--
+234,"Ramhormoz, Iran",80,Moderate,50.0,Moderate,79.0,Moderate,56.0,Moderate,78.0,Moderate
+235,"Tondi, India",80,Moderate,60.0,Moderate,81.0,Moderate,60.0,Moderate,68.0,Moderate
+236,"Luohe, China",80,Moderate,94.0,Moderate,106.0,Poor,101.0,Poor,113.0,Poor
+237,"Jining, China",80,Moderate,87.0,Moderate,89.0,Moderate,100.0,Moderate,105.0,Poor
+238,"Chandrapur, India",80,Moderate,86.0,Moderate,89.0,Moderate,109.0,Poor,87.0,Moderate
+239,"Hadan, Iran",80,Moderate,75.0,Moderate,79.0,Moderate,119.0,Poor,97.0,Moderate
+240,"Chengguan, China",80,Moderate,96.0,Moderate,102.0,Poor,,--,100.0,Poor
+241,"Weinan, China",80,Moderate,96.0,Moderate,111.0,Poor,122.0,Poor,115.0,Poor
+242,"As Suwayqah, Qatar",87,Moderate,,--,,--,,--,,--
+243,"Al Hofuf, Saudi Arabia",87,Moderate,68.0,Moderate,129.0,Poor,50.0,Good,42.0,Good
+244,"Handan, China",87,Moderate,96.0,Moderate,100.0,Poor,119.0,Poor,97.0,Moderate
+245,"Bhagalpur, India",87,Moderate,123.0,Poor,176.0,Poor,179.0,Poor,133.0,Poor
+246,"Bandar E Mahshahr, Iran",87,Moderate,75.0,Moderate,72.0,Moderate,137.0,Poor,65.0,Moderate
+247,"Xianyang, China",87,Moderate,90.0,Moderate,103.0,Poor,115.0,Poor,130.0,Poor
+248,"Khammam, India",87,Moderate,54.0,Moderate,64.0,Moderate,53.0,Moderate,46.0,Good
+249,"Kuwait City, Kuwait",87,Moderate,98.0,Moderate,93.0,Moderate,149.0,Poor,131.0,Poor
+250,"Dhahran, Saudi Arabia",87,Moderate,75.0,Moderate,130.0,Poor,245.0,Unhealthy,87.0,Moderate
+251,"Wujingcu, China",87,Moderate,96.0,Moderate,116.0,Poor,131.0,Poor,132.0,Poor
+252,"Guntur, India",87,Moderate,52.0,Moderate,61.0,Moderate,63.0,Moderate,63.0,Moderate
+253,"Heishan, China",87,Moderate,88.0,Moderate,129.0,Poor,,--,136.0,Poor
+254,"Xi'an, China",86,Moderate,96.0,Moderate,137.0,Poor,137.0,Poor,133.0,Poor
+255,"Parbhani, India",85,Moderate,62.0,Moderate,53.0,Moderate,78.0,Moderate,57.0,Moderate
+256,"Al Ahmadi, Kuwait",85,Moderate,64.0,Moderate,83.0,Moderate,149.0,Poor,74.0,Moderate
+257,"Pingdingshan, China",85,Moderate,100.0,Moderate,106.0,Poor,132.0,Poor,112.0,Poor
+258,"Ahvaz, Iran",85,Moderate,75.0,Moderate,83.0,Moderate,144.0,Poor,51.0,Moderate
+259,"Nizamabad, India",85,Moderate,64.0,Moderate,64.0,Moderate,78.0,Moderate,81.0,Moderate
+260,"Yancheng, China",85,Moderate,90.0,Moderate,116.0,Poor,134.0,Poor,123.0,Poor
+261,"Luoyang, China",85,Moderate,101.0,Poor,104.0,Poor,118.0,Poor,113.0,Poor
+262,"Dhangadhi, Nepal",85,Moderate,,--,,--,,--,,--
+263,"Ghazipur, India",85,Moderate,52.0,Moderate,62.0,Moderate,63.0,Moderate,54.0,Moderate
+264,"Kara Suu, Kyrgyzstan",85,Moderate,,--,,--,,--,,--
+265,"Yavatmal, India",85,Moderate,68.0,Moderate,63.0,Moderate,90.0,Moderate,76.0,Moderate
+266,"Jal Al-Ahmad, Kyrgyzstan",85,Moderate,66.0,Moderate,82.0,Moderate,207.0,Unhealthy,,--
+267,"Madinat Zayed, United Arab Emirates",85,Moderate,71.0,Moderate,85.0,Moderate,115.0,Poor,134.0,Poor
+268,"Sambalpur, India",85,Moderate,72.0,Moderate,74.0,Moderate,86.0,Moderate,72.0,Moderate
+269,"Al Jahra, Kuwait",85,Moderate,,--,,--,,--,,--
+270,"Amaravati, India",85,Moderate,,--,,--,,--,,--
+271,"Bidar, India",85,Moderate,58.0,Moderate,59.0,Moderate,90.0,Moderate,74.0,Moderate
+272,"Zhengzhou, China",85,Moderate,90.0,Moderate,104.0,Poor,133.0,Poor,100.0,Poor
+273,"Shizui, China",85,Moderate,73.0,Moderate,134.0,Poor,113.0,Poor,55.0,Moderate
+274,"Yongcheng, China",85,Moderate,72.0,Moderate,92.0,Moderate,,--,130.0,Poor
+275,"Xibocha, China",85,Moderate,94.0,Moderate,105.0,Poor,131.0,Poor,122.0,Poor
+276,"Kolhapur, India",85,Moderate,44.0,Good,38.0,Good,50.0,Moderate,44.0,Good
+277,"Nalgonda, India",85,Moderate,66.0,Moderate,64.0,Moderate,73.0,Moderate,71.0,Moderate
+278,"Osh, Kyrgyzstan",84,Moderate,48.0,Good,89.0,Moderate,239.0,Unhealthy,,--
+279,"Adilabad, India",84,Moderate,66.0,Moderate,63.0,Moderate,104.0,Poor,64.0,Moderate
+280,"Kamareddy, India",84,Moderate,57.0,Moderate,64.0,Moderate,90.0,Moderate,64.0,Moderate
+281,"Behbahan, Iran",84,Moderate,75.0,Moderate,65.0,Moderate,113.0,Poor,84.0,Moderate
+282,"Dushanbe, Tajikistan",84,Moderate,76.0,Moderate,100.0,Poor,97.0,Moderate,115.0,Poor
+283,"Jiangchuan, China",84,Moderate,90.0,Moderate,89.0,Moderate,109.0,Poor,98.0,Moderate
+284,"Qingping, China",84,Moderate,95.0,Moderate,106.0,Poor,,--,134.0,Poor
+285,"Siliguri, India",84,Moderate,79.0,Moderate,74.0,Moderate,96.0,Moderate,123.0,Poor
+286,"Huaiyin, China",84,Moderate,90.0,Moderate,107.0,Poor,96.0,Moderate,91.0,Moderate
+287,"Qilu, China",84,Moderate,68.0,Moderate,100.0,Poor,96.0,Moderate,100.0,Poor
+288,"Chongshangcun, China",84,Moderate,69.0,Moderate,89.0,Moderate,101.0,Poor,100.0,Poor
+289,"Qingdao, China",83,Moderate,90.0,Moderate,106.0,Poor,103.0,Poor,104.0,Poor
+290,"Zaozhuang, China",83,Moderate,88.0,Moderate,100.0,Poor,100.0,Moderate,100.0,Poor
+291,"Anxian, China",83,Moderate,96.0,Moderate,101.0,Poor,114.0,Poor,114.0,Poor
+292,"Puyang, China",83,Moderate,90.0,Moderate,106.0,Poor,119.0,Poor,107.0,Poor
+293,"Bandar Abbas, Iran",83,Moderate,68.0,Moderate,83.0,Moderate,97.0,Moderate,84.0,Moderate
+294,"Dezful, Iran",83,Moderate,73.0,Moderate,77.0,Moderate,119.0,Poor,98.0,Moderate
+295,"Sanmenxia, China",83,Moderate,97.0,Moderate,101.0,Poor,132.0,Poor,106.0,Poor
+296,"Boyru, Iran",83,Moderate,66.0,Moderate,72.0,Moderate,94.0,Moderate,87.0,Moderate
+297,"Bozhou, China",83,Moderate,84.0,Moderate,85.0,Moderate,97.0,Moderate,95.0,Moderate
+298,"Shushtar, Iran",83,Moderate,68.0,Moderate,75.0,Moderate,107.0,Poor,93.0,Moderate
+299,"Urmia, Iran",83,Moderate,77.0,Moderate,87.0,Moderate,108.0,Poor,105.0,Poor
+300,"Nanded, India",83,Moderate,68.0,Moderate,87.0,Moderate,84.0,Moderate,58.0,Moderate

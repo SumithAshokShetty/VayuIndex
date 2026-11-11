@@ -1,0 +1,136 @@
+Rank,Country,2025_AQI,2025_Status,2024_AQI,2024_Status,2023_AQI,2023_Status,2022_AQI,2022_Status,2021_AQI,2021_Status
+1,Bangladesh,99,Moderate,144.0,Poor,182.0,Poor,184.0,Poor,182.0,Poor
+2,Pakistan,99,Moderate,148.0,Poor,97.0,Moderate,150.0,Poor,145.0,Poor
+3,India,88,Moderate,144.0,Poor,107.0,Poor,138.0,Poor,154.0,Poor
+4,Bahrain,82,Moderate,79.0,Moderate,97.0,Moderate,134.0,Poor,74.0,Moderate
+5,United Arab Emirates,80,Moderate,75.0,Moderate,75.0,Moderate,118.0,Poor,100.0,Moderate
+6,Qatar,84,Moderate,,--,,--,,--,,--
+7,Kuwait,84,Moderate,94.0,Moderate,92.0,Moderate,145.0,Poor,59.0,Moderate
+8,Tajikistan,72,Moderate,67.0,Moderate,93.0,Moderate,93.0,Moderate,135.0,Poor
+9,Nepal,67,Moderate,78.0,Moderate,108.0,Poor,162.0,Poor,44.0,Good
+10,Oman,65,Moderate,,--,,--,,--,,--
+11,Kyrgyzstan,65,Moderate,50.0,Moderate,94.0,Moderate,60.0,Moderate,89.0,Moderate
+12,Saudi Arabia,65,Moderate,40.0,Good,44.0,Good,64.0,Moderate,98.0,Moderate
+13,Iran,64,Moderate,50.0,Good,53.0,Moderate,77.0,Moderate,67.0,Moderate
+14,Iraq,60,Moderate,54.0,Moderate,44.0,Good,119.0,Poor,67.0,Moderate
+15,Mongolia,59,Moderate,72.0,Moderate,75.0,Moderate,119.0,Poor,100.0,Poor
+16,China,57,Moderate,66.0,Moderate,75.0,Moderate,73.0,Moderate,79.0,Moderate
+17,Uzbekistan,54,Moderate,50.0,Moderate,93.0,Moderate,64.0,Moderate,83.0,Moderate
+18,Turkmenistan,53,Moderate,45.0,Good,91.0,Moderate,35.0,Good,36.0,Good
+19,Myanmar,48,Good,,--,,--,,--,,--
+20,Bosnia and Herzegovina,47,Good,50.0,Moderate,94.0,Moderate,68.0,Moderate,84.0,Moderate
+21,Azerbaijan,46,Good,40.0,Good,27.0,Good,29.0,Good,,--
+22,Sudan,44,Good,37.0,Good,62.0,Moderate,56.0,Moderate,73.0,Moderate
+23,North Korea,44,Good,40.0,Good,54.0,Moderate,50.0,Good,57.0,Moderate
+24,Armenia,43,Good,35.0,Good,28.0,Good,42.0,Good,48.0,Good
+25,Egypt,43,Good,50.0,Moderate,100.0,Poor,107.0,Poor,,--
+26,North Macedonia,42,Good,,--,,--,,--,,--
+27,Kosovo,42,Good,31.0,Good,33.0,Good,42.0,Good,44.0,Good
+28,Laos,41,Good,58.0,Moderate,97.0,Moderate,39.0,Good,48.0,Good
+29,Uganda,41,Good,52.0,Moderate,63.0,Moderate,56.0,Moderate,58.0,Moderate
+30,Sri Lanka,41,Good,39.0,Good,21.0,Good,39.0,Good,28.0,Good
+31,Democratic Republic of the Congo,40,Good,,--,,--,,--,,--
+32,Vietnam,40,Good,41.0,Good,45.0,Good,34.0,Good,50.0,Good
+33,Chad,40,Good,40.0,Good,65.0,Moderate,56.0,Moderate,,--
+34,Lebanon,40,Good,40.0,Good,50.0,Good,51.0,Moderate,,--
+35,Turkey,39,Good,39.0,Good,41.0,Good,49.0,Good,62.0,Moderate
+36,Chile,39,Good,40.0,Good,43.0,Good,46.0,Good,51.0,Moderate
+37,Cameroon,38,Good,50.0,Moderate,64.0,Moderate,46.0,Good,,--
+38,Thailand,38,Good,40.0,Good,46.0,Good,40.0,Good,47.0,Good
+39,Gabon,38,Good,39.0,Good,36.0,Good,35.0,Good,,--
+40,Namibia,38,Good,35.0,Good,3.0,Good,10.0,Good,,--
+41,Rwanda,38,Good,58.0,Moderate,74.0,Moderate,74.0,Moderate,,--
+42,Jordan,38,Good,33.0,Good,37.0,Good,37.0,Good,39.0,Good
+43,Mexico,38,Good,46.0,Good,37.0,Good,53.0,Moderate,52.0,Moderate
+44,Nigeria,38,Good,68.0,Moderate,93.0,Moderate,76.0,Moderate,94.0,Moderate
+45,Serbia,37,Good,40.0,Good,32.0,Good,44.0,Good,48.0,Good
+46,Peru,37,Good,31.0,Good,32.0,Good,56.0,Moderate,48.0,Good
+47,Benin,34,Good,39.0,Good,44.0,Good,27.0,Good,,--
+48,South Korea,34,Good,30.0,Good,48.0,Good,42.0,Good,45.0,Good
+49,Georgia,34,Good,31.0,Good,33.0,Good,35.0,Good,46.0,Good
+50,Angola,34,Good,25.0,Good,24.0,Good,22.0,Good,,--
+51,Albania,34,Good,23.0,Good,14.0,Good,38.0,Good,,--
+52,Cambodia,34,Good,35.0,Good,18.0,Good,34.0,Good,,--
+53,Taiwan,34,Good,37.0,Good,38.0,Good,37.0,Good,43.0,Good
+54,Madagascar,34,Good,30.0,Good,18.0,Good,31.0,Good,34.0,Good
+55,Haiti,33,Good,37.0,Good,28.0,Good,37.0,Good,40.0,Good
+56,Kenya,33,Good,32.0,Good,16.0,Good,30.0,Good,,--
+57,Botswana,33,Good,29.0,Good,21.0,Good,22.0,Good,28.0,Good
+58,Armenia,33,Good,50.0,Moderate,51.0,Moderate,96.0,Moderate,62.0,Moderate
+59,Mali,32,Good,31.0,Good,63.0,Moderate,119.0,Poor,152.0,Poor
+60,Burkina Faso,32,Good,25.0,Good,51.0,Moderate,108.0,Poor,,--
+61,Kazakhstan,32,Good,50.0,Moderate,37.0,Good,80.0,Good,59.0,Moderate
+62,Cyprus,32,Good,36.0,Good,31.0,Good,27.0,Good,28.0,Good
+63,Guinea,32,Good,29.0,Good,22.0,Good,105.0,Poor,68.0,Moderate
+64,Ethiopia,32,Good,41.0,Good,53.0,Moderate,51.0,Moderate,41.0,Good
+65,Greece,31,Good,29.0,Good,26.0,Good,51.0,Moderate,53.0,Moderate
+66,San Marino,31,Good,26.0,Good,31.0,Good,45.0,Good,43.0,Good
+67,Indonesia,31,Good,32.0,Good,38.0,Good,30.0,Good,34.0,Good
+68,South Africa,31,Good,34.0,Good,38.0,Good,35.0,Good,43.0,Good
+69,Ghana,31,Good,37.0,Good,27.0,Good,45.0,Good,48.0,Good
+70,Zambia,31,Good,31.0,Good,18.0,Good,48.0,Good,,--
+71,Italy,30,Good,25.0,Good,21.0,Good,35.0,Good,26.0,Good
+72,Togo,30,Good,20.0,Good,16.0,Good,14.0,Good,,--
+73,Cote D'Ivoire,30,Good,41.0,Good,32.0,Good,39.0,Good,52.0,Moderate
+74,Liberia,30,Good,32.0,Good,28.0,Good,30.0,Good,,--
+75,Montenegro,29,Good,37.0,Good,48.0,Good,41.0,Good,18.0,Good
+76,Gambia,29,Good,37.0,Good,53.0,Moderate,32.0,Good,,--
+77,Senegal,29,Good,41.0,Good,38.0,Good,31.0,Good,,--
+78,Poland,29,Good,29.0,Good,18.0,Good,33.0,Good,37.0,Good
+79,Cape Verde,29,Good,21.0,Good,15.0,Good,15.0,Good,,--
+80,Bolivia,29,Good,23.0,Good,5.0,Good,,--,,--
+81,Czechia,29,Good,31.0,Good,16.0,Good,34.0,Good,33.0,Good
+82,Brazil,28,Good,30.0,Good,17.0,Good,29.0,Good,36.0,Good
+83,El Salvador,28,Good,25.0,Good,43.0,Good,37.0,Good,40.0,Good
+84,Hungary,28,Good,29.0,Good,14.0,Good,30.0,Good,38.0,Good
+85,Slovenia,28,Good,29.0,Good,17.0,Good,29.0,Good,27.0,Good
+86,Bulgaria,28,Good,27.0,Good,14.0,Good,27.0,Good,31.0,Good
+87,Japan,28,Good,29.0,Good,27.0,Good,27.0,Good,28.0,Good
+88,Russia,27,Good,21.0,Good,14.0,Good,25.0,Good,29.0,Good
+89,Morocco,27,Good,,--,,--,,--,,--
+90,Ecuador,26,Good,24.0,Good,23.0,Good,29.0,Good,31.0,Good
+91,Paraguay,26,Good,,--,,--,,--,,--
+92,Philippines,26,Good,26.0,Good,19.0,Good,25.0,Good,26.0,Good
+93,Croatia,26,Good,27.0,Good,16.0,Good,26.0,Good,23.0,Good
+94,Singapore,26,Good,26.0,Good,17.0,Good,26.0,Good,32.0,Good
+95,Romania,26,Good,24.0,Good,16.0,Good,21.0,Good,24.0,Good
+96,Algeria,25,Good,29.0,Good,24.0,Good,30.0,Good,26.0,Good
+97,Norway,25,Good,17.0,Good,14.0,Good,17.0,Good,17.0,Good
+98,Portugal,25,Good,26.0,Good,24.0,Good,30.0,Good,31.0,Good
+99,Argentina,25,Good,24.0,Good,17.0,Good,35.0,Good,38.0,Good
+100,Spain,25,Good,27.0,Good,18.0,Good,32.0,Good,32.0,Good
+101,Liechtenstein,25,Good,20.0,Good,20.0,Good,22.0,Good,21.0,Good
+102,Switzerland,25,Good,21.0,Good,21.0,Good,26.0,Good,26.0,Good
+103,Andorra,24,Good,20.0,Good,20.0,Good,28.0,Good,32.0,Good
+104,Moldova,24,Good,17.0,Good,12.0,Good,17.0,Good,31.0,Good
+105,France,24,Good,23.0,Good,24.0,Good,26.0,Good,27.0,Good
+106,Slovakia,24,Good,25.0,Good,23.0,Good,26.0,Good,30.0,Good
+107,Malaysia,24,Good,14.0,Good,4.0,Good,4.0,Good,4.0,Good
+108,Trinidad And Tobago,24,Good,29.0,Good,27.0,Good,24.0,Good,28.0,Good
+109,Austria,24,Good,17.0,Good,15.0,Good,17.0,Good,18.0,Good
+110,United States,23,Good,21.0,Good,21.0,Good,21.0,Good,24.0,Good
+111,Guatemala,23,Good,35.0,Good,29.0,Good,23.0,Good,28.0,Good
+112,Grenada,23,Good,14.0,Good,6.0,Good,6.0,Good,,--
+113,Latvia,23,Good,16.0,Good,9.0,Good,20.0,Good,,--
+114,Curacao,23,Good,19.0,Good,15.0,Good,12.0,Good,14.0,Good
+115,Denmark,23,Good,20.0,Good,19.0,Good,25.0,Good,27.0,Good
+116,United Kingdom,22,Good,20.0,Good,18.0,Good,20.0,Good,23.0,Good
+117,Brunei,22,Good,9.0,Good,1.0,Good,,--,,--
+118,Colombia,22,Good,28.0,Good,25.0,Good,30.0,Good,31.0,Good
+119,Germany,22,Good,22.0,Good,22.0,Good,24.0,Good,24.0,Good
+120,Lithuania,22,Good,24.0,Good,21.0,Good,24.0,Good,28.0,Good
+121,Estonia,22,Good,22.0,Good,19.0,Good,23.0,Good,26.0,Good
+122,Finland,22,Good,14.0,Good,12.0,Good,12.0,Good,13.0,Good
+123,Sweden,22,Good,17.0,Good,14.0,Good,17.0,Good,17.0,Good
+124,Costa Rica,21,Good,18.0,Good,11.0,Good,11.0,Good,14.0,Good
+125,Luxembourg,21,Good,23.0,Good,26.0,Good,27.0,Good,27.0,Good
+126,Belarus,21,Good,19.0,Good,18.0,Good,23.0,Good,,--
+127,Belgium,20,Good,18.0,Good,20.0,Good,21.0,Good,24.0,Good
+128,Ukraine,20,Good,22.0,Good,17.0,Good,19.0,Good,27.0,Good
+129,Netherlands,19,Good,24.0,Good,23.0,Good,26.0,Good,26.0,Good
+130,Venezuela,19,Good,30.0,Good,9.0,Good,6.0,Good,,--
+131,Canada,18,Good,16.0,Good,21.0,Good,17.0,Good,19.0,Good
+132,Iceland,18,Good,13.0,Good,12.0,Good,12.0,Good,14.0,Good
+133,Australia,18,Good,14.0,Good,13.0,Good,12.0,Good,15.0,Good
+134,Ireland,17,Good,14.0,Good,11.0,Good,16.0,Good,20.0,Good
+135,New Zealand,17,Good,17.0,Good,16.0,Good,16.0,Good,18.0,Good

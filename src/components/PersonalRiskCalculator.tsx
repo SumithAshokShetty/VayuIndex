@@ -80,7 +80,7 @@ export function PersonalRiskCalculator({ aqi, locationName, sourceLabel, provena
           <label className="risk-field" key={key}>
             <span>{key === "age" ? "AGE GROUP" : key === "health" ? "HEALTH CONTEXT" : key === "activity" ? "OUTDOOR ACTIVITY" : "TIME OUTDOORS"}</span>
             <select value={profile[key]} onChange={(event) => setField(key, event.target.value as RiskProfile[typeof key])}>
-              {OPTIONS[key].map((option) => <option key={option.value} value={option.value}>{option.label} · ×{option.weight.toFixed(2)}</option>)}
+              {OPTIONS[key].map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
         ))}

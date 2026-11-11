@@ -34,12 +34,20 @@ import {
   Plus,
   RadioTower,
   Search,
+  Share2,
   Sparkles,
   TrendingUp,
   X,
+  FileText,
 } from "lucide-react";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
 import { useTheme } from "@/lib/use-theme";
+import { AiComparativeInsightBanner } from "./compare/AiComparativeInsightBanner";
+import { CigaretteBurdenCard } from "./compare/CigaretteBurdenCard";
+import { MeteorologicalMatrixCard } from "./compare/MeteorologicalMatrixCard";
+import { DiurnalHazardHeatmap } from "./compare/DiurnalHazardHeatmap";
+import { AqiShareCardModal } from "@/components/AqiShareCardModal";
+import { PollutionImpactReportModal } from "@/components/PollutionImpactReportModal";
 
 // ==========================================
 // Types & Constants
@@ -297,7 +305,7 @@ function formatTimestampBadge(isoString: string): string {
   }
 }
 
-function locationKey(loc: Location): string {
+export function locationKey(loc: Location): string {
   return `${loc.latitude.toFixed(3)}:${loc.longitude.toFixed(3)}`;
 }
 
@@ -308,6 +316,8 @@ function locationKey(loc: Location): string {
 export function LocationComparison({ initialLocation }: { initialLocation?: Location }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [shareTarget, setShareTarget] = useState<{ location: Location; air: AirQualityResponse | null } | null>(null);
+  const [dossierLocation, setDossierLocation] = useState<Location | null>(null);
 
   // 1. Comparison Location State (2 to 4 locations)
   const [locations, setLocations] = useState<Location[]>(() => {
@@ -968,22 +978,47 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     </span>
                   </div>
 
-                  {isBest && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                      <Sparkles size={12} /> BEST AIR QUALITY
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {isBest && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                        <Sparkles size={11} /> BEST
+                      </span>
+                    )}
 
-                  {locations.length > 2 && (
                     <button
                       type="button"
-                      onClick={() => removeLocation(index)}
-                      className="text-[var(--dash-muted)] hover:text-[var(--dash-ink)] p-1.5 rounded-full hover:bg-[var(--dash-surface-soft)] transition-colors"
-                      aria-label={`Remove ${site.location.name}`}
+                      onClick={() => {
+                        const data = liveData[locationKey(site.location)]?.air ?? null;
+                        setShareTarget({ location: site.location, air: data });
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm cursor-pointer transition-all active:scale-95"
+                      title={`Generate Share Card for ${site.location.name}`}
                     >
-                      <X size={16} />
+                      <Share2 size={11} />
+                      <span>Share</span>
                     </button>
-                  )}
+
+                    <button
+                      type="button"
+                      onClick={() => setDossierLocation(site.location)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[var(--dash-surface-soft)] hover:bg-[var(--dash-rule)] text-[var(--dash-ink)] border border-[var(--dash-rule)] shadow-sm cursor-pointer transition-all active:scale-95"
+                      title={`Generate Pollution Impact Report for ${site.location.name}`}
+                    >
+                      <FileText size={11} />
+                      <span>Report</span>
+                    </button>
+
+                    {locations.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLocation(index)}
+                        className="text-[var(--dash-muted)] hover:text-[var(--dash-ink)] p-1.5 rounded-full hover:bg-[var(--dash-surface-soft)] transition-colors"
+                        aria-label={`Remove ${site.location.name}`}
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* City and Coordinates */}
@@ -1036,6 +1071,31 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
           })}
         </AnimatePresence>
       </div>
+
+      {/* ---------------------------------------------------- */}
+      {/* Comparative Synthesis, Health Burden & Meteorology */}
+      {/* ---------------------------------------------------- */}
+      <AiComparativeInsightBanner
+        locations={locations}
+        liveData={liveData}
+        historyData={historyData}
+        onGenerateDossier={(loc) => setDossierLocation(loc)}
+      />
+
+      <CigaretteBurdenCard
+        locations={locations}
+        liveData={liveData}
+        historyData={historyData}
+      />
+
+      <MeteorologicalMatrixCard
+        locations={locations}
+      />
+
+      <DiurnalHazardHeatmap
+        locations={locations}
+        historyData={historyData}
+      />
 
       {/* ---------------------------------------------------- */}
       {/* Tier 3: Selectors Bar (Directly Above Chart 1) */}
@@ -1250,7 +1310,7 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                 })}
               </LineChart>
             ) : (
-              <AreaChart data={timeSeriesData} margin={{ top: 12, right: 12, left: -4, bottom: 0 }}>
+              <BarChart data={timeSeriesData} margin={{ top: 12, right: 12, left: -4, bottom: 0 }}>
                 <CartesianGrid
                   stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "#E5E7EB"}
                   strokeDasharray="3 3"
@@ -1280,28 +1340,28 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
                     borderRadius: "10px",
                     fontSize: "13px",
                     color: "var(--dash-ink)",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
+                    padding: "10px 14px",
                   }}
                   formatter={(val: any, name: any) => [`${val} ${activeParam.unit}`, name]}
                   labelFormatter={(label, payload) => payload?.[0]?.payload?.dateLabel || label}
+                  labelStyle={{ color: "var(--dash-muted)", marginBottom: "6px", fontSize: "12px", fontWeight: 600 }}
                 />
                 <Legend wrapperStyle={{ paddingTop: 10, fontSize: 13 }} />
                 <ReferenceLine y={activeParam.threshold} stroke="#f59e0b" strokeDasharray="4 4" />
                 {locations.map((loc, idx) => {
                   const locTheme = LOCATION_THEMES[idx % LOCATION_THEMES.length];
                   return (
-                    <Area
+                    <Bar
                       key={loc.name}
-                      type="monotone"
                       dataKey={loc.name}
                       name={loc.name}
-                      stroke={locTheme.stroke}
-                      fill={locTheme.fill}
-                      fillOpacity={0.16}
-                      strokeWidth={2}
+                      fill={locTheme.stroke}
+                      radius={[4, 4, 0, 0]}
                     />
                   );
                 })}
-              </AreaChart>
+              </BarChart>
             )}
           </ResponsiveContainer>
         </div>
@@ -1583,6 +1643,28 @@ export function LocationComparison({ initialLocation }: { initialLocation?: Loca
           <strong>Atmospheric Load Synthesis:</strong> Identifies which pollutants dominate each city&apos;s air space. A dominant red/amber block indicates fine and coarse particulate dust (PM₂.₅ and PM₁₀) requiring filtration masks, while high cyan/purple/teal segments signal combustion gas pollutants (NO₂, SO₂, CO) typical of dense commuter traffic and fossil energy infrastructure.
         </div>
       </article>
+
+      {shareTarget && (
+        <AqiShareCardModal
+          open={Boolean(shareTarget)}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setShareTarget(null);
+          }}
+          air={shareTarget.air}
+          location={shareTarget.location}
+        />
+      )}
+
+      {dossierLocation && (
+        <PollutionImpactReportModal
+          open={Boolean(dossierLocation)}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setDossierLocation(null);
+          }}
+          location={dossierLocation}
+          initialData={historyData[locationKey(dossierLocation)]?.payload}
+        />
+      )}
     </section>
   );
 }

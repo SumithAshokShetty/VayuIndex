@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { Activity, Clock3, Radio, Wind } from "lucide-react";
+import { Activity, Clock3, Radio, Share2, Wind } from "lucide-react";
 import { AQI_COLORS } from "@/lib/aqi-calculator";
 import type { AirQualityResponse, Location } from "@/lib/types";
 
@@ -44,9 +44,10 @@ type TelemetryCardProps = {
   location: Location;
   loading: boolean;
   error: string | null;
+  onShare?: () => void;
 };
 
-export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, error }: TelemetryCardProps) {
+export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, error, onShare }: TelemetryCardProps) {
   const counterRef = useRef<HTMLSpanElement | null>(null);
   const band = aqi === null ? null : getBand(aqi);
   const source = air?.provider === "cpcb" ? "CPCB OFFICIAL TELEMETRY"
@@ -83,7 +84,20 @@ export function TelemetryCard({ air, aqi, dominantPollutant, location, loading, 
     <article className="telemetry-card">
       <div className="telemetry-heading">
         <span className="section-kicker"><Activity size={13}/> LIVE TELEMETRY</span>
-        <span className={`telemetry-live ${loading ? "is-loading" : error ? "is-error" : ""}`}><i/>{loading ? "SYNCING" : error ? "OFFLINE" : "LIVE"}</span>
+        <div className="flex items-center gap-2">
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-emerald-600/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+              title="Share Pollution Card"
+            >
+              <Share2 size={11} />
+              <span>Share</span>
+            </button>
+          )}
+          <span className={`telemetry-live ${loading ? "is-loading" : error ? "is-error" : ""}`}><i/>{loading ? "SYNCING" : error ? "OFFLINE" : "LIVE"}</span>
+        </div>
       </div>
 
       <div className="telemetry-location">

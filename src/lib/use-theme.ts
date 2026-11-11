@@ -4,7 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 export type Theme = "light" | "dark";
 
-let currentTheme: Theme = "dark";
+let currentTheme: Theme = "light";
 const listeners = new Set<() => void>();
 
 function emitChange() {
@@ -18,7 +18,7 @@ function getSnapshot(): Theme {
 }
 
 function getServerSnapshot(): Theme {
-  return "dark";
+  return "light";
 }
 
 function subscribe(listener: () => void) {
@@ -62,7 +62,7 @@ export function useTheme() {
 
     const resolved: Theme = docTheme === "light" || docTheme === "dark"
       ? docTheme
-      : (saved === "light" || saved === "dark" ? saved : "dark");
+      : (saved === "light" || saved === "dark" ? saved : "light");
 
     if (resolved !== currentTheme) {
       currentTheme = resolved;

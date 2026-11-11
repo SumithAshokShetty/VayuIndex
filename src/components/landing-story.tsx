@@ -69,7 +69,7 @@ export function LandingStory() {
               <span className="brand-mark" aria-hidden="true"><i/><i/><i/></span>
               <span className="brand-copy"><strong>VAYU<span>INDEX</span></strong><small>GLOBAL AIR INTELLIGENCE</small></span>
             </a>
-            <nav aria-label="Main navigation"><a className="story-nav-link active" href="/">The atmosphere</a><a className="story-nav-link" href="/dashboard">Air dashboard <ArrowUpRight size={13}/></a><a className="story-nav-link" href="/about">About</a><a className="story-nav-cta" href="/dashboard">Explore the air <ArrowRight size={14}/></a></nav>
+            <nav aria-label="Main navigation"><a className="story-nav-link active" href="/">The atmosphere</a><a className="story-nav-link" href="/overview">Overview <ArrowUpRight size={13}/></a><a className="story-nav-link" href="/about">About</a><a className="story-nav-cta" href="/overview">Explore the air <ArrowRight size={14}/></a></nav>
           </header>
 
           <div className="story-sky" aria-hidden="true">

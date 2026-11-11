@@ -4,15 +4,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as Popover from "@radix-ui/react-popover";
 import { motion } from "framer-motion";
-import { ArrowUpRight, LocateFixed, Map, Minus, Moon, Plus, RotateCcw, Search, ShieldAlert, Sun } from "lucide-react";
+import { ArrowUpRight, LocateFixed, Map, Minus, Moon, Plus, RotateCcw, Search, Share2, ShieldAlert, Sun } from "lucide-react";
 import { AqiScaleBar } from "@/components/AqiScaleBar";
 import { TelemetryCard } from "@/components/TelemetryCard";
 import { DashboardMotion } from "@/components/DashboardMotion";
 import type { MapLayer } from "@/components/MapLayersPanel";
 import { HistoricalTracker } from "@/components/HistoricalTracker";
 import { AqiForecast } from "@/components/AqiForecast";
+import { AqiShareCardModal } from "@/components/AqiShareCardModal";
 import { useTheme } from "@/lib/use-theme";
 import type { AirQualityResponse, GeocodedPlace, Location } from "@/lib/types";
+import { CONTINENTS, type Continent } from "@/lib/continents";
 
 import { GlobalCityRanking } from "@/components/GlobalCityRanking";
 
@@ -89,6 +91,9 @@ export function Dashboard() {
   const [windEnabled, setWindEnabled] = useState(true);
   const [temperatureEnabled, setTemperatureEnabled] = useState(false);
   const [weather, setWeather] = useState<{ temperature_2m?: number; wind_speed_10m?: number; wind_direction_10m?: number; time?: string } | null>(null);
+  const [globeContinent, setGlobeContinent] = useState<Continent>("All");
+  const [globeMetric, setGlobeMetric] = useState<"aqi" | "pm2_5">("aqi");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [activeView, setActiveView] = useState<DashboardView>("live");
 
@@ -234,16 +239,28 @@ export function Dashboard() {
                     <h2>{location.name}</h2>
                     <p>{[location.admin, location.country].filter(Boolean).join(" · ")}</p>
                   </div>
-                  <button
-                    type="button"
-                    className="location-pin"
-                    onClick={detectUserLocation}
-                    title="Detect my real location"
-                    aria-label="Detect my real location"
-                    style={{ cursor: "pointer", background: "none", border: "none" }}
-                  >
-                    <LocateFixed size={16}/>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="share-report-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-[11px] font-bold active:scale-95 transition-all cursor-pointer shadow-md"
+                      onClick={() => setShareModalOpen(true)}
+                      title="Generate Social Sharing Card"
+                      aria-label="Generate Social Sharing Card"
+                    >
+                      <Share2 size={13} />
+                      <span>Share Card</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="location-pin"
+                      onClick={detectUserLocation}
+                      title="Detect my real location"
+                      aria-label="Detect my real location"
+                      style={{ cursor: "pointer", background: "none", border: "none" }}
+                    >
+                      <LocateFixed size={16}/>
+                    </button>
+                  </div>
                 </div>
                 <Popover.Root open={searchOpen && query.trim().length >= 2} onOpenChange={setSearchOpen}>
                   <Popover.Anchor asChild>
@@ -261,27 +278,90 @@ export function Dashboard() {
                 <div className="location-coordinates">{locationCoordinates(location)}</div>
               </section>
 
-              <TelemetryCard key={`${location.latitude}:${location.longitude}`} air={air} aqi={aqi} dominantPollutant={dominantPollutant} location={location} loading={loading} error={error}/>
+              <TelemetryCard key={`${location.latitude}:${location.longitude}`} air={air} aqi={aqi} dominantPollutant={dominantPollutant} location={location} loading={loading} error={error} onShare={() => setShareModalOpen(true)}/>
 
               <section className="health-warning" aria-live="polite">
-                <div className="health-warning-top"><span className="health-warning-icon"><ShieldAlert size={16}/></span><span className="section-kicker">HEALTH CONTEXT · CPCB NAQI</span></div>
+                <div className="health-warning-top flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="health-warning-icon"><ShieldAlert size={16}/></span>
+                    <span className="section-kicker">HEALTH CONTEXT · CPCB NAQI</span>
+                  </div>
+                  {/* Dedicated Share Alert Badge */}
+                  <button
+                    type="button"
+                    onClick={() => setShareModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all shadow-xs cursor-pointer active:scale-95"
+                    title="Share Health Alert Card to Social Media"
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600 dark:bg-amber-400"></span>
+                    </span>
+                    <Share2 size={11} />
+                    <span>Share Alert</span>
+                  </button>
+                </div>
                 <h2>{guidance.label}</h2>
                 <p>{guidance.advice}</p>
-                <a href="/risk">Personal risk guidance <ArrowUpRight size={13}/></a>
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--dash-rule)]/60">
+                  <a href="/risk" className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--dash-ink)] hover:text-emerald-700 transition-colors">
+                    Personal risk guidance <ArrowUpRight size={13}/>
+                  </a>
+                  {/* Dedicated Export Infographic Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => setShareModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm cursor-pointer transition-all active:scale-95"
+                    title="Export High-Resolution Infographic for Social Media"
+                  >
+                    <Share2 size={12} />
+                    <span>Export Infographic</span>
+                  </button>
+                </div>
                 <small>General public information. Follow local health authority guidance.</small>
               </section>
             </aside>
 
             <section className="spatial-viewport" aria-label="Spatial air quality visualization">
-              <div className="spatial-header">
+              <div className="spatial-header flex flex-wrap items-center justify-between gap-2">
                 <div><span className="section-kicker">PLANETARY VIEW</span><h2>One atmosphere. Many signals.</h2></div>
-                <span className="spatial-mode"><Map size={13}/> SPATIAL PREVIEW</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShareModalOpen(true)}
+                    className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm cursor-pointer transition-all active:scale-95"
+                    title="Export Share Card"
+                  >
+                    <Share2 size={12} />
+                    <span className="hidden sm:inline">Share Card</span>
+                  </button>
+                  <select
+                    value={globeContinent}
+                    onChange={(e) => setGlobeContinent(e.target.value as Continent)}
+                    aria-label="Filter globe by continent"
+                    className="px-2 py-1 text-[11px] font-mono rounded border border-[var(--dash-rule)] bg-[var(--dash-surface)] text-[var(--dash-ink)] cursor-pointer focus:outline-none"
+                  >
+                    {CONTINENTS.map((c) => (
+                      <option key={c} value={c}>{c === "All" ? "All Continents" : c}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={globeMetric}
+                    onChange={(e) => setGlobeMetric(e.target.value as "aqi" | "pm2_5")}
+                    aria-label="Globe metric selector"
+                    className="px-2 py-1 text-[11px] font-mono font-semibold rounded border border-emerald-600/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 cursor-pointer focus:outline-none"
+                  >
+                    <option value="aqi">AQI (IN)</option>
+                    <option value="pm2_5">PM2.5</option>
+                  </select>
+                  <span className="spatial-mode hidden sm:inline-flex"><Map size={13}/> SPATIAL PREVIEW</span>
+                </div>
               </div>
               <div className="spatial-canvas" id="globe">
                 <div className="spatial-grid"/><div className="spatial-orbit spatial-orbit-one"/><div className="spatial-orbit spatial-orbit-two"/>
                 <div className="spatial-location-tag"><i/>{location.name}<small>{locationCoordinates(location)}</small></div>
                 <motion.div className="spatial-globe-wrap" key="globe-engine" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7, ease: "easeOut" }}>
-                  <GlobeEngine location={location} air={air} layer={mapLayer} weather={weather} heatmap={heatmapEnabled} wind={windEnabled} temperature={temperatureEnabled} zoom={zoom} onLocationSelect={selectLocation}/>
+                  <GlobeEngine location={location} air={air} layer={mapLayer} weather={weather} heatmap={heatmapEnabled} wind={windEnabled} temperature={temperatureEnabled} zoom={zoom} continent={globeContinent} metric={globeMetric} onLocationSelect={selectLocation}/>
                 </motion.div>
                 <div className="spatial-aqi-chip"><span>{mapLayer === "aqi" ? air?.sourceLabel ?? "WAITING FOR SOURCE" : `${mapLayer.toUpperCase().replace("_", "₂.")} · ${activeLayerUnit}`}</span><strong>{typeof activeLayerValue === "number" ? (mapLayer === "aqi" ? Math.round(activeLayerValue) : activeLayerValue.toFixed(1)) : "—"}</strong></div>
                 <div className="spatial-controls"><button type="button" aria-label="Zoom in" onClick={() => setZoom((value) => Math.min(1.18, value + .05))}><Plus size={14}/></button><button type="button" aria-label="Zoom out" onClick={() => setZoom((value) => Math.max(.88, value - .05))}><Minus size={14}/></button></div>
@@ -306,6 +386,14 @@ export function Dashboard() {
           </footer>
         </main>
       </div>
+
+      <AqiShareCardModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        air={air}
+        location={location}
+        dominantPollutant={dominantPollutant}
+      />
     </div>
   );
 }
